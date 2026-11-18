@@ -1,4 +1,6 @@
 const SUFFIX = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+/** En français : milliard = Md (« B » se lit « billion » en anglais), le reste est le même. */
+const SUFFIX_FR = ['', 'K', 'M', 'Md', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
 
 /** Entier avec espace fine insécable (U+00A0) entre les milliers (1 200). */
 function group(n: number): string {
@@ -10,17 +12,18 @@ function group(n: number): string {
  * Moins de 10 000 : entier complet ; ensuite abrégé (K, M, B…) au plus grand palier qui garde au moins 2 chiffres.
  * L'arrondi est le plus proche.
  */
-export function fmt(n: number, _lang: string = 'fr'): string {
+export function fmt(n: number, lang: string = 'fr'): string {
+  const SUF = lang === 'fr' ? SUFFIX_FR : SUFFIX;
   if (Number.isNaN(n)) return '0';
   if (!isFinite(n)) return n < 0 ? '-∞' : '∞';
-  if (n < 0) return '-' + fmt(-n);
+  if (n < 0) return '-' + fmt(-n, lang);
   const r = Math.round(n);
   if (r < 10000) return group(r);
   let tier = Math.min(Math.floor(Math.log10(r) / 3), SUFFIX.length - 1);
   if (tier > 0 && r / Math.pow(1000, tier) < 10) tier--;
   const coef = Math.floor(r / Math.pow(1000, tier));
-  if (coef >= 1e12) return group(999999999999) + SUFFIX[tier] + '+'; // au-delà : plafond d'affichage, jamais de notation scientifique
-  return group(coef) + SUFFIX[tier];
+  if (coef >= 1e12) return group(999999999999) + SUF[tier] + '+'; // au-delà : plafond d'affichage, jamais de notation scientifique
+  return group(coef) + SUF[tier];
 }
 
 /** Pourcentage de bonus, entier : +25 % (fr) / +25% (en). */
@@ -32,7 +35,7 @@ export function fmtDuration(sec: number, lang: string = 'fr'): string {
   const s = Math.round(sec);
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
   const hh = lang === 'fr' ? ' h ' : 'h ';
-  if (h > 0) return `${h}${hh}${m} min`;
+  if (h > 0) return m > 0 ? `${h}${hh}${m} min` : `${h}${hh.trimEnd()}`;
   if (m > 0) return `${m} min ${s % 60} s`;
   return `${s} s`;
 }

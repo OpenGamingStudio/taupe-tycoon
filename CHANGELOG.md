@@ -2,6 +2,13 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.8.0 — 2026-11-18 (icônes et finitions)
+- Icônes de l'application (favicon, apple-touch-icon, 192, 512) redessinées depuis la mascotte actuelle : casque, lunettes, pelle, fond ciel (`tools/picto.mjs`).
+- Icônes : Options = engrenage, Pécule = pile de pièces, Taupinière simplifiée (monticule et trou), les trois premiers succès de clic ont chacun leur icône (pelle, patte, poignet d'acier), pépites = pépite.
+- En français : K / M / Md (milliards) au lieu de B, « 2 h » au lieu de « 2 h 0 min ».
+- Jauge de rebirth en turquoise foncé, reflet plus discret (contraste).
+- Musique : boucle de 8 mesures en deux parties (nouvelle progression, arpège inversé et petite mélodie), toujours très basse.
+
 ## 2.7.0 — 2026-11-18 (la scène : paysage, fin de partie, menu ouvert)
 - Sur ordinateur et en paysage, le décor n'est plus rogné : le ciel, le soleil, les nuages et les collines restent visibles, le décor se prolonge sur les côtés, plus de piliers ni de rochers géants coupés.
 - Fin de partie : au plus quelques taupes et machines par galerie (le compteur porte le nombre réel), plus de halos translucides, gains flottants opaques à contour encre, profondeur 2 en aplats violets vifs.

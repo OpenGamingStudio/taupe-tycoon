@@ -37,13 +37,10 @@ export const ICONS: Record<string, string> = {
     <circle cx="18" cy="28" r="6" fill="#fff" ${st(2.6)}/><circle cx="30" cy="28" r="6" fill="#fff" ${st(2.6)}/><path d="M23.5 27h1" ${st(2.6)}/>
     <circle cx="18.5" cy="29" r="2.4" fill="${k}"/><circle cx="29.5" cy="29" r="2.4" fill="${k}"/>
     <ellipse cx="24" cy="35" rx="3.2" ry="2.3" fill="${C.pink}" ${st(2)}/>`,
-  taupiniere: `<path d="M1 45C4 32 12 26 24 26s20 6 23 19z" fill="${C.wood}" ${st()}/>
-    <path d="M1 45C3 40 7 36 12 34 8 38 6 41 6 45z" fill="${C.woodDark}"/>
-    <ellipse cx="24" cy="36" rx="10.5" ry="6" fill="${C.cave}" ${st()}/>
-    <circle cx="20" cy="34" r="3.4" fill="#fff" ${st(2)}/><circle cx="28" cy="34" r="3.4" fill="#fff" ${st(2)}/>
-    <circle cx="20.5" cy="34.8" r="1.4" fill="${k}"/><circle cx="27.5" cy="34.8" r="1.4" fill="${k}"/>
-    <ellipse cx="24" cy="30" rx="3.4" ry="2.4" fill="${C.pink}" ${st(2)}/>
-    <path d="M6 24c3-1 5 0 6 2M38 25c2-2 5-2 7 0" fill="none" ${st(2.6)}/><circle cx="10" cy="20" r="2.2" fill="${C.wood}" ${st(2)}/><circle cx="40" cy="21" r="2" fill="${C.woodDark}" ${st(2)}/>`,
+  taupiniere: `<path d="M3 45C6 33 14 27 24 27s18 6 21 18z" fill="${C.wood}" ${st()}/>
+    <path d="M3 45C5 40 8 36 13 34 9 38 7 41 8 45z" fill="${C.woodDark}"/>
+    <ellipse cx="24" cy="38" rx="9" ry="5.5" fill="${C.cave}" ${st()}/>
+    <circle cx="9" cy="24" r="3" fill="${C.wood}" ${st(2)}/><circle cx="40" cy="22" r="2.4" fill="${C.woodDark}" ${st(2)}/><circle cx="33" cy="16" r="1.8" fill="${C.wood}" ${st(2)}/>`,
   foreuse: `<circle cx="14" cy="8" r="4" fill="#fff" ${st(2.4)}/><circle cx="21" cy="5" r="3" fill="#fff" ${st(2.4)}/>
     <rect x="9" y="12" width="9" height="7" rx="2" fill="${C.steel}" ${st()}/>
     <rect x="4" y="17" width="26" height="19" rx="5" fill="${C.pink}" ${st()}/><path d="M7 31h20" stroke="#d94d82" stroke-width="3" stroke-linecap="round"/>
@@ -71,10 +68,10 @@ export const ICONS: Record<string, string> = {
     <circle cx="14" cy="27" r="6.2" fill="#fff6c9" ${st(2.4)}/><circle cx="34" cy="27" r="6.2" fill="#fff6c9" ${st(2.4)}/>
     <path d="M23.5 25q.5-2.600 1-0 .5-2.6 1 0" ${st(3)} fill="none"/>${shine('M10.500 25c1-2 2.500-3 4-3M30.500 25c1-2 2.500-3 4-3')}
     <path d="M40 8l1.5 3.5L45 13l-3.500 1.500L40 18l-1.500-3.500L35 13l3.500-1.500z" fill="#fff" ${st(2)}/>`,
-  pecule: `<path d="M5 30c0 10 8 15 19 15s19-5 19-15z" fill="${C.woodDark}" ${st()}/>
-    <path d="M9 34l9 6M16 32l12 11M26 32l11 8M34 33l5 3" stroke="${C.wood}" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M24 4c8 0 14 9 14 18 0 6-5 10-14 10S10 28 10 22C10 13 16 4 24 4z" fill="${C.cream}" ${st()}/>
-    <circle cx="19" cy="17" r="2.600" fill="${C.gold}" ${st(2)}/><circle cx="28" cy="13" r="2" fill="${C.pink}" ${st(2)}/><circle cx="29" cy="22" r="2.800" fill="${C.gem}" ${st(2)}/>${shine('M15 20c0-3 1-6 3-8')}`,
+  pecule: `<path d="M8 33v6c0 3.500 7 6 16 6s16-2.500 16-6v-6z" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="33" rx="16" ry="6" fill="${C.gold}" ${st()}/><path d="M8 25v6c0 3.500 7 6 16 6s16-2.500 16-6v-6z" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="25" rx="16" ry="6" fill="${C.gold}" ${st()}/><path d="M8 17v6c0 3.500 7 6 16 6s16-2.500 16-6v-6z" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="17" rx="16" ry="6" fill="${C.gold}" ${st()}/><ellipse cx="24" cy="17" rx="8" ry="3" fill="none" stroke="${C.goldDark}" stroke-width="2"/>${shine('M12 15c2-2 5-3 8-3')}`,
+  gear: `<g fill="${C.steel}" ${st(3)}>${[0, 45, 90, 135].map((a) => `<rect x="20.500" y="3" width="7" height="42" rx="2.500" transform="rotate(${a} 24 24)"/>`).join('')}</g><circle cx="24" cy="24" r="13.500" fill="${C.steel}" ${st(3)}/><circle cx="24" cy="24" r="5.500" fill="${C.cave}" ${st(3)}/>${shine('M15 21a10 10 0 0 1 6-7')}`,
+  paw: `<ellipse cx="24" cy="32" rx="11.500" ry="9.500" fill="${C.fur}" ${st()}/><ellipse cx="24" cy="33" rx="5" ry="4" fill="${C.pink}" ${st(2)}/><ellipse cx="10.500" cy="22" rx="4" ry="5.500" transform="rotate(-20 10.500 22)" fill="${C.fur}" ${st()}/><ellipse cx="19" cy="13" rx="4" ry="5.500" fill="${C.fur}" ${st()}/><ellipse cx="29" cy="13" rx="4" ry="5.500" fill="${C.fur}" ${st()}/><ellipse cx="37.500" cy="22" rx="4" ry="5.500" transform="rotate(20 37.500 22)" fill="${C.fur}" ${st()}/>`,
+  cuff: `<rect x="5" y="13" width="38" height="22" rx="7" fill="${C.steel}" ${st()}/><rect x="11" y="19" width="26" height="10" rx="4" fill="${C.steelDark}" ${st(2.400)}/><circle cx="17" cy="24" r="2" fill="${C.steel}"/><circle cx="24" cy="24" r="2" fill="${C.steel}"/><circle cx="31" cy="24" r="2" fill="${C.steel}"/>${shine('M10 19c1-2 3-3 5-3')}`,
   sacoche: `<path d="M13 15C13 6 35 6 35 15" fill="none" ${st(3)}/>
     <path d="M7 19c0-4 3-6 6-6h22c3 0 6 2 6 6l2 22c0 3-2 4-5 4H10c-3 0-5-1-5-4z" fill="${C.grass}" ${st()}/>
     <path d="M7 19c0-4 3-6 6-6h22c3 0 6 2 6 6v6c-7 4-27 4-34 0z" fill="${C.grassDark}" ${st()}/>
