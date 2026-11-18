@@ -196,7 +196,7 @@ html, body {
   .nugget[hidden] { display: none; }
   .nugget svg { @apply h-10 w-10; }
   .nugget:focus-visible { outline: 3px solid #2b1d14; outline-offset: 3px; box-shadow: 0 0 0 3px #fff, 4px 4px 0 #2b1d14; }
-  .vol { height: 44px; accent-color: #8a5a2b; background: transparent; }
+  .vol { height: 44px; accent-color: #0f9490; background: transparent; }
   .io { @apply w-full resize-none rounded-xl border-[3px] border-ink bg-white p-2 text-base; font-family: ui-monospace, monospace; min-height: 72px; }
   .io:focus-visible, .vol:focus-visible { outline: 3px solid #2b1d14; outline-offset: 3px; }
   .welcome { margin: auto; width: min(24rem, calc(100% - 1.5rem)); padding: 1rem; }

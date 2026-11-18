@@ -2,6 +2,11 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.6.1 — 2026-11-18 (correctifs de la revue des assets)
+- Plus de texte « fr » parasite sous les Succès et les Statistiques ; plus de petit tiret à côté de « Niv. N » dans la Boutique permanente.
+- Un succès n'est annoncé que par la bannière (plus de toast en double).
+- Couleurs d'application (barre du navigateur, manifest, curseur de volume) alignées sur la palette Plein soleil ; compression gzip du site.
+
 ## 2.6.0 — 2026-11-18 (direction artistique « Plein soleil », combo retiré, vraie pelle)
 - Le combo est supprimé : plus de compteur, de timer ni de multiplicateur caché. Chaque coup de pelle fait la même chose, lisible : le gain affiché, des pièces vers le compteur.
 - La pelle est redessinée : manche en bois à poignée en D, douille en fer, lame plate (taupe, icône de boutique, pelle d'or).

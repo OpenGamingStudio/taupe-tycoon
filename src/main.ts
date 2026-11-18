@@ -13,6 +13,7 @@ import { BUILD, watch } from './update';
 import { createWorld } from './world';
 import { createFx } from './fx';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
+import { statsHtml, trophiesHtml } from './lists';
 import {
   State, applyEvent, applyOffline, buyN, buyPerm, click, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
   milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
@@ -339,6 +340,7 @@ function render() {
     setText(r.lv, `${t('level')} ${f(lvl)}`);
     setText(r.desc, t(p.id + 'D'));
     setText(r.stat, extra);
+    r.plus.hidden = true;
     setHtml(r.cost, maxed ? t('maxed') : `${icon('gem', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(permCost(s, i))}`);
     setDisabled(r.el, maxed || s.gems < permCost(s, i));
   });
@@ -511,19 +513,15 @@ function renderBuffs() {
 
 function renderTrophies() {
   const L = lang();
-  const n = s.trophies.length;
-  setText($('tr-sum'), t('trophyBonus', { n: f(n), m: f(TROPHY_COUNT), p: f(Math.round((trophyMult(s) - 1) * 100)) }));
-  setHtml($('trophies'), TROPHIES.map((tr) => {
-    const on = s.trophies.includes(tr.id);
-    const [name, desc] = tr[L];
-    return `<li class="trophy ${on ? 'is-on' : 'is-off'}"><span class="tile">${icon(on ? tr.icon : 'lock', 'h-9 w-9')}</span><span class="min-w-0"><span class="block text-lg font-bold leading-tight">${name}</span><span class="block text-sm leading-tight">${desc}</span><span class="sr-only">${t(on ? 'trophyOk' : 'trophyLocked')}</span></span></li>`;
-  }).join('') + L);
-  const rows: [string, string][] = [
+  const statRows = (): [string, string][] => [
     ['sDirt', f(s.lifeTotal)], ['sClicks', f(s.clicks)], ['sTime', fmtDuration(s.playTime, L)],
     ['sRebirths', f(s.rebirths)], ['sGems', f(s.gemsEarned)], ['sBest', s.bestRun > 0 ? fmtDuration(s.bestRun, L) : t('sNone')],
     ['sCaught', f(s.caught)], ['sBuildings', f(s.gens.reduce((a, b) => a + b, 0))],
   ];
-  setHtml($('stats'), rows.map(([k, v]) => `<div class="note"><dt>${t(k)}</dt><dd class="text-xl font-bold">${v}</dd></div>`).join('') + L);
+  const n = s.trophies.length;
+  setText($('tr-sum'), t('trophyBonus', { n: f(n), m: f(TROPHY_COUNT), p: f(Math.round((trophyMult(s) - 1) * 100)) }));
+  setHtml($('trophies'), trophiesHtml(s.trophies, L, icon, (k) => t(k)));
+  setHtml($('stats'), statsHtml(statRows(), (k) => t(k)));
 }
 const trophyName = (id: string) => TROPHIES.find((x) => x.id === id)!;
 /** Débloque les succès atteints (annonce groupée s'il y en a plusieurs d'un coup). */
@@ -534,7 +532,6 @@ function awardTrophies(quiet = false) {
   sfx.trophy();
   { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.3, 40); }
   banner(fresh.length === 1 ? fresh[0].icon : 'trophy', t('trophyBanner'), fresh.length === 1 ? trophyName(fresh[0].id)[lang()][0] : t('trophiesMany', { n: fresh.length }));
-  notify(fresh.length === 1 ? t('trophyDone', { name: trophyName(fresh[0].id)[lang()][0] }) : t('trophiesMany', { n: fresh.length }));
 }
 
 // ---------- pépite d'or (événement aléatoire) ----------
