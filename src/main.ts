@@ -47,7 +47,7 @@ document.querySelectorAll<HTMLElement>('[data-ico]').forEach((el) => { el.innerH
 $('ver').textContent = `v${VERSION}`;
 
 // ---------- lignes ----------
-interface Row { el: HTMLButtonElement; tile: HTMLElement; name: HTMLElement; lv: HTMLElement; desc: HTMLElement; stat: HTMLElement; mile: HTMLElement; cost: HTMLElement; kind: number; id: string }
+interface Row { el: HTMLButtonElement; tile: HTMLElement; name: HTMLElement; lv: HTMLElement; plus: HTMLElement; cur: HTMLElement; desc: HTMLElement; stat: HTMLElement; mile: HTMLElement; cost: HTMLElement; kind: number; id: string }
 const rows: Row[] = [];
 const permRows: Row[] = [];
 
@@ -56,10 +56,10 @@ function mkRow(id: string, kind: number): Row {
   const el = document.createElement('button');
   el.type = 'button';
   el.className = 'row';
-  el.innerHTML = `<span class="tile"></span><span class="min-w-0"><span class="block text-lg font-bold leading-tight"><span class="name"></span><span class="lv"></span></span><span class="desc block text-sm leading-tight"></span><span class="stat"></span><span class="mile"></span></span><span class="cost"></span>`;
+  el.innerHTML = `<span class="tile"></span><span class="min-w-0"><span class="block text-lg font-bold leading-tight"><span class="name"></span></span><span class="badges"><span class="lv"></span><span class="plus"></span></span><span class="desc block text-sm leading-tight"></span><span class="stat"></span><span class="cur"></span><span class="mile"></span></span><span class="cost"></span>`;
   li.append(el);
   const q = (c: string) => el.querySelector<HTMLElement>('.' + c)!;
-  return { el, tile: q('tile'), name: q('name'), lv: q('lv'), desc: q('desc'), stat: q('stat'), mile: q('mile'), cost: q('cost'), kind, id };
+  return { el, tile: q('tile'), name: q('name'), lv: q('lv'), plus: q('plus'), cur: q('cur'), desc: q('desc'), stat: q('stat'), mile: q('mile'), cost: q('cost'), kind, id };
 }
 const rowsUl = $('rows');
 const permsUl = $('perms');
@@ -294,21 +294,26 @@ function render() {
     r.el.classList.toggle('is-locked', locked);
     setHtml(r.tile, icon(locked ? 'lock' : ids[i], 'h-11 w-11'));
     setText(r.name, locked ? t('locked') : t(ids[i]));
-    setText(r.lv, locked ? '' : `${t('level')} ${f(level)}${n > 1 ? ` +${f(n)}` : ''}`);
+    setText(r.lv, locked ? '' : `${t('level')} ${f(level)}`);
     r.lv.hidden = locked;
+    setText(r.plus, locked || n <= 1 ? '' : `+${f(n)}`);
+    r.plus.hidden = locked || n <= 1;
     if (locked) {
       setText(r.desc, t('lockedD', { n: f(Math.ceil(GENS[r.kind].cost * 0.4)) }));
       setText(r.stat, '');
+      setText(r.cur, '');
     } else if (r.kind < 0) {
       setText(r.desc, t('shovelD'));
       setText(r.stat, `${t('gain')} : +${f(clickBase({ ...s, shovel: s.shovel + n }) - clickBase(s))} ${t('per')}`);
+      setText(r.cur, `${t('nowVal')} : ${f(clickBase(s))} ${t('per')}`);
     } else {
       const gain = genProdAt(s, r.kind, level + n) - genProd(s, r.kind);
       setText(r.desc, t(ids[i] + 'D'));
-      setText(r.stat, `${t('gain')} : +${f(gain)}${t('secShort')} · ${f(genProd(s, r.kind))}${t('secShort')}`);
+      setText(r.stat, `${t('gain')} : +${f(gain)}${t('secShort')}`);
+      setText(r.cur, `${t('nowVal')} : ${f(genProd(s, r.kind))}${t('secShort')}`);
     }
     const nm = locked ? null : nextMilestone(level);
-    setText(r.mile, locked ? '' : nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : `${t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm })}${milestoneMult(level) > 1 ? ` · ×${f(milestoneMult(level))}` : ''}`);
+    setText(r.mile, locked ? '' : nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm }));
     setHtml(r.cost, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
     setDisabled(r.el, locked || s.dirt < cost);
     const wantHot = !hot && (hintKey() === 'hintBuy' || hintKey() === 'hintOpen') && !locked && s.dirt >= cost;
