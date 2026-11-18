@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { GENS } from '../src/config';
-import { applyOffline, buy, click, clickPower, costOf, maxAffordable, newState, perSecond, rebirth, rebirthGain, tick } from '../src/sim';
-import { fmt as fmtRaw } from '../src/format';
-const fmt = (n: number, l: string) => fmtRaw(n, l).replace(/\s/g, ' ');
+import { applyOffline, buy, click, clickPower, genProd, costOf, maxAffordable, newState, perSecond, rebirth, rebirthGain, tick } from '../src/sim';
+import { fmt as fmtRaw, fmtPct as fmtPctRaw } from '../src/format';
+const fmtPct = (n: number, l: string) => fmtPctRaw(n, l);
+const fmt = (n: number, l: string) => fmtRaw(n, l).replace(/\u00a0/g, ' ');
 import { sanitize } from '../src/save';
 import { play } from '../tools/play';
 
@@ -15,10 +16,10 @@ describe('coûts', () => {
     }
   });
   it('achat : débite et monte le niveau', () => {
-    const s = newState(); s.dirt = 40;
+    const s = newState(); s.dirt = 400;
     expect(buy(s, 0, 1)).toBe(1);
     expect(s.gens[0]).toBe(1);
-    expect(s.dirt).toBeCloseTo(25);
+    expect(s.dirt).toBeCloseTo(250);
     expect(buy(s, 1, 1)).toBe(0);
   });
 });
@@ -62,11 +63,11 @@ describe('rebirth', () => {
     const s = newState(); s.runTotal = 10; expect(rebirth(s)).toBe(0); expect(s.rebirths).toBe(0);
   });
   it('réinitialise le run et garde les gemmes', () => {
-    const s = newState(); s.runTotal = 1e8; s.dirt = 5; s.gens[0] = 9; s.shovel = 4;
+    const s = newState(); s.runTotal = 1e9; s.dirt = 5; s.gens[0] = 9; s.shovel = 4;
     const g = rebirthGain(s); expect(g).toBeGreaterThan(1);
     expect(rebirth(s)).toBe(g);
     expect(s.gems).toBe(g); expect(s.gens.every((x) => x === 0)).toBe(true); expect(s.shovel).toBe(0);
-    expect(clickPower(s)).toBeGreaterThan(1);
+    expect(clickPower(s)).toBeGreaterThan(10);
   });
 });
 
@@ -80,13 +81,39 @@ describe('hors-ligne', () => {
   });
 });
 
-describe('format', () => {
-  it('abrège les grands nombres', () => {
+describe('format : aucun nombre à virgule', () => {
+  it('entiers, espaces entre milliers, K/M/B sans décimale', () => {
+    expect(fmt(0, 'fr')).toBe('0');
+    expect(fmt(0.3, 'fr')).toBe('0');
+    expect(fmt(2.5, 'fr')).toBe('3');
     expect(fmt(999, 'en')).toBe('999');
-    expect(fmt(1500, 'en')).toBe('1.50 K');
-    expect(fmt(2.5e6, 'fr')).toBe('2,50 M');
-    expect(fmt(3e9, 'en')).toBe('3.00 B');
-    expect(fmt(1e40, 'en')).toMatch(/e40$/);
+    expect(fmt(1200, 'fr')).toBe('1 200');
+    expect(fmt(9999.4, 'en')).toBe('9 999');
+    expect(fmt(12345, 'fr')).toBe('12K');
+    expect(fmt(999999, 'fr')).toBe('999K');
+    expect(fmt(1.9e6, 'fr')).toBe('1 900K');
+    expect(fmt(12.4e6, 'en')).toBe('12M');
+    expect(fmt(3e9, 'en')).toBe('3 000M');
+    expect(fmt(7e12, 'en')).toBe('7 000B');
+    expect(fmt(1e40, 'en')).toBe('10 000 000Dc');
+    expect(fmt(Infinity, 'en')).toBe('∞');
+    expect(fmt(NaN, 'en')).toBe('0');
+  });
+  it('jamais de séparateur décimal, quelle que soit la valeur', () => {
+    for (let i = 0; i < 400; i++) {
+      const n = Math.random() * Math.pow(10, Math.random() * 40);
+      for (const l of ['fr', 'en']) expect(fmt(n, l)).toMatch(/^\d[\d ]*[A-Za-z]{0,2}$/);
+    }
+  });
+  it('pourcentages entiers', () => {
+    expect(fmtPct(25, 'fr').replace(/\s/g, ' ')).toBe('+25 %');
+    expect(fmtPct(181.25, 'en')).toBe('+181%');
+  });
+  it('toutes les valeurs affichées par le jeu sont entières (échantillon d\'états)', () => {
+    const s = newState(); s.gemsEarned = 3; s.shovel = 7; s.gens = [4, 3, 2, 1, 1, 1]; s.perms = [2, 1, 1, 0];
+    for (const v of [clickPower(s), perSecond(s), ...GENS.map((_, i) => genProd(s, i)), s.dirt, rebirthGain(s)]) {
+      expect(fmt(v, 'fr')).not.toMatch(/[.,]/);
+    }
   });
 });
 

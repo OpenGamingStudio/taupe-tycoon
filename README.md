@@ -21,3 +21,10 @@ Docker : `docker build -t taupe-tycoon . && docker run -p 8080:80 taupe-tycoon` 
 
 ## Accessibilité
 Voir `ACCESSIBILITY.md`. Licence MIT.
+
+## V2 (2.0.0)
+
+- Tous les nombres affichés sont des entiers (« 1 200 », « 12K », jamais « 1,2K ») ; les valeurs internes sont ×10 pour garder des paliers fins. Les anciennes sauvegardes sont migrées automatiquement.
+- Tous les visuels (taupe à lunettes et pelle, 16 icônes, décor qui s'enfonce avec les bâtiments) sont des SVG dessinés dans `src/art.ts`, sans dégradé.
+- Sons synthétisés (Web Audio) optionnels, coupables dans l'écran Options.
+- Contrôles : `e2e/shots.mjs` (captures), `e2e/a11y.mjs` (contrastes, cibles 44 px, clavier, focus, mouvement réduit), `e2e/check.mjs`.

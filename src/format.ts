@@ -1,22 +1,29 @@
 const SUFFIX = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
 
-/** Grand nombre lisible : 12,3 K, 4,56 M… puis notation scientifique au-delà de Dc. */
-export function fmt(n: number, lang: string = 'fr'): string {
-  if (!isFinite(n)) return '∞';
-  if (n < 0) return '-' + fmt(-n, lang);
-  const dec = lang === 'fr' ? ',' : '.';
-  const out = (v: number, digits: number, suf: string) => v.toFixed(digits).replace('.', dec) + (suf ? ' ' + suf : '');
-  if (n < 1000) {
-    if (n < 10 && n !== Math.floor(n)) return out(n, 1, '');
-    return out(Math.floor(n), 0, '');
-  }
-  const tier = Math.floor(Math.log10(n) / 3);
-  if (tier >= SUFFIX.length) {
-    const e = Math.floor(Math.log10(n));
-    return out(n / Math.pow(10, e), 2, '').replace(/$/, 'e' + e);
-  }
-  const v = n / Math.pow(1000, tier);
-  return out(v, v < 10 ? 2 : v < 100 ? 1 : 0, SUFFIX[tier]);
+/** Entier avec espace fine insécable (U+00A0) entre les milliers (1 200). */
+function group(n: number): string {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+}
+
+/**
+ * Nombre entier lisible, jamais de virgule : 842, 1 200, 12K, 1 900K, 12M…
+ * Moins de 10 000 : entier complet ; ensuite abrégé (K, M, B…) au plus grand palier qui garde au moins 2 chiffres.
+ * L'arrondi est le plus proche.
+ */
+export function fmt(n: number, _lang: string = 'fr'): string {
+  if (Number.isNaN(n)) return '0';
+  if (!isFinite(n)) return n < 0 ? '-∞' : '∞';
+  if (n < 0) return '-' + fmt(-n);
+  const r = Math.round(n);
+  if (r < 10000) return group(r);
+  let tier = Math.min(Math.floor(Math.log10(r) / 3), SUFFIX.length - 1);
+  if (tier > 0 && r / Math.pow(1000, tier) < 10) tier--;
+  return group(Math.floor(r / Math.pow(1000, tier))) + SUFFIX[tier];
+}
+
+/** Pourcentage de bonus, entier : +25 % (fr) / +25% (en). */
+export function fmtPct(p: number, lang: string = 'fr'): string {
+  return '+' + fmt(Math.round(p)) + (lang === 'fr' ? ' %' : '%');
 }
 
 export function fmtDuration(sec: number, lang: string = 'fr'): string {

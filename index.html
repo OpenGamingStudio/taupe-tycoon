@@ -15,59 +15,35 @@
 <script type="module" src="/src/main.ts"></script>
 </head>
 <body class="font-sans">
-<main id="app" class="fixed inset-0 grid grid-rows-[minmax(0,9fr)_minmax(0,11fr)] gap-3 overflow-hidden px-[max(0.75rem,env(safe-area-inset-left))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] wide:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] wide:grid-rows-1">
-  <section class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 wide:grid-rows-[auto_minmax(0,1fr)]" aria-label="Terrain">
-    <header class="grid grid-cols-[1fr_auto] items-center gap-2">
-      <h1 class="logo text-3xl sm:text-4xl" data-i18n="title">Taupe Tycoon</h1>
-      <p class="chip" title="Gemmes"><svg class="h-6 w-6" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 7-8 13L4 9z" fill="#20c5c0" stroke="#2b1d14" stroke-width="2.5" stroke-linejoin="round"/></svg><span class="sr-only" data-i18n="gems">Gemmes</span><span id="hud-gems">0</span></p>
-      <p class="panel col-span-2 grid grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-1"><span><span class="text-base" data-i18n="dirt">Terre</span> <span id="hud-dirt" class="block text-4xl font-bold leading-none sm:text-5xl">0</span></span><span class="text-right"><span id="hud-ps" class="block text-2xl font-bold">0</span><span class="text-sm" data-i18n="perSec">par seconde</span></span></p>
+<main id="app" class="fixed inset-0 grid grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 overflow-hidden px-[max(0.75rem,env(safe-area-inset-left))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] wide:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] wide:grid-rows-1">
+  <section id="stage" class="stage depth-0 relative flex min-h-0 flex-col overflow-hidden rounded-3xl border-[3px] border-ink shadow-hard" aria-label="Terrain">
+    <svg id="scene" class="absolute inset-0 h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"></svg>
+    <header class="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 p-2">
+      <h1 class="logo col-span-2 hidden text-4xl wide:block" data-i18n="title">Taupe Tycoon</h1>
+      <h1 class="sr-only wide:hidden" data-i18n="title">Taupe Tycoon</h1>
+      <div class="panel min-w-0 px-3 py-1">
+        <p class="flex items-center gap-2"><span id="ico-dirt" class="shrink-0"></span><span class="sr-only" data-i18n="dirt">Terre</span><span id="hud-dirt" class="min-w-0 flex-1 truncate text-3xl font-bold leading-none sm:text-4xl">0</span><span class="shrink-0 text-right text-base font-bold leading-none"><span id="hud-ps">0</span><span class="text-sm" data-i18n="secShort">/s</span><span class="sr-only" data-i18n="perSec">par seconde</span></span></p>
+        <div class="mt-1 flex items-center gap-2"><span id="ico-gem" class="shrink-0" aria-hidden="true"></span><span class="sr-only" data-i18n="gems">Gemmes</span><span id="hud-gems" class="min-w-[1.5ch] shrink-0 text-lg font-bold leading-none">0</span><div id="goal" class="goal min-w-0 flex-1" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Rebirth"><span id="goal-fill" class="goal-fill"></span></div><span id="goal-l" class="shrink-0 text-sm font-bold leading-none"></span></div>
+      </div>
+      <button id="snd" type="button" class="btn btn-icon" aria-pressed="true"></button>
     </header>
-    <div class="stage relative min-h-0">
-      <div id="fx" class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true"></div>
-      <button id="mole" type="button" class="mole absolute inset-0 m-auto h-full max-h-[22rem] w-full max-w-[22rem] touch-manipulation" aria-label="Creuser">
-        <svg viewBox="0 0 240 240" class="h-full w-full" role="img" aria-hidden="true" focusable="false">
-          <ellipse cx="120" cy="214" rx="104" ry="20" fill="#6b3f1d" stroke="#2b1d14" stroke-width="5"/>
-          <ellipse cx="120" cy="206" rx="88" ry="14" fill="#8a5a2b"/>
-          <!-- corps -->
-          <path d="M52 206c-6-60 18-98 68-98s74 38 68 98z" fill="#7a5a44" stroke="#2b1d14" stroke-width="5" stroke-linejoin="round"/>
-          <path d="M84 206c-2-34 8-52 36-52s38 18 36 52z" fill="#d9b48c"/>
-          <!-- bras droit du personnage (à droite de l'écran) -->
-          <ellipse cx="184" cy="172" rx="16" ry="22" transform="rotate(-18 184 172)" fill="#7a5a44" stroke="#2b1d14" stroke-width="5"/>
-          <g fill="#f4c7a8" stroke="#2b1d14" stroke-width="4" stroke-linejoin="round"><path d="M176 190l-3 12M184 192l-1 13M192 190l2 12"/></g>
-          <!-- tête -->
-          <circle cx="82" cy="92" r="15" fill="#7a5a44" stroke="#2b1d14" stroke-width="5"/>
-          <circle cx="158" cy="92" r="15" fill="#7a5a44" stroke="#2b1d14" stroke-width="5"/>
-          <ellipse cx="120" cy="104" rx="52" ry="46" fill="#7a5a44" stroke="#2b1d14" stroke-width="5"/>
-          <ellipse cx="120" cy="124" rx="30" ry="22" fill="#d9b48c"/>
-          <ellipse cx="120" cy="116" rx="13" ry="9" fill="#ff7aa8" stroke="#2b1d14" stroke-width="4"/>
-          <path d="M104 134q16 12 32 0" fill="none" stroke="#2b1d14" stroke-width="4.5" stroke-linecap="round"/>
-          <rect x="112" y="136" width="7" height="9" rx="2" fill="#fff" stroke="#2b1d14" stroke-width="3"/><rect x="121" y="136" width="7" height="9" rx="2" fill="#fff" stroke="#2b1d14" stroke-width="3"/>
-          <!-- lunettes rondes -->
-          <circle cx="97" cy="96" r="17" fill="#fff" fill-opacity=".85" stroke="#2b1d14" stroke-width="5"/>
-          <circle cx="143" cy="96" r="17" fill="#fff" fill-opacity=".85" stroke="#2b1d14" stroke-width="5"/>
-          <path d="M114 94h12" stroke="#2b1d14" stroke-width="5" stroke-linecap="round"/>
-          <circle cx="99" cy="98" r="6" fill="#2b1d14"/><circle cx="141" cy="98" r="6" fill="#2b1d14"/>
-          <circle cx="101" cy="95" r="2" fill="#fff"/><circle cx="143" cy="95" r="2" fill="#fff"/>
-          <!-- pelle dans la MAIN GAUCHE (côté gauche de l'écran) -->
-          <g id="shovel">
-            <path d="M44 214L62 100" stroke="#2b1d14" stroke-width="13" stroke-linecap="round"/>
-            <path d="M44 214L62 100" stroke="#e0a458" stroke-width="6" stroke-linecap="round"/>
-            <path d="M44 214L50 188" stroke="#2b1d14" stroke-width="0"/>
-            <path d="M50 214c-14-4-22-12-20-26l30 6c8 6 4 18-10 20z" fill="#b8c4cc" stroke="#2b1d14" stroke-width="5" stroke-linejoin="round" transform="translate(-8 4) rotate(8 50 204)"/>
-            <path d="M54 106l16 3" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-            <ellipse cx="60" cy="152" rx="15" ry="19" transform="rotate(10 60 152)" fill="#7a5a44" stroke="#2b1d14" stroke-width="5"/>
-            <g fill="#f4c7a8" stroke="#2b1d14" stroke-width="4" stroke-linejoin="round"><path d="M52 146l-4-3M52 154l-6 0M54 162l-5 3"/></g>
-          </g>
-        </svg>
+        <div class="relative z-10 min-h-0 flex-1">
+      <p id="hint" class="hint pointer-events-none absolute left-1/2 top-1 z-20 w-max max-w-[calc(100%-1rem)] -translate-x-1/2" hidden></p>
+      <div id="fx" class="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true"></div>
+      <button id="mole" type="button" data-mood="idle" class="mole absolute inset-x-0 bottom-[-1.75rem] mx-auto h-[calc(100%+1.75rem)] max-h-[26rem] w-full max-w-[26rem] touch-manipulation" aria-label="Creuser">
+        <svg id="mole-svg" viewBox="0 0 240 240" class="h-full w-full" aria-hidden="true" focusable="false"></svg>
       </button>
     </div>
+    <ul id="owned" class="owned relative z-10 flex min-h-[3.25rem] flex-wrap items-end justify-center gap-1 px-2 pb-2"></ul>
+    <p id="toast" class="toast" role="presentation" hidden></p>
+    <div id="rb-fx" class="rb-fx" aria-hidden="true" hidden></div>
   </section>
 
   <section class="panel flex min-h-0 flex-col overflow-hidden p-0" aria-label="Menu">
     <div role="tablist" class="grid grid-cols-3 gap-2 p-2" aria-label="Sections">
-      <button id="tab-dig" role="tab" type="button" class="tab" aria-controls="p-dig" aria-selected="true" data-i18n="tabDig">Creuser</button>
-      <button id="tab-rebirth" role="tab" type="button" class="tab" aria-controls="p-rebirth" aria-selected="false" tabindex="-1" data-i18n="tabRebirth">Rebirth</button>
-      <button id="tab-options" role="tab" type="button" class="tab" aria-controls="p-options" aria-selected="false" tabindex="-1" data-i18n="tabOptions">Options</button>
+      <button id="tab-dig" role="tab" type="button" class="tab" aria-controls="p-dig" aria-selected="true"><span class="tab-ico" data-ico="shovel"></span><span data-i18n="tabDig">Creuser</span></button>
+      <button id="tab-rebirth" role="tab" type="button" class="tab" aria-controls="p-rebirth" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="gem"></span><span data-i18n="tabRebirth">Rebirth</span><span id="rb-dot" class="dot" hidden><span class="sr-only" data-i18n="ready">(prêt)</span></span></button>
+      <button id="tab-options" role="tab" type="button" class="tab" aria-controls="p-options" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="sacoche"></span><span data-i18n="tabOptions">Options</span></button>
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2">
       <div id="p-dig" role="tabpanel" aria-labelledby="tab-dig" tabindex="-1">
@@ -82,7 +58,7 @@
         <p class="mt-1 text-base" data-i18n="rebirthIntro"></p>
         <dl class="mt-2 grid grid-cols-2 gap-2 text-base">
           <div class="note"><dt data-i18n="rebirthGain">Gemmes à gagner</dt><dd id="rb-gain" class="text-2xl font-bold">0</dd></div>
-          <div class="note"><dt data-i18n="mult">Multiplicateur</dt><dd id="rb-mult" class="text-2xl font-bold">×1</dd></div>
+          <div class="note"><dt data-i18n="mult">Bonus de production</dt><dd id="rb-mult" class="text-2xl font-bold">+0 %</dd></div>
           <div class="note"><dt data-i18n="rebirths">Rebirths</dt><dd id="rb-count" class="text-2xl font-bold">0</dd></div>
           <div class="note"><dt data-i18n="runTime">Durée du run</dt><dd id="rb-time" class="text-2xl font-bold">0</dd></div>
         </dl>
@@ -92,10 +68,11 @@
         <ul id="perms" class="mt-2 grid gap-2"></ul>
       </div>
       <div id="p-options" role="tabpanel" aria-labelledby="tab-options" tabindex="-1" hidden class="grid gap-3">
+        <button id="opt-sound" type="button" class="btn w-full justify-between" aria-pressed="true"></button>
         <button id="opt-lang" type="button" class="btn w-full justify-between"></button>
         <button id="opt-motion" type="button" class="btn w-full justify-between" aria-pressed="false"></button>
         <button id="opt-reset" type="button" class="btn w-full" data-i18n="reset">Effacer la sauvegarde</button>
-        <p class="text-base"><span data-i18n="about"></span> <a class="underline" href="https://github.com/OpenGamingStudio/taupe-tycoon" rel="noopener noreferrer" data-i18n="code">Code source</a></p>
+        <p class="flex flex-wrap items-center gap-x-2 text-base"><span data-i18n="about"></span> <a class="inline-flex min-h-[44px] min-w-[44px] items-center whitespace-nowrap underline" href="https://github.com/OpenGamingStudio/taupe-tycoon" rel="noopener noreferrer" data-i18n="code">Code source</a> · <span id="ver">v2.0.0</span></p>
       </div>
     </div>
   </section>
