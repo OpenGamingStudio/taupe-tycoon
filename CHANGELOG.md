@@ -2,6 +2,14 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.5.0 — 2026-11-18 (V4 « TYCOON » 3/3 : chaque achat passif se voit dans la mine)
+- Foreuse, Machine à creuser, Mine et Excavatrice ne sont plus des taupes : ce sont de vraies machines animées dans les galeries (foreuse à vapeur avec mèche et fumée, tunnelier avec tapis de déblais, puits de mine avec benne qui monte et descend, excavatrice au bras articulé). Apprentie et Taupinière gardent leurs taupes ouvrières.
+- Plusieurs exemplaires s'affichent avec le nombre possédé (plafonné par la place sur l'écran, une machine représente alors un groupe). Le palier (10 / 25 / 50 / 100) change l'allure : lampe, fanion, halo, dorures.
+- Les 4 bonus permanents ont leur objet dans le décor : lunettes qui scintillent, pelle d'or de plus en plus grande, tas de pièces (Pécule), sacs de toile (Sacoche).
+- À l'achat : la machine sort de terre avec un éclair, une onde et des éclats, un « +N » en sort ; ensuite chaque machine livre à son tour un « +N » de sa vraie production. Mouvement réduit : image fixe, sans éclats.
+- Galeries resserrées sous une taupe un peu plus petite pour que tout le décor reste visible ; au plus 14 taupes dessinées (performances).
+- Inventaire complet dans TAUPE-V4.md.
+
 ## 2.4.0 — 2026-11-18 (V4 « TYCOON » 2/3 : plein écran de jeu et menus repliables)
 - La scène (mine, taupes, effets) occupe tout l'écran ; en-tête réduit à un compteur compact (terre, /s, gemmes, progression).
 - Les menus passent dans un dock de 5 boutons en bas (Mine, Rebirth, Succès, Stats, Options). Chaque menu est un tiroir qui s'ouvre et se ferme avec animation : bottom-sheet sur mobile, panneau latéral sur grand écran/paysage. Un seul ouvert à la fois, fermé par défaut sur une nouvelle partie ; bouton ×, Échap et clic hors du tiroir ferment (creuser ou cueillir une pépite ne le ferme pas) ; le dernier menu ouvert est mémorisé (`opts.panel`, anciennes sauvegardes = fermé).

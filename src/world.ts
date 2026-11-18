@@ -6,6 +6,7 @@
  */
 import { SPR_H, SPR_W, chest, sprites } from './sprites';
 import { crewCap, distribute } from './crew-math';
+import { MACHINE_KINDS, MACHINE_W, drawMachine, drawPerm, shownMachines, tierOf } from './machines';
 
 export interface WorldHooks {
   /** Une ouvrière vide sa pépite : position CSS dans la scène, gain réel représenté, type. */
@@ -18,6 +19,8 @@ type St = 'fall' | 'walk' | 'dig' | 'carry' | 'drop';
 interface Agent {
   kind: number; w: number; lane: number; x: number; y: number; vy: number; dir: 1 | -1; st: St; t: number; tx: number; hop: number; ph: number;
 }
+interface Mach { kind: number; i: number; lane: number; x: number; born: number; t: number; w: number; pulse: number }
+interface Ring { x: number; y: number; t: number; c: string }
 interface Bit { x: number; y: number; vx: number; vy: number; life: number; c: string }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
@@ -32,6 +35,7 @@ export interface World {
   setDepth(d: number): void;
   setReduced(r: boolean): void;
   setLevel(n: number): void;
+  setPerms(levels: number[], animate: boolean): void;
   kick(power: number): void;
   resize(): void;
 }
@@ -45,11 +49,15 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
   let counts: number[] = [0, 0, 0, 0, 0, 0];
   let rates: number[] = [0, 0, 0, 0, 0, 0];
   let agents: Agent[] = [];
+  let machines: Mach[] = [];
+  let perms: number[] = [0, 0, 0, 0];
+  const rings: Ring[] = [];
+  const HOME = [0.12, 0.5, 0.78, 0.3];
   const bits: Bit[] = [];
   let camX = 0, camV = 0;
   let last = 0, clock = 0;
-  const laneY = (l: number) => Math.round(H * 0.36 + l * (LANE_H + 3));
-  const laneCount = () => Math.max(1, Math.min(4, Math.floor((H * 0.9 - H * 0.36) / (LANE_H + 3))));
+  const laneY = (l: number) => Math.round(H * 0.34 + l * (LANE_H + 3));
+  const laneCount = () => Math.max(1, Math.min(4, Math.floor((H * 0.575 - H * 0.34) / (LANE_H + 3))));
 
   // poussière : deux couches de profondeur
   const motes = Array.from({ length: 28 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random() < 0.5 ? 1 : 2, s: Math.random() * 6.3 }));
@@ -62,7 +70,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     H = Math.max(40, Math.ceil(r.height / PIX));
     if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
     lanes = laneCount();
-    cap = Math.min(crewCap(W, H), lanes * Math.max(3, Math.floor(W / 22)));
+    cap = Math.min(crewCap(W, H), 14, lanes * Math.max(3, Math.floor(W / 22)));
     layout(false);
   }
 
@@ -71,7 +79,8 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
 
   /** Recale les agents sur le plafond et les galeries actuels, sans faire réapparaître personne. */
   function layout(animate: boolean, added: number[] = []) {
-    const shown = distribute(counts, cap);
+    const shown = distribute(counts.map((n, k) => (k < 2 ? n : 0)), cap);
+    layoutMachines(animate, added);
     const next: Agent[] = [];
     for (let k = 0; k < shown.length; k++) {
       const mine = agents.filter((a) => a.kind === k);
@@ -92,6 +101,47 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     // les taupes sans galerie n'existent plus : une galerie reçoit au plus ~W/20 taupes (la répartition est déjà plafonnée)
   }
 
+  const PERIOD = 6; // secondes entre deux livraisons d'une machine
+  /** Une machine par type possédé (plusieurs avec le nombre, plafonnées par la place), posées sur les galeries. */
+  function layoutMachines(animate: boolean, added: number[]) {
+    const room = Math.max(1, lanes * Math.floor((W - 40) / 30));
+    const next: Mach[] = [];
+    MACHINE_KINDS.forEach((k, ki) => {
+      const n = shownMachines(counts[k] ?? 0, Math.max(1, Math.floor(room / 2)));
+      for (let i = 0; i < n; i++) {
+        const old = machines.find((m) => m.kind === k && m.i === i);
+        const lane = (ki + i) % lanes;
+        const x = 18 + ((HOME[ki] + i * 0.37) % 1) * Math.max(8, W - 36 - MACHINE_W[ki]);
+        const m: Mach = old ?? { kind: k, i, lane, x, born: -9, t: rnd(1, PERIOD), w: 1, pulse: 0 };
+        m.lane = lane; m.x = x; m.w = counts[k] / n;
+        if (!old && animate && added[k] > 0) m.born = clock;
+        next.push(m);
+      }
+    });
+    machines = next;
+  }
+  const ringAt = (x: number, y: number, c: string) => { if (!reduced) rings.push({ x, y, t: 0, c }); };
+
+  function setPerms(levels: number[], animate: boolean) {
+    levels.forEach((l, i) => {
+      if (animate && l > (perms[i] ?? 0)) {
+        const [px, py] = permPos(i);
+        spark(px + 4, py - 6, 14, ['#ffd84a', '#fff', '#20c5c0']); ringAt(px + 4, py - 4, '#ffd84a');
+        hooks.arrive(...css(px + 4, py - 6), l - (perms[i] ?? 0), 10 + i);
+      }
+    });
+    perms = levels.slice(0, 4);
+  }
+  /** Emplacement de chaque bonus permanent (coin bas gauche) : près des coffres, dans la terre au-dessus des galeries. */
+  function permPos(i: number): [number, number] {
+    const l = lanes - 1;
+    const cx = chestX(l), side = cx < W / 2 ? 1 : -1;
+    if (i === 0) return [Math.round(W * 0.2), Math.round(H * 0.28)];
+    if (i === 1) return [Math.round(W * 0.74), Math.round(H * 0.28)];
+    if (i === 2) return [cx + (side > 0 ? 17 : -22), laneY(l) + LANE_H];
+    return [chestX(0) + (chestX(0) < W / 2 ? 17 : -22) + (lanes > 1 ? 0 : 12), laneY(0) + LANE_H];
+  }
+
   function setCrew(c: number[], r: number[], animate: boolean) {
     const added = c.map((n, i) => Math.max(0, n - (counts[i] ?? 0)));
     counts = c.slice(); rates = r.slice();
@@ -99,6 +149,15 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     if (animate) {
       added.forEach((n, k) => {
         if (n <= 0) return;
+        if (k >= 2) {
+          const m = machines.filter((q) => q.kind === k).pop();
+          if (m) {
+            const [cx, cy] = css(m.x + MACHINE_W[k - 2] / 2, laneY(m.lane) + 2);
+            spark(m.x + 10, laneY(m.lane) + LANE_H - 6, 16, ['#ffc21a', '#fff', '#8a5a2b', '#20c5c0']); ringAt(m.x + 10, laneY(m.lane) + LANE_H - 4, '#fff');
+            hooks.arrive(cx, cy, n, k);
+          }
+          return;
+        }
         const mine = agents.filter((a) => a.kind === k);
         mine.forEach((a) => { a.hop = 0.5; });
         const a = mine[mine.length - 1];
@@ -157,6 +216,17 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
         }
       }
     }
+    for (const m of machines) {
+      m.t -= dt * (reduced ? 0.7 : 1);
+      if (m.pulse > 0) m.pulse = Math.max(0, m.pulse - dt * 3);
+      if (m.t <= 0 && clock - m.born > 0.8) {
+        m.t = PERIOD * rnd(0.85, 1.15); m.pulse = 1;
+        const [cx, cy] = css(m.x + MACHINE_W[m.kind - 2] / 2, laneY(m.lane));
+        spark(m.x + MACHINE_W[m.kind - 2] / 2, laneY(m.lane) + 2, 4, ['#ffc21a', '#fff3b0']);
+        hooks.deliver(cx, cy, ((rates[m.kind] ?? 0) / Math.max(1, counts[m.kind] / m.w)) * PERIOD, m.kind);
+      }
+    }
+    for (let i = rings.length - 1; i >= 0; i--) { rings[i].t += dt; if (rings[i].t > 0.6) rings.splice(i, 1); }
     for (let i = bits.length - 1; i >= 0; i--) {
       const b = bits[i];
       b.life -= dt; b.vy += 120 * dt; b.x += b.vx * dt; b.y += b.vy * dt;
@@ -227,7 +297,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     }
 
     // vers dans la terre, au-dessus de la première galerie
-    const wy = Math.round(H * 0.3);
+    const wy = Math.round(H * 0.28);
     for (let w = 0; w < 2; w++) {
       const head = ((tt * (calm ? 0 : 4 + w * 2) + w * 70) % (W + 40)) - 20;
       for (let i = 0; i < 7; i++) {
@@ -240,6 +310,14 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     // teinte d'ambiance (aplat translucide) : chaque palier assombrit et colore la galerie
     const lv = Math.min(1, level / 8);
     rect(TINT[depth], 0, 0, W, H, TINT_A[depth] + lv * 0.08 + (calm ? 0 : Math.sin(tt * 0.12) * 0.03));
+
+    // bonus permanents et machines (devant les galeries, derrière les ouvrières)
+    for (let i = 0; i < 4; i++) { const [px, py] = permPos(i); drawPerm(g, i, perms[i] ?? 0, px, py, tt, calm); }
+    for (const m of machines.slice().sort((a, b) => a.lane - b.lane)) {
+      const rise = calm ? 1 : Math.min(1, Math.max(0, (clock - m.born) / 0.8));
+      drawMachine(g, m.kind, Math.round(m.x), laneY(m.lane) + LANE_H, tt, tierOf(counts[m.kind] ?? 0), calm, rise, m.pulse);
+    }
+    for (const rg of rings) { const k = rg.t / 0.6, rr = 3 + k * 16; g.globalAlpha = 1 - k; g.fillStyle = rg.c; g.fillRect(Math.round(rg.x - rr), Math.round(rg.y - rr), Math.round(rr * 2), 1); g.fillRect(Math.round(rg.x - rr), Math.round(rg.y + rr), Math.round(rr * 2), 1); g.fillRect(Math.round(rg.x - rr), Math.round(rg.y - rr), 1, Math.round(rr * 2)); g.fillRect(Math.round(rg.x + rr), Math.round(rg.y - rr), 1, Math.round(rr * 2)); g.globalAlpha = 1; }
 
     // ouvrières
     const ordered = agents.slice().sort((a, b) => a.y - b.y);
@@ -297,6 +375,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     setDepth(d) { depth = d; },
     setReduced(r) { reduced = r; },
     setLevel(n) { level = n; },
+    setPerms,
     kick(p) { camV += (Math.random() < 0.5 ? -1 : 1) * Math.min(p, 40); },
     resize,
   };
