@@ -8,6 +8,8 @@ export interface Options {
   lang: 'fr' | 'en'; reduced: boolean; mode: 1 | 10 | 'max'; sound: boolean; seen: number;
   volume: number; // 0 à 100
   ambient: boolean;
+  music: boolean;
+  musicVolume: number; // 0 à 100
 }
 export interface Saved { s: State; at: number; opts: Options }
 
@@ -49,7 +51,9 @@ export function sanitize(raw: unknown): Saved | null {
     seen: int(o.seen, 1 << 20),
     mode: o.mode === 10 || o.mode === 'max' ? o.mode : 1,
     volume: typeof o.volume === 'number' && isFinite(o.volume) ? Math.max(0, Math.min(100, Math.round(o.volume))) : 60,
-    ambient: o.ambient === true,
+    ambient: o.ambient !== false, // V3 : activée par défaut (un choix « désactivé » déjà fait est gardé)
+    music: o.music !== false,
+    musicVolume: typeof o.musicVolume === 'number' && isFinite(o.musicVolume) ? Math.max(0, Math.min(100, Math.round(o.musicVolume))) : 35,
   };
   return { s, at: Math.min(num(r.at, Date.now(), Date.now()), Date.now()), opts };
 }

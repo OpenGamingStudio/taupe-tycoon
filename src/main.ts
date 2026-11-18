@@ -20,10 +20,12 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const loaded = load();
 let s: State = loaded?.s ?? newState();
-const opts: Options = loaded?.opts ?? { lang: defaultLang(), reduced: false, mode: 1, sound: true, seen: 0, volume: 60, ambient: false };
+const opts: Options = loaded?.opts ?? { lang: defaultLang(), reduced: false, mode: 1, sound: true, seen: 0, volume: 60, ambient: true, music: true, musicVolume: 35 };
 sfx.setEnabled(opts.sound);
 sfx.setVolume(opts.volume);
 sfx.setAmbient(opts.ambient);
+sfx.setMusic(opts.music);
+sfx.setMusicVolume(opts.musicVolume);
 // Aucun son avant la première interaction : le contexte audio naît au premier geste.
 for (const ev of ['pointerdown', 'keydown'] as const) document.addEventListener(ev, () => sfx.unlock(), { capture: true });
 // Plusieurs onglets : le plus récent écrit, l'ancien arrête de sauvegarder (sinon il écraserait la partie).
@@ -63,11 +65,14 @@ ids.forEach((id, i) => {
   const r = mkRow(id, i - 1);
   r.el.addEventListener('click', () => {
     if (r.el.getAttribute('aria-disabled') === 'true') { sfx.deny(); return; }
+    const before = r.kind < 0 ? s.shovel : s.gens[r.kind];
     const n = buyN(s, r.kind, opts.mode);
     if (n > 0) {
       const lvl = r.kind < 0 ? s.shovel : s.gens[r.kind];
       say(t('bought', { name: t(id), n: lvl }));
       bought(r, false);
+      if (milestoneMult(lvl) > milestoneMult(before)) milestoneHit(r, lvl);
+      if (r.kind >= 0) sfx.moleArrive();
     }
   });
   rows.push(r);
@@ -82,6 +87,12 @@ PERMS.forEach((p, i) => {
   permRows.push(r);
   permsUl.append(r.el.parentElement!);
 });
+
+/** Un palier de niveaux est franchi : fanfare et annonce. */
+function milestoneHit(r: Row, level: number) {
+  sfx.fanfare();
+  notify(`${t('mileBanner')} ${t(r.kind < 0 ? 'mileSubShovel' : 'mileSub', { name: t(r.id), n: level, m: milestoneMult(level) })}`);
+}
 
 function bought(r: Row, perm: boolean) {
   if (perm) sfx.upgrade(); else sfx.buy();
@@ -165,6 +176,7 @@ function render() {
   $('mole').setAttribute('aria-label', t('digLabel', { n: f(power) }));
   const st = $('stage');
   const d = depthOf();
+  sfx.setDepth(d);
   if (!st.classList.contains('depth-' + d)) st.className = st.className.replace(/depth-\d/, 'depth-' + d);
   const gl = goal();
   $('goal').setAttribute('aria-valuenow', String(gl.pct));
@@ -239,6 +251,12 @@ function render() {
   $('opt-sound').setAttribute('aria-pressed', String(opts.sound));
   $('opt-ambient').textContent = `${t('ambient')} : ${t(opts.ambient ? 'on' : 'off')}`;
   $('opt-ambient').setAttribute('aria-pressed', String(opts.ambient));
+  $('opt-music').textContent = `${t('music')} : ${t(opts.music ? 'on' : 'off')}`;
+  $('opt-music').setAttribute('aria-pressed', String(opts.music));
+  const mvol = $<HTMLInputElement>('opt-mvol');
+  if (document.activeElement !== mvol) mvol.value = String(opts.musicVolume);
+  mvol.setAttribute('aria-valuetext', `${opts.musicVolume} %`);
+  setText($('mvol-v'), `${opts.musicVolume} %`);
   const vol = $<HTMLInputElement>('opt-vol');
   if (document.activeElement !== vol) vol.value = String(opts.volume);
   vol.setAttribute('aria-valuetext', `${opts.volume} %`);
@@ -310,6 +328,7 @@ function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
   combo = now - lastDigAt < 450 ? combo + 1 : 0;
   lastDigAt = now;
   sfx.dig(combo);
+  if (combo === 10 || combo === 25 || combo === 50 || combo === 100) sfx.comboTier(combo === 10 ? 0 : combo === 25 ? 1 : combo === 50 ? 2 : 3);
   const box = fx.getBoundingClientRect();
   const hasPos = 'clientX' in e && (e.clientX || e.clientY);
   const x = hasPos ? (e as MouseEvent).clientX - box.left : box.width / 2;
@@ -468,6 +487,10 @@ $('opt-sound').addEventListener('click', toggleSound);
 $('snd').addEventListener('click', toggleSound);
 $('opt-motion').addEventListener('click', () => { opts.reduced = !opts.reduced; render(); });
 $('opt-ambient').addEventListener('click', () => { opts.ambient = !opts.ambient; sfx.setAmbient(opts.ambient); persist(); render(); });
+$('opt-music').addEventListener('click', () => { opts.music = !opts.music; sfx.setMusic(opts.music); persist(); render(); });
+const mvolEl = $<HTMLInputElement>('opt-mvol');
+mvolEl.addEventListener('input', () => { opts.musicVolume = Math.max(0, Math.min(100, Math.round(Number(mvolEl.value) / 5) * 5)); sfx.setMusicVolume(opts.musicVolume); render(); });
+mvolEl.addEventListener('change', persist);
 const volEl = $<HTMLInputElement>('opt-vol');
 volEl.addEventListener('input', () => { opts.volume = Math.max(0, Math.min(100, Math.round(Number(volEl.value) / 5) * 5)); sfx.setVolume(opts.volume); render(); });
 volEl.addEventListener('change', () => { sfx.volumeTick(); persist(); });

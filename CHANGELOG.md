@@ -2,6 +2,11 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.2.0 — 2026-11-18 (V3 « JUICE »)
+### Sons et musique
+- Sound design refait : coup de pelle (trois sons au hasard, hauteur variable, tintement de pierre précieuse), ramassage en gamme pentatonique montante, fanfare de palier, arrivée d'une taupe, accord de combo, refus à deux notes.
+- Musique de fond synthétisée (boucle de 4 mesures, très basse, tonalité qui change avec la profondeur) avec son propre bouton et son propre volume ; l'ambiance sonore (vent, gouttes, cristaux) est activée par défaut. Les sauvegardes existantes sont migrées (champs absents = valeurs par défaut).
+
 ## 2.1.0 — 2026-11-18
 ### Sons
 - Moteur sonore refait : coup de pelle (choc + gravier, hauteur aléatoire), achat, amélioration permanente, succès, pépite, rebirth, ambiance de galerie (optionnelle, désactivée par défaut).
