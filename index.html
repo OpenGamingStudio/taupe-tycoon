@@ -18,6 +18,8 @@
 <main id="app" class="fixed inset-0 grid grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 overflow-hidden px-[max(0.75rem,env(safe-area-inset-left))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] wide:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] wide:grid-rows-1">
   <section id="stage" class="stage depth-0 relative flex min-h-0 flex-col overflow-hidden rounded-3xl border-[3px] border-ink shadow-hard" aria-label="Terrain">
     <svg id="scene" class="absolute inset-0 h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"></svg>
+    <canvas id="world" class="world absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+    <div id="stage-fx" class="pointer-events-none absolute inset-0 z-[15] overflow-hidden" aria-hidden="true"></div>
     <header class="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 p-2">
       <h1 class="logo col-span-2 hidden text-4xl wide:block" data-i18n="title">Taupe Tycoon</h1>
       <h1 class="sr-only wide:hidden" data-i18n="title">Taupe Tycoon</h1>

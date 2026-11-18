@@ -1,6 +1,6 @@
 import './style.css';
 import {
-  GENS, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
+  GENS, MILESTONES, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
   NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME,
 } from './config';
 import { CHIPS, ICONS, MOLE, SCENE, icon } from './art';
@@ -9,6 +9,7 @@ import { Lang, setLang, t } from './i18n';
 import { Options, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
 import * as sfx from './sound';
 import { VERSION } from './version';
+import { createWorld } from './world';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
 import {
   State, applyEvent, applyOffline, buyN, buyPerm, click, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
@@ -134,6 +135,31 @@ function goal() {
   return { pct: Math.max(0, Math.min(100, Math.floor(((s.runTotal - from) / (to - from)) * 100))), first: s.rebirths === 0 && g < 1 };
 }
 
+// ---------- décor vivant et petites taupes ----------
+const stageFx = $('stage-fx');
+let floatAt = 0, deliverSnd = 0;
+/** Petit texte flottant « +N » dans la scène (DOM, une animation CSS par texte, nombre borné). */
+function floater(x: number, y: number, text: string, cls: string) {
+  if (reducedMotion() && cls === 'fx-s') return;
+  while (stageFx.children.length > 24) stageFx.firstElementChild!.remove();
+  const el = document.createElement('span');
+  el.className = 'fx ' + cls;
+  el.textContent = text;
+  el.style.left = `${x}px`; el.style.top = `${y}px`;
+  stageFx.append(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+const world = createWorld($<HTMLCanvasElement>('world'), {
+  deliver(x, y, gain) {
+    const now = performance.now();
+    if (now - floatAt > 260) { floatAt = now; floater(x, y - 18, '+' + f(gain), 'fx-s'); }
+    if (now - deliverSnd > 300) { deliverSnd = now; sfx.pickup(0); }
+  },
+  arrive(x, y, n) {
+    floater(x, y - 24, '+' + f(n), 'fx-n');
+  },
+});
+
 let ownedKey = '';
 let ownedPrev: number[] = [];
 function renderOwned() {
@@ -151,6 +177,8 @@ function renderOwned() {
     if ((ownedPrev[i] ?? 0) < s.gens[i] && ownedPrev.length) li.classList.add('pop');
     ul.append(li);
   });
+  const grew = ownedPrev.length > 0 && s.gens.some((n, i) => n > (ownedPrev[i] ?? 0));
+  world.setCrew(s.gens, GENS.map((_, i) => genProd(s, i)), grew);
   ownedPrev = s.gens.slice();
 }
 
@@ -177,6 +205,10 @@ function render() {
   const st = $('stage');
   const d = depthOf();
   sfx.setDepth(d);
+  world.setDepth(d);
+  world.setReduced(reducedMotion());
+  world.setRates(GENS.map((_, i) => genProd(s, i)));
+  world.setLevel(s.gens.reduce((a, n) => a + MILESTONES.filter((m) => n >= m).length, 0));
   if (!st.classList.contains('depth-' + d)) st.className = st.className.replace(/depth-\d/, 'depth-' + d);
   const gl = goal();
   $('goal').setAttribute('aria-valuenow', String(gl.pct));
@@ -338,6 +370,7 @@ function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
   mole.classList.remove('hit');
   void mole.offsetWidth;
   mole.classList.add('hit');
+  world.kick(5);
   if (s.clicks % 50 === 0 && now - cheerAt > 2000) { cheerAt = now; mood('happy', 800); }
   setText($('hud-dirt'), f(s.dirt));
 }
