@@ -6,6 +6,10 @@ Versionnage sémantique. La version courante est affichée dans le jeu (Options)
 ### Sons et musique
 - Sound design refait : coup de pelle (trois sons au hasard, hauteur variable, tintement de pierre précieuse), ramassage en gamme pentatonique montante, fanfare de palier, arrivée d'une taupe, accord de combo, refus à deux notes.
 - Musique de fond synthétisée (boucle de 4 mesures, très basse, tonalité qui change avec la profondeur) avec son propre bouton et son propre volume ; l'ambiance sonore (vent, gouttes, cristaux) est activée par défaut. Les sauvegardes existantes sont migrées (champs absents = valeurs par défaut).
+### Décor vivant et équipe de fond
+- Chaque taupe ouvrière achetée apparaît en pixel-art dans des galeries du décor : elle tombe en rebondissant, creuse, rapporte une pépite au coffre (« +N » flottant, étincelles) puis repart ; casque et outil selon le type (6 types). Plafond d'affichage selon la taille de l'écran (24 au plus, moins sur mobile), au-delà une taupe affichée représente un groupe (petite bande de taupes).
+- Décor : rayons de lumière, poussière en deux couches (parallaxe qui réagit aux coups de pelle), cristaux qui pulsent, vers, lampes suspendues ; la teinte et le nombre de cristaux suivent la profondeur et les paliers.
+- Canvas en pixel-art minuscule, 30 images/s, à l'arrêt quand la page est cachée ; mouvement réduit : taupes ralenties, sans étincelles, poussière ni balancement.
 
 ## 2.1.0 — 2026-11-18
 ### Sons

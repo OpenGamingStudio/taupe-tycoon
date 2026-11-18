@@ -70,11 +70,11 @@ for (const w of [320, 390, 1440]) {
   const q = await open(390, 844, mk({ gens: [7, 0, 0, 0, 0, 0], dirt: 123 }, Date.now(), { sound: false }));
   await q.click('#tab-options'); await wait(200);
   await q.$eval('#opt-vol', (e) => { e.value = '35'; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); });
-  await q.click('#opt-ambient'); await wait(150);
+  await q.click('#opt-ambient'); await wait(150); // activée par défaut en V3 : le clic la coupe
   check('volume affiché', (await q.$eval('#vol-v', (e) => e.textContent)) === '35 %');
-  check('ambiance activée (aria-pressed)', (await q.$eval('#opt-ambient', (e) => e.getAttribute('aria-pressed'))) === 'true');
+  check('ambiance coupée (aria-pressed)', (await q.$eval('#opt-ambient', (e) => e.getAttribute('aria-pressed'))) === 'false');
   const saved = await q.evaluate(() => { window.dispatchEvent(new Event('pagehide')); return JSON.parse(localStorage.getItem('taupe-tycoon-save')).opts; });
-  check('volume + ambiance persistés', saved.volume === 35 && saved.ambient === true && saved.sound === false, JSON.stringify(saved));
+  check('volume + ambiance persistés', saved.volume === 35 && saved.ambient === false && saved.music === true && saved.sound === false, JSON.stringify(saved));
   await q.click('#io-export'); await wait(200);
   const text = await q.$eval('#io-text', (e) => e.value);
   check('export "TT1."', text.startsWith('TT1.'), text.slice(0, 20));
