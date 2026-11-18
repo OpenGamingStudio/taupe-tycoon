@@ -88,14 +88,14 @@ html, body {
 
   /* progression */
   .goal { @apply overflow-hidden rounded-full border-[3px] border-ink bg-cream; box-sizing: content-box; height: 8px; }
-  .goal-fill { @apply block h-full bg-gem; width: 0; transition: width 0.25s linear; }
+  .goal-fill { @apply block h-full; background: #0f9490; width: 0; transition: width 0.25s linear; }
 
   /* V3 : dopamine et interface */
   .hud { background: var(--plank); color: #fff0c4; }
   .hud .sr-only { color: inherit; }
   .hud.bump, #ico-gem.bump { animation: bump 0.22s ease-out; }
   .goal-fill { @apply relative; }
-  .goal-fill::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; background: rgba(255,255,255,0.55); animation: shine 2.2s ease-in-out infinite; }
+  .goal-fill::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; background: rgba(255,255,255,0.3); animation: shine 2.2s ease-in-out infinite; }
   .shake1 { animation: shake1 0.28s linear; }
   .shake2 { animation: shake2 0.4s linear; }
   .shake3 { animation: shake2 0.52s linear; --amp: 1.6; }

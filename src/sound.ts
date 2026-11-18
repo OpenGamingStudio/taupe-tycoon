@@ -246,13 +246,21 @@ function stopAmbient() {
   ambNode = null;
 }
 
-// ---------- musique : boucle de 4 mesures, douce et rythmée, programmée un peu à l'avance ----------
+// ---------- musique : boucle de 8 mesures (deux parties), douce et rythmée, programmée un peu à l'avance ----------
 // Accords (racine en Hz, tierce, quinte) par profondeur : clair en surface, plus sombre au fond.
 const CHORDS: number[][][] = [
   [[130.8, 4, 7], [110, 3, 7], [87.3, 4, 7], [98, 4, 7]], // surface : Do, La m, Fa, Sol
   [[146.8, 3, 7], [116.5, 4, 7], [87.3, 4, 7], [130.8, 4, 7]], // galeries : Ré m, Si b, Fa, Do
   [[110, 3, 7], [87.3, 4, 11], [130.8, 4, 7], [82.4, 3, 7]], // cristaux : La m, Fa maj7, Do, Mi m
 ];
+// seconde partie (mesures 5 à 8) : autre progression et arpège inversé, avec une petite mélodie : la boucle dure ~16 s au lieu de 8
+const CHORDS_B: number[][][] = [
+  [[110, 3, 7], [87.3, 4, 7], [130.8, 4, 7], [98, 4, 10]], // surface : La m, Fa, Do, Sol7
+  [[116.5, 4, 7], [130.8, 4, 7], [146.8, 3, 7], [110, 4, 7]], // galeries : Si b, Do, Ré m, La
+  [[87.3, 4, 11], [82.4, 3, 7], [110, 3, 7], [98, 4, 7]], // cristaux : Fa maj7, Mi m, La m, Sol
+];
+const ARP_B = [0, 1, 2, 3, 2, 1, 3, 2];
+const MELODY_B = [[12, 7], [9, 7], [12, 16], [14, 12]]; // deux notes par mesure (temps 1 et 3)
 const BPM = [92, 98, 104];
 const ARP = [0, 2, 1, 2, 3, 2, 1, 2];
 let musicTimer = 0;
@@ -266,26 +274,30 @@ function startMusic() {
   musicTimer = window.setInterval(() => {
     if (!ctx || ctx.state !== 'running' || !musicBus) return;
     if (nextStep < ctx.currentTime) nextStep = ctx.currentTime + 0.05;
-    while (nextStep < ctx.currentTime + 0.4) { playStep(ctx, stepNo, nextStep); nextStep += 60 / BPM[deep] / 2; stepNo = (stepNo + 1) % 32; }
+    while (nextStep < ctx.currentTime + 0.4) { playStep(ctx, stepNo, nextStep); nextStep += 60 / BPM[deep] / 2; stepNo = (stepNo + 1) % 64; }
   }, 100);
 }
 function playStep(a: AudioContext, n: number, at: number) {
   const bus = musicBus!;
-  const ch = CHORDS[deep][Math.floor(n / 8)];
+  const partB = n >= 32;
+  const bar = Math.floor((n % 32) / 8);
+  const ch = (partB ? CHORDS_B : CHORDS)[deep][bar];
   const step = n % 8;
   const d = at - a.currentTime;
   const notes = [0, ch[1], ch[2], 12];
   // basse sur les temps forts
-  if (step === 0 || step === 3 || step === 4 || (step === 6 && Math.floor(n / 8) % 2 === 1)) tone(a, ch[0] / 2, ch[0] / 2, 0.28, 'triangle', 0.55, d, bus);
+  if (step === 0 || step === 3 || step === 4 || (step === 6 && bar % 2 === 1)) tone(a, ch[0] / 2, ch[0] / 2, 0.28, 'triangle', 0.55, d, bus);
   // grosse caisse douce et petit charleston sur les contretemps
   if (step === 0 || step === 4) tone(a, 110, 45, 0.16, 'sine', 0.7, d, bus);
   if (step % 2 === 1) noise(a, 'highpass', 7000, 9000, 0.04, 0.12, d, 1, bus);
   // arpège pincé, une note sur trois laissée muette de temps en temps pour respirer
   if (!(step === 7 && n % 16 === 15)) {
-    const f = hz(ch[0] * 2, notes[ARP[step]]);
+    const f = hz(ch[0] * 2, notes[(partB ? ARP_B : ARP)[step]]);
     tone(a, f, f, 0.22, 'triangle', 0.4, d, bus);
     if (deep === 2 && step % 4 === 2) tone(a, f * 2, f * 2, 0.3, 'sine', 0.15, d, bus); // reflets de cristal
   }
+  // mélodie douce de la seconde partie
+  if (partB && (step === 0 || step === 4)) { const mf = hz(ch[0], MELODY_B[bar][step / 4]); tone(a, mf * 2, mf * 2, 0.45, 'sine', 0.22, d, bus); }
   // nappe sur la première croche de la mesure à partir des galeries
   if (step === 0 && deep >= 1) {
     tone(a, ch[0], ch[0], 60 / BPM[deep] * 4, 'sine', 0.25, d, bus);
