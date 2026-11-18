@@ -29,6 +29,8 @@
     </header>
         <div class="relative z-10 min-h-0 flex-1">
       <p id="hint" class="hint pointer-events-none absolute left-1/2 top-1 z-20 w-max max-w-[calc(100%-1rem)] -translate-x-1/2" hidden></p>
+      <ul id="buffs" class="pointer-events-none absolute left-1 top-1 z-20 grid gap-1"></ul>
+      <button id="nugget" type="button" class="nugget" hidden></button>
       <div id="fx" class="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true"></div>
       <button id="mole" type="button" data-mood="idle" class="mole absolute inset-x-0 bottom-[-1.75rem] mx-auto h-[calc(100%+1.75rem)] max-h-[26rem] w-full max-w-[26rem] touch-manipulation" aria-label="Creuser">
         <svg id="mole-svg" viewBox="0 0 240 240" class="h-full w-full" aria-hidden="true" focusable="false"></svg>
@@ -40,9 +42,10 @@
   </section>
 
   <section class="panel flex min-h-0 flex-col overflow-hidden p-0" aria-label="Menu">
-    <div role="tablist" class="grid grid-cols-3 gap-2 p-2" aria-label="Sections">
+    <div role="tablist" class="grid grid-cols-4 gap-1.5 p-2 min-[420px]:gap-2" aria-label="Sections">
       <button id="tab-dig" role="tab" type="button" class="tab" aria-controls="p-dig" aria-selected="true"><span class="tab-ico" data-ico="shovel"></span><span data-i18n="tabDig">Creuser</span></button>
       <button id="tab-rebirth" role="tab" type="button" class="tab" aria-controls="p-rebirth" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="gem"></span><span data-i18n="tabRebirth">Rebirth</span><span id="rb-dot" class="dot" hidden><span class="sr-only" data-i18n="ready">(prêt)</span></span></button>
+      <button id="tab-trophies" role="tab" type="button" class="tab" aria-controls="p-trophies" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="trophy"></span><span data-i18n="tabTrophies">Succès</span></button>
       <button id="tab-options" role="tab" type="button" class="tab" aria-controls="p-options" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="sacoche"></span><span data-i18n="tabOptions">Options</span></button>
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2">
@@ -67,15 +70,36 @@
         <h3 class="mt-4 text-xl font-bold" data-i18n="shopTitle">Boutique permanente</h3>
         <ul id="perms" class="mt-2 grid gap-2"></ul>
       </div>
+      <div id="p-trophies" role="tabpanel" aria-labelledby="tab-trophies" tabindex="-1" hidden>
+        <h2 class="text-2xl font-bold" data-i18n="trophyTitle">Succès</h2>
+        <p id="tr-sum" class="mt-1 text-base font-bold"></p>
+        <ul id="trophies" class="mt-2 grid gap-2"></ul>
+        <h3 class="mt-4 text-xl font-bold" data-i18n="statsTitle">Statistiques</h3>
+        <dl id="stats" class="mt-2 grid grid-cols-2 gap-2 text-base"></dl>
+      </div>
       <div id="p-options" role="tabpanel" aria-labelledby="tab-options" tabindex="-1" hidden class="grid gap-3">
         <button id="opt-sound" type="button" class="btn w-full justify-between" aria-pressed="true"></button>
+        <div class="note grid gap-1"><label for="opt-vol" class="flex justify-between text-lg font-bold"><span data-i18n="volume">Volume</span><span id="vol-v"></span></label><input id="opt-vol" type="range" min="0" max="100" step="5" class="vol w-full"></div>
+        <button id="opt-ambient" type="button" class="btn w-full justify-between" aria-pressed="false"></button>
         <button id="opt-lang" type="button" class="btn w-full justify-between"></button>
         <button id="opt-motion" type="button" class="btn w-full justify-between" aria-pressed="false"></button>
+        <div class="note grid gap-2">
+          <label for="io-text" class="text-lg font-bold" data-i18n="ioLabel">Texte de sauvegarde</label>
+          <textarea id="io-text" class="io" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+          <div class="grid grid-cols-2 gap-2"><button id="io-export" type="button" class="btn" data-i18n="exportBtn">Exporter</button><button id="io-import" type="button" class="btn" data-i18n="importBtn">Importer</button></div>
+        </div>
         <button id="opt-reset" type="button" class="btn w-full" data-i18n="reset">Effacer la sauvegarde</button>
         <p class="flex flex-wrap items-center gap-x-2 text-base"><span data-i18n="about"></span> <a class="inline-flex min-h-[44px] min-w-[44px] items-center whitespace-nowrap underline" href="https://github.com/OpenGamingStudio/taupe-tycoon" rel="noopener noreferrer" data-i18n="code">Code source</a> · <span id="ver">v2.0.0</span></p>
       </div>
     </div>
   </section>
+  <dialog id="welcome" class="panel welcome" aria-labelledby="w-title">
+    <h2 id="w-title" class="text-2xl font-bold" data-i18n="welcomeTitle">Bon retour !</h2>
+    <p id="w-text" class="mt-2 text-lg"></p>
+    <p id="w-gain" class="mt-1 text-3xl font-bold"></p>
+    <p id="w-cap" class="mt-2 text-base"></p>
+    <button id="w-ok" type="button" class="btn btn-big mt-3 w-full" data-i18n="welcomeOk">Super !</button>
+  </dialog>
   <div id="live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 </main>
 </body>

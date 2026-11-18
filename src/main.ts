@@ -1,22 +1,34 @@
 import './style.css';
-import { GENS, PERMS, PERM_CLICK_BONUS, PERM_PROD_BONUS, SHOVEL_BASE, SHOVEL_POWER, GEM_DIV, PROD_EXP } from './config';
+import {
+  GENS, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
+  NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME,
+} from './config';
 import { CHIPS, ICONS, MOLE, SCENE, icon } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
 import { Lang, setLang, t } from './i18n';
-import { Options, defaultLang, load, save, wipe } from './save';
+import { Options, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
 import * as sfx from './sound';
 import { VERSION } from './version';
+import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
 import {
-  State, applyOffline, buyN, buyPerm, click, clickPower, costOf, gemMult, genProd, maxAffordable, newState,
-  perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain, startDirt, tick,
+  State, applyEvent, applyOffline, buyN, buyPerm, click, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
+  milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
+  rollEvent, startDirt, tick, trophyMult,
 } from './sim';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
 const loaded = load();
 let s: State = loaded?.s ?? newState();
-const opts: Options = loaded?.opts ?? { lang: defaultLang(), reduced: false, mode: 1, sound: true, seen: 0 };
+const opts: Options = loaded?.opts ?? { lang: defaultLang(), reduced: false, mode: 1, sound: true, seen: 0, volume: 60, ambient: false };
 sfx.setEnabled(opts.sound);
+sfx.setVolume(opts.volume);
+sfx.setAmbient(opts.ambient);
+// Aucun son avant la première interaction : le contexte audio naît au premier geste.
+for (const ev of ['pointerdown', 'keydown'] as const) document.addEventListener(ev, () => sfx.unlock(), { capture: true });
+// Plusieurs onglets : le plus récent écrit, l'ancien arrête de sauvegarder (sinon il écraserait la partie).
+let readOnly = false;
+const persist = () => { if (!readOnly) save(s, opts); };
 const lang = () => opts.lang;
 const f = (n: number) => fmt(n, lang());
 const reducedMotion = () => opts.reduced || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -30,7 +42,7 @@ document.querySelectorAll<HTMLElement>('[data-ico]').forEach((el) => { el.innerH
 $('ver').textContent = `v${VERSION}`;
 
 // ---------- lignes ----------
-interface Row { el: HTMLButtonElement; tile: HTMLElement; name: HTMLElement; lv: HTMLElement; desc: HTMLElement; stat: HTMLElement; cost: HTMLElement; kind: number; id: string }
+interface Row { el: HTMLButtonElement; tile: HTMLElement; name: HTMLElement; lv: HTMLElement; desc: HTMLElement; stat: HTMLElement; mile: HTMLElement; cost: HTMLElement; kind: number; id: string }
 const rows: Row[] = [];
 const permRows: Row[] = [];
 
@@ -39,10 +51,10 @@ function mkRow(id: string, kind: number): Row {
   const el = document.createElement('button');
   el.type = 'button';
   el.className = 'row';
-  el.innerHTML = `<span class="tile"></span><span class="min-w-0"><span class="block text-lg font-bold leading-tight"><span class="name"></span><span class="lv"></span></span><span class="desc block text-sm leading-tight"></span><span class="stat"></span></span><span class="cost"></span>`;
+  el.innerHTML = `<span class="tile"></span><span class="min-w-0"><span class="block text-lg font-bold leading-tight"><span class="name"></span><span class="lv"></span></span><span class="desc block text-sm leading-tight"></span><span class="stat"></span><span class="mile"></span></span><span class="cost"></span>`;
   li.append(el);
   const q = (c: string) => el.querySelector<HTMLElement>('.' + c)!;
-  return { el, tile: q('tile'), name: q('name'), lv: q('lv'), desc: q('desc'), stat: q('stat'), cost: q('cost'), kind, id };
+  return { el, tile: q('tile'), name: q('name'), lv: q('lv'), desc: q('desc'), stat: q('stat'), mile: q('mile'), cost: q('cost'), kind, id };
 }
 const rowsUl = $('rows');
 const permsUl = $('perms');
@@ -55,7 +67,7 @@ ids.forEach((id, i) => {
     if (n > 0) {
       const lvl = r.kind < 0 ? s.shovel : s.gens[r.kind];
       say(t('bought', { name: t(id), n: lvl }));
-      bought(r);
+      bought(r, false);
     }
   });
   rows.push(r);
@@ -65,14 +77,14 @@ PERMS.forEach((p, i) => {
   const r = mkRow(p.id, i);
   r.el.addEventListener('click', () => {
     if (r.el.getAttribute('aria-disabled') === 'true') { sfx.deny(); return; }
-    if (buyPerm(s, i)) { say(t('bought', { name: t(p.id), n: s.perms[i] })); bought(r); }
+    if (buyPerm(s, i)) { say(t('bought', { name: t(p.id), n: s.perms[i] })); bought(r, true); }
   });
   permRows.push(r);
   permsUl.append(r.el.parentElement!);
 });
 
-function bought(r: Row) {
-  sfx.buy();
+function bought(r: Row, perm: boolean) {
+  if (perm) sfx.upgrade(); else sfx.buy();
   r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
   mood('happy', 800);
   render();
@@ -176,12 +188,14 @@ function render() {
       setText(r.stat, '');
     } else if (r.kind < 0) {
       setText(r.desc, t('shovelD'));
-      setText(r.stat, `${t('gain')} : +${f(SHOVEL_POWER * n * gemMult(s) * (1 + PERM_CLICK_BONUS * s.perms[1]))} ${t('per')}`);
+      setText(r.stat, `${t('gain')} : +${f(clickBase({ ...s, shovel: s.shovel + n }) - clickBase(s))} ${t('per')}`);
     } else {
-      const gain = GENS[r.kind].prod * (Math.pow(level + n, PROD_EXP) - Math.pow(level, PROD_EXP)) * prodMult(s);
+      const gain = genProdAt(s, r.kind, level + n) - genProd(s, r.kind);
       setText(r.desc, t(ids[i] + 'D'));
       setText(r.stat, `${t('gain')} : +${f(gain)}${t('secShort')} · ${f(genProd(s, r.kind))}${t('secShort')}`);
     }
+    const nm = locked ? null : nextMilestone(level);
+    setText(r.mile, locked ? '' : nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : `${t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm })}${milestoneMult(level) > 1 ? ` · ×${f(milestoneMult(level))}` : ''}`);
     setHtml(r.cost, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
     setDisabled(r.el, locked || s.dirt < cost);
     const wantHot = !hot && hintKey() === 'hintBuy' && !locked && s.dirt >= cost;
@@ -201,7 +215,7 @@ function render() {
     const r = permRows[i];
     const lvl = s.perms[i];
     const maxed = lvl >= p.max;
-    const extra = p.id === 'lunettes' ? bonusPct(lvl, PERM_PROD_BONUS) : p.id === 'pelleor' ? bonusPct(lvl, PERM_CLICK_BONUS)
+    const extra = p.id === 'lunettes' ? bonusPct(lvl, PERM_PROD_BONUS) : p.id === 'pelleor' ? bonusPct(lvl, PERM_CLICK_PS)
       : p.id === 'pecule' ? `${f(startDirt(s))}` : p.id === 'sacoche' ? `+${f(lvl)} h` : '';
     setHtml(r.tile, icon(p.id, 'h-11 w-11'));
     setText(r.name, t(p.id));
@@ -212,6 +226,9 @@ function render() {
     setDisabled(r.el, maxed || s.gems < permCost(s, i));
   });
   renderOwned();
+  renderBuffs();
+  const sel = tabs.find((n) => $('tab-' + n).getAttribute('aria-selected') === 'true');
+  if (sel === 'trophies') renderTrophies();
   const hk = hintKey();
   const hint = $('hint');
   if (hk) { setText(hint, t(hk)); hint.hidden = false; } else hint.hidden = true;
@@ -220,6 +237,12 @@ function render() {
   $('opt-motion').setAttribute('aria-pressed', String(opts.reduced));
   $('opt-sound').textContent = `${t('sound')} : ${t(opts.sound ? 'on' : 'off')}`;
   $('opt-sound').setAttribute('aria-pressed', String(opts.sound));
+  $('opt-ambient').textContent = `${t('ambient')} : ${t(opts.ambient ? 'on' : 'off')}`;
+  $('opt-ambient').setAttribute('aria-pressed', String(opts.ambient));
+  const vol = $<HTMLInputElement>('opt-vol');
+  if (document.activeElement !== vol) vol.value = String(opts.volume);
+  vol.setAttribute('aria-valuetext', `${opts.volume} %`);
+  setText($('vol-v'), `${opts.volume} %`);
   const snd = $('snd');
   setHtml(snd, icon(opts.sound ? 'soundOn' : 'soundOff', 'h-7 w-7'));
   snd.setAttribute('aria-pressed', String(opts.sound));
@@ -322,8 +345,79 @@ function rebirthFx() {
   window.setTimeout(() => { box.hidden = true; box.innerHTML = ''; }, 1400);
 }
 
+// ---------- bonus temporaires, succès, statistiques ----------
+function renderBuffs() {
+  const ul = $('buffs');
+  const items: string[] = [];
+  if (s.rush > 0) items.push(t('buffLeft', { name: t('buffRush'), s: Math.ceil(s.rush) }));
+  if (s.genius > 0) items.push(t('buffLeft', { name: t('buffGenius'), s: Math.ceil(s.genius) }));
+  setHtml(ul, items.map((x) => `<li class="buff">${x}</li>`).join(''));
+}
+
+function renderTrophies() {
+  const L = lang();
+  const n = s.trophies.length;
+  setText($('tr-sum'), t('trophyBonus', { n: f(n), m: f(TROPHY_COUNT), p: f(Math.round((trophyMult(s) - 1) * 100)) }));
+  setHtml($('trophies'), TROPHIES.map((tr) => {
+    const on = s.trophies.includes(tr.id);
+    const [name, desc] = tr[L];
+    return `<li class="trophy ${on ? 'is-on' : 'is-off'}"><span class="tile">${icon(on ? tr.icon : 'lock', 'h-9 w-9')}</span><span class="min-w-0"><span class="block text-lg font-bold leading-tight">${name}</span><span class="block text-sm leading-tight">${desc}</span><span class="sr-only">${t(on ? 'trophyOk' : 'trophyLocked')}</span></span></li>`;
+  }).join('') + L);
+  const rows: [string, string][] = [
+    ['sDirt', f(s.lifeTotal)], ['sClicks', f(s.clicks)], ['sTime', fmtDuration(s.playTime, L)],
+    ['sRebirths', f(s.rebirths)], ['sGems', f(s.gemsEarned)], ['sBest', s.bestRun > 0 ? fmtDuration(s.bestRun, L) : t('sNone')],
+    ['sCaught', f(s.caught)], ['sBuildings', f(s.gens.reduce((a, b) => a + b, 0))],
+  ];
+  setHtml($('stats'), rows.map(([k, v]) => `<div class="note"><dt>${t(k)}</dt><dd class="text-xl font-bold">${v}</dd></div>`).join('') + L);
+}
+const trophyName = (id: string) => TROPHIES.find((x) => x.id === id)!;
+/** Débloque les succès atteints (annonce groupée s'il y en a plusieurs d'un coup). */
+function awardTrophies(quiet = false) {
+  const fresh = checkTrophies(s);
+  if (!fresh.length) return;
+  if (quiet) return;
+  sfx.trophy();
+  notify(fresh.length === 1 ? t('trophyDone', { name: trophyName(fresh[0].id)[lang()][0] }) : t('trophiesMany', { n: fresh.length }));
+}
+
+// ---------- pépite d'or (événement aléatoire) ----------
+const nuggetEl = $<HTMLButtonElement>('nugget');
+nuggetEl.innerHTML = icon('nugget', 'h-10 w-10');
+let nuggetIn = 45; // secondes avant la prochaine apparition
+let nuggetLeft = 0; // secondes restantes pour la cueillir (0 = absente)
+const nextNuggetDelay = () => NUGGET_MIN_DELAY + Math.random() * (NUGGET_MAX_DELAY - NUGGET_MIN_DELAY);
+function nuggetTick(dt: number) {
+  if (document.hidden || welcome.open) return;
+  if (nuggetLeft > 0) {
+    nuggetLeft -= dt;
+    if (nuggetLeft <= 0) { nuggetEl.hidden = true; nuggetIn = nextNuggetDelay(); }
+  } else if (s.clicks + s.lifeTotal > 0) {
+    nuggetIn -= dt;
+    if (nuggetIn <= 0) {
+      nuggetEl.style.left = `${rnd(8, 78)}%`;
+      nuggetEl.style.top = `${rnd(18, 62)}%`;
+      nuggetEl.setAttribute('aria-label', t('nuggetLabel'));
+      nuggetEl.hidden = false;
+      nuggetLeft = NUGGET_LIFE * (reducedMotion() ? 1.5 : 1);
+      sfx.nuggetAppear();
+      say(t('nuggetAppear'));
+    }
+  }
+}
+nuggetEl.addEventListener('click', () => {
+  if (nuggetEl.hidden) return;
+  nuggetEl.hidden = true; nuggetLeft = 0; nuggetIn = nextNuggetDelay();
+  const kind = rollEvent(s, Math.random());
+  const got = applyEvent(s, kind);
+  sfx.nuggetCatch();
+  mood('happy', 800);
+  notify(kind === 'rush' ? t('nuggetRush') : kind === 'genius' ? t('nuggetGenius') : t('nuggetTreasure', { n: f(got) }));
+  awardTrophies();
+  render();
+});
+
 // ---------- onglets ----------
-const tabs = ['dig', 'rebirth', 'options'];
+const tabs = ['dig', 'rebirth', 'trophies', 'options'];
 function selectTab(name: string, focus = false) {
   tabs.forEach((n) => {
     const on = n === name;
@@ -339,8 +433,9 @@ tabs.forEach((n, i) => {
   $('tab-' + n).addEventListener('click', () => { sfx.tab(); selectTab(n); render(); });
   $('tab-' + n).addEventListener('keydown', (e) => {
     const k = e.key;
-    const to = k === 'ArrowRight' ? (i + 1) % 3 : k === 'ArrowLeft' ? (i + 2) % 3 : k === 'Home' ? 0 : k === 'End' ? 2 : -1;
-    if (to >= 0) { e.preventDefault(); selectTab(tabs[to], true); }
+    const m = tabs.length;
+    const to = k === 'ArrowRight' ? (i + 1) % m : k === 'ArrowLeft' ? (i + m - 1) % m : k === 'Home' ? 0 : k === 'End' ? m - 1 : -1;
+    if (to >= 0) { e.preventDefault(); selectTab(tabs[to], true); render(); }
   });
 });
 
@@ -362,37 +457,81 @@ function twoTap(btn: HTMLElement, key: string, action: () => void) {
     i18nStatic(); render();
   });
 }
-twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { save(s, opts); sfx.rebirth(); rebirthFx(); notify(t('rebirthDone', { n: g })); selectTab('dig'); } });
-twoTap($('opt-reset'), 'resetConfirm', () => { wipe(); s = newState(); say(t('resetDone')); save(s, opts); });
+twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); notify(t('rebirthDone', { n: g })); selectTab('dig'); } });
+twoTap($('opt-reset'), 'resetConfirm', () => {
+  wipe(); s = newState(); lastWall = Date.now(); nuggetIn = 45; nuggetLeft = 0; nuggetEl.hidden = true;
+  say(t('resetDone')); persist();
+});
 $('opt-lang').addEventListener('click', () => { opts.lang = lang() === 'fr' ? 'en' : 'fr'; i18nStatic(); render(); });
-const toggleSound = () => { opts.sound = !opts.sound; sfx.setEnabled(opts.sound); if (opts.sound) sfx.buy(); save(s, opts); render(); };
+const toggleSound = () => { opts.sound = !opts.sound; sfx.setEnabled(opts.sound); if (opts.sound) sfx.buy(); persist(); render(); };
 $('opt-sound').addEventListener('click', toggleSound);
 $('snd').addEventListener('click', toggleSound);
 $('opt-motion').addEventListener('click', () => { opts.reduced = !opts.reduced; render(); });
+$('opt-ambient').addEventListener('click', () => { opts.ambient = !opts.ambient; sfx.setAmbient(opts.ambient); persist(); render(); });
+const volEl = $<HTMLInputElement>('opt-vol');
+volEl.addEventListener('input', () => { opts.volume = Math.max(0, Math.min(100, Math.round(Number(volEl.value) / 5) * 5)); sfx.setVolume(opts.volume); render(); });
+volEl.addEventListener('change', () => { sfx.volumeTick(); persist(); });
 
-// ---------- boucle, sauvegarde, hors-ligne ----------
-let last = performance.now();
-let acc = 0;
+// export / import : texte copiable, validé par `importText` (JSON seulement, bornes, jamais d'exécution)
+const ioText = $<HTMLTextAreaElement>('io-text');
+$('io-export').addEventListener('click', () => {
+  const text = exportText(s, opts);
+  ioText.value = text;
+  ioText.select();
+  const done = () => notify(t('ioCopied'));
+  const shown = () => notify(t('ioShown'));
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done, shown); else shown();
+});
+twoTap($('io-import'), 'importConfirm', () => {
+  const imp = importText(ioText.value);
+  if (!imp) { notify(t('importBad')); return; }
+  s = imp.s; lastWall = Date.now(); ownedKey = ''; ownedPrev = [];
+  nuggetIn = 45; nuggetLeft = 0; nuggetEl.hidden = true;
+  awardTrophies(true);
+  persist(); ioText.value = '';
+  notify(t('importOk'));
+});
+window.addEventListener('storage', (e) => {
+  if (e.key === SAVE_KEY && e.newValue && !readOnly) { readOnly = true; notify(t('otherTab')); }
+});
+
+// ---------- hors-ligne : fenêtre « bon retour » ----------
+const welcome = $<HTMLDialogElement>('welcome');
+$('w-ok').addEventListener('click', () => welcome.close());
+function offlineReturn(gap: number) {
+  const cap = offlineCap(s);
+  const { gain, seconds } = applyOffline(s, gap);
+  if (gain <= 0) return;
+  if (gap <= 120) { notify(t('offline', { t: fmtDuration(seconds, lang()), n: f(gain) })); return; }
+  setText($('w-text'), t('welcomeText', { t: fmtDuration(seconds, lang()) }));
+  setText($('w-gain'), t('welcomeGain', { n: f(gain) }));
+  setText($('w-cap'), t(gap > cap ? 'welcomeCapped' : 'welcomeCap', { c: fmtDuration(cap, lang()) }));
+  if (!welcome.open) welcome.showModal();
+  $('w-ok').focus();
+}
+
+// ---------- boucle, sauvegarde ----------
+// L'horloge est celle du mur : un onglet figé ou en arrière-plan rattrape le temps écoulé au retour.
+let lastWall = loaded ? loaded.at : Date.now();
+let acc = 0, renderAcc = 0;
 window.setInterval(() => {
-  const now = performance.now();
-  const dt = Math.min((now - last) / 1000, 1);
-  last = now;
-  tick(s, dt);
-  acc += dt;
-  if (acc >= 5) { acc = 0; save(s, opts); }
-  render();
+  const now = Date.now();
+  const gap = Math.max(0, (now - lastWall) / 1000);
+  lastWall = now;
+  if (gap > 60) offlineReturn(gap);
+  else tick(s, gap);
+  awardTrophies();
+  nuggetTick(Math.min(gap, 1));
+  acc += gap; renderAcc += gap;
+  if (acc >= 5) { acc = 0; persist(); }
+  if (renderAcc >= 0.25 || gap > 1) { renderAcc = 0; render(); }
 }, 100);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { save(s, opts); } else { last = performance.now(); }
+  sfx.onVisibility(document.hidden);
+  if (document.hidden) persist();
 });
-window.addEventListener('pagehide', () => save(s, opts));
+window.addEventListener('pagehide', () => persist());
 
-if (loaded) {
-  const away = (Date.now() - loaded.at) / 1000;
-  if (away > 60) {
-    const { gain, seconds } = applyOffline(s, away);
-    if (gain > 0) notify(t('offline', { t: fmtDuration(seconds, lang()), n: f(gain) }));
-  }
-}
+awardTrophies(true);
 i18nStatic();
 render();

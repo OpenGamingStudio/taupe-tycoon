@@ -33,12 +33,12 @@ describe('débuts rapides', () => {
 });
 
 describe('équilibrage (joueur simulé : 4 clics/s, meilleur remboursement)', () => {
-  it('premier rebirth entre 20 et 40 min, runs suivants plus courts', () => {
+  it('premier rebirth entre 18 et 35 min, runs suivants plus courts', () => {
     const log = play(newState(), 8 * 3600, true, 10);
     expect(log.length).toBe(10);
     const m = log.map((l) => l.t / 60);
-    expect(m[0]).toBeGreaterThanOrEqual(20);
-    expect(m[0]).toBeLessThanOrEqual(40);
+    expect(m[0]).toBeGreaterThanOrEqual(18);
+    expect(m[0]).toBeLessThanOrEqual(35);
     for (let i = 1; i < m.length; i++) expect(m[i]).toBeLessThan(m[i - 1] * 1.6);
     expect(m[5]).toBeLessThan(m[0] * 0.7);
     expect(m[9]).toBeLessThan(m[2]);
@@ -63,7 +63,7 @@ describe('rebirth', () => {
     const s = newState(); s.runTotal = 10; expect(rebirth(s)).toBe(0); expect(s.rebirths).toBe(0);
   });
   it('réinitialise le run et garde les gemmes', () => {
-    const s = newState(); s.runTotal = 1e9; s.dirt = 5; s.gens[0] = 9; s.shovel = 4;
+    const s = newState(); s.runTotal = 1e10; s.dirt = 5; s.gens[0] = 9; s.shovel = 4;
     const g = rebirthGain(s); expect(g).toBeGreaterThan(1);
     expect(rebirth(s)).toBe(g);
     expect(s.gems).toBe(g); expect(s.gens.every((x) => x === 0)).toBe(true); expect(s.shovel).toBe(0);

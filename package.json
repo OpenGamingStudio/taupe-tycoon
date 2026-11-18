@@ -1,6 +1,6 @@
 {
   "name": "taupe-tycoon",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Taupe Tycoon : clicker tycoon d'une taupe à lunettes, jouable dans le navigateur et sur mobile.",
   "license": "MIT",
@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "balance": "BALANCE_REPORT=1 vitest run tests/report.test.ts"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.5",

@@ -28,3 +28,6 @@ Voir `ACCESSIBILITY.md`. Licence MIT.
 - Tous les visuels (taupe à lunettes et pelle, 16 icônes, décor qui s'enfonce avec les bâtiments) sont des SVG dessinés dans `src/art.ts`, sans dégradé.
 - Sons synthétisés (Web Audio) optionnels, coupables dans l'écran Options.
 - Contrôles : `e2e/shots.mjs` (captures), `e2e/a11y.mjs` (contrastes, cibles 44 px, clavier, focus, mouvement réduit), `e2e/check.mjs`.
+
+## V2.1
+Sons synthétisés (volume, ambiance), 20 succès, pépites d'or et événements, paliers de niveau, statistiques, retour hors ligne, import/export de sauvegarde. Voir `BALANCE.md`, `REVIEW.md`, `CHANGELOG.md`.
