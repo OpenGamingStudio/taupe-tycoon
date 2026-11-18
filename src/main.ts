@@ -10,6 +10,7 @@ import { Options, SAVE_KEY, defaultLang, exportText, importText, load, save, wip
 import * as sfx from './sound';
 import { VERSION } from './version';
 import { createWorld } from './world';
+import { createFx } from './fx';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
 import {
   State, applyEvent, applyOffline, buyN, buyPerm, click, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
@@ -92,7 +93,10 @@ PERMS.forEach((p, i) => {
 /** Un palier de niveaux est franchi : fanfare et annonce. */
 function milestoneHit(r: Row, level: number) {
   sfx.fanfare();
-  notify(`${t('mileBanner')} ${t(r.kind < 0 ? 'mileSubShovel' : 'mileSub', { name: t(r.id), n: level, m: milestoneMult(level) })}`);
+  const sub = t(r.kind < 0 ? 'mileSubShovel' : 'mileSub', { name: t(r.id), n: level, m: milestoneMult(level) });
+  say(`${t('mileBanner')} ${sub}`);
+  banner('gem', t('mileBanner'), sub);
+  const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.35, 60); shake(2); vibe([30, 40, 60]);
 }
 
 function bought(r: Row, perm: boolean) {
@@ -149,17 +153,78 @@ function floater(x: number, y: number, text: string, cls: string) {
   stageFx.append(el);
   el.addEventListener('animationend', () => el.remove());
 }
+const jfx = createFx($<HTMLCanvasElement>('fxc'));
+const fxBox = () => $('fxc').getBoundingClientRect();
+const centerOf = (id: string): [number, number] => { const b = $(id).getBoundingClientRect(), o = fxBox(); return [b.left - o.left + b.width / 2, b.top - o.top + b.height / 2]; };
+const bump = (id: string) => { const el = $(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+/** Pièces de terre/or qui filent vers le compteur : chaque arrivée fait sonner le compteur. */
+let landAt = 0;
+function coinsToHud(x: number, y: number, n: number, kind: 'dirt' | 'gold' | 'gem') {
+  jfx.coins(x, y, n, kind, () => centerOf(kind === 'gem' ? 'ico-gem' : 'ico-dirt'), (i) => {
+    const now = performance.now();
+    bump(kind === 'gem' ? 'ico-gem' : 'hud');
+    if (now - landAt > 70) { landAt = now; sfx.pickup(i); }
+  });
+}
+let shakeT = 0;
+function shake(level: 1 | 2 | 3) {
+  if (reducedMotion()) return;
+  const st = $('stage');
+  st.classList.remove('shake1', 'shake2', 'shake3'); void st.offsetWidth; st.classList.add('shake' + level);
+  window.clearTimeout(shakeT); shakeT = window.setTimeout(() => st.classList.remove('shake1', 'shake2', 'shake3'), 520);
+}
+let vibeAt = 0;
+function vibe(ms: number | number[]) {
+  if (reducedMotion() || !navigator.vibrate || !navigator.userActivation?.hasBeenActive) return;
+  const now = performance.now();
+  if (now - vibeAt < 60) return;
+  vibeAt = now; navigator.vibrate(ms);
+}
+// bannières (file d'attente : une à la fois)
+const bannerQ: { ico: string; t: string; s: string }[] = [];
+let bannerOn = false;
+function banner(ico: string, title: string, sub: string) {
+  if (bannerQ.length > 3) bannerQ.shift();
+  bannerQ.push({ ico, t: title, s: sub });
+  if (!bannerOn) nextBanner();
+}
+function nextBanner() {
+  const b = bannerQ.shift();
+  const el = $('banner');
+  if (!b) { bannerOn = false; el.hidden = true; return; }
+  bannerOn = true;
+  $('banner-ico').innerHTML = icon(b.ico, 'h-12 w-12');
+  setText($('banner-t'), b.t); setText($('banner-s'), b.s);
+  el.hidden = false; el.classList.remove('banner-in'); void el.offsetWidth; el.classList.add('banner-in');
+  window.setTimeout(nextBanner, reducedMotion() ? 2200 : 2600);
+}
 const world = createWorld($<HTMLCanvasElement>('world'), {
   deliver(x, y, gain) {
     const now = performance.now();
     if (now - floatAt > 260) { floatAt = now; floater(x, y - 18, '+' + f(gain), 'fx-s'); }
-    if (now - deliverSnd > 300) { deliverSnd = now; sfx.pickup(0); }
+    if (now - deliverSnd > 450) { deliverSnd = now; coinsToHud(x, y - 6, 1, 'gold'); }
   },
   arrive(x, y, n) {
     floater(x, y - 24, '+' + f(n), 'fx-n');
   },
 });
 
+// compteur de terre qui roule vers sa valeur (entiers seulement ; direct si mouvement réduit)
+let shown = -1, rollRaf = 0, rollLast = 0;
+function rollTo(v: number) {
+  if (shown < 0 || reducedMotion() || Math.abs(v - shown) < 2) { shown = v; setText($('hud-dirt'), f(v)); return; }
+  if (rollRaf) return;
+  rollLast = performance.now();
+  const step = (now: number) => {
+    const dt = Math.min(0.1, (now - rollLast) / 1000); rollLast = now;
+    const target = s.dirt, d = target - shown;
+    shown = Math.abs(d) < 2 ? target : shown + d * Math.min(1, dt * 9) + Math.sign(d);
+    shown = d > 0 ? Math.min(shown, target) : Math.max(shown, target);
+    setText($('hud-dirt'), f(Math.floor(shown)));
+    rollRaf = shown === target ? 0 : requestAnimationFrame(step);
+  };
+  rollRaf = requestAnimationFrame(step);
+}
 let ownedKey = '';
 let ownedPrev: number[] = [];
 function renderOwned() {
@@ -197,7 +262,7 @@ function hintKey(): string | null {
 function render() {
   const L = lang();
   document.documentElement.lang = L;
-  setText($('hud-dirt'), f(s.dirt));
+  rollTo(s.dirt);
   setText($('hud-ps'), f(perSecond(s)));
   setText($('hud-gems'), f(s.gems));
   const power = clickPower(s);
@@ -207,6 +272,7 @@ function render() {
   sfx.setDepth(d);
   world.setDepth(d);
   world.setReduced(reducedMotion());
+  jfx.setReduced(reducedMotion());
   world.setRates(GENS.map((_, i) => genProd(s, i)));
   world.setLevel(s.gens.reduce((a, n) => a + MILESTONES.filter((m) => n >= m).length, 0));
   if (!st.classList.contains('depth-' + d)) st.className = st.className.replace(/depth-\d/, 'depth-' + d);
@@ -352,7 +418,23 @@ function burst(power: number, x: number, y: number) {
   }
 }
 
-let combo = 0, lastDigAt = 0, cheerAt = 0;
+let combo = 0, lastDigAt = 0, cheerAt = 0, comboHide = 0;
+const comboEl = $('combo');
+function showCombo(n: number) {
+  const tier = n >= 100 ? 3 : n >= 50 ? 2 : n >= 25 ? 1 : 0;
+  comboEl.hidden = false; comboEl.dataset.tier = String(tier);
+  setText(comboEl, t('comboLabel', { n: f(n) }));
+  comboEl.classList.remove('tick'); void comboEl.offsetWidth; comboEl.classList.add('tick');
+  window.clearTimeout(comboHide); comboHide = window.setTimeout(() => { comboEl.hidden = true; }, 900);
+}
+let jellyT = 0;
+/** Écrasement élastique du bouton principal (CSS), sauf quand la taupe joue déjà une humeur forte. */
+function jelly() {
+  if (reducedMotion()) return;
+  const el = $('mole-svg') as unknown as HTMLElement;
+  el.classList.remove('jelly'); void el.getBoundingClientRect(); el.classList.add('jelly');
+  window.clearTimeout(jellyT); jellyT = window.setTimeout(() => el.classList.remove('jelly'), 320);
+}
 let skipClick = false;
 function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
   const p = click(s);
@@ -360,19 +442,27 @@ function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
   combo = now - lastDigAt < 450 ? combo + 1 : 0;
   lastDigAt = now;
   sfx.dig(combo);
-  if (combo === 10 || combo === 25 || combo === 50 || combo === 100) sfx.comboTier(combo === 10 ? 0 : combo === 25 ? 1 : combo === 50 ? 2 : 3);
+  if (combo === 10 || combo === 25 || combo === 50 || combo === 100) {
+    sfx.comboTier(combo === 10 ? 0 : combo === 25 ? 1 : combo === 50 ? 2 : 3);
+    const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.45, combo === 10 ? 20 : 40); if (combo >= 25) shake(combo >= 50 ? 3 : 2);
+  }
   const box = fx.getBoundingClientRect();
   const hasPos = 'clientX' in e && (e.clientX || e.clientY);
   const x = hasPos ? (e as MouseEvent).clientX - box.left : box.width / 2;
   const y = hasPos ? (e as MouseEvent).clientY - box.top : box.height * 0.6;
   burst(p, x, y);
+  coinsToHud(x, y, combo >= 25 ? 3 : combo >= 8 ? 2 : 1, 'dirt');
+  if (combo >= 10) showCombo(combo + 1); 
+  if (p >= s.dirt * 0.2 && p > 50) { shake(1); jfx.sparks(x, y, 10, '#ffc21a'); }
+  vibe(combo >= 10 ? 14 : 8);
+  jelly();
   mood('dig', 260);
   mole.classList.remove('hit');
   void mole.offsetWidth;
   mole.classList.add('hit');
   world.kick(5);
   if (s.clicks % 50 === 0 && now - cheerAt > 2000) { cheerAt = now; mood('happy', 800); }
-  setText($('hud-dirt'), f(s.dirt));
+  rollTo(s.dirt);
 }
 mole.addEventListener('pointerdown', (e) => { if (e.button === 0 || e.pointerType !== 'mouse') { skipClick = true; dig(e); } });
 mole.addEventListener('click', (e) => { if (skipClick) { skipClick = false; return; } dig(e); });
@@ -429,6 +519,8 @@ function awardTrophies(quiet = false) {
   if (!fresh.length) return;
   if (quiet) return;
   sfx.trophy();
+  { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.3, 40); }
+  banner(fresh.length === 1 ? fresh[0].icon : 'trophy', t('trophyBanner'), fresh.length === 1 ? trophyName(fresh[0].id)[lang()][0] : t('trophiesMany', { n: fresh.length }));
   notify(fresh.length === 1 ? t('trophyDone', { name: trophyName(fresh[0].id)[lang()][0] }) : t('trophiesMany', { n: fresh.length }));
 }
 
@@ -462,6 +554,8 @@ nuggetEl.addEventListener('click', () => {
   const kind = rollEvent(s, Math.random());
   const got = applyEvent(s, kind);
   sfx.nuggetCatch();
+  { const b = nuggetEl.getBoundingClientRect(), o = fxBox(); const nx = b.left - o.left + b.width / 2, ny = b.top - o.top + b.height / 2; coinsToHud(nx, ny, kind === 'treasure' ? 14 : 8, 'gold'); jfx.confetti(nx, ny, 26); jfx.sparks(nx, ny, 14, '#ffc21a'); }
+  vibe([20, 30, 40]);
   mood('happy', 800);
   notify(kind === 'rush' ? t('nuggetRush') : kind === 'genius' ? t('nuggetGenius') : t('nuggetTreasure', { n: f(got) }));
   awardTrophies();
@@ -509,7 +603,7 @@ function twoTap(btn: HTMLElement, key: string, action: () => void) {
     i18nStatic(); render();
   });
 }
-twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); notify(t('rebirthDone', { n: g })); selectTab('dig'); } });
+twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.4, 90); coinsToHud(b.width / 2, b.height * 0.5, 10, 'gem'); shake(3); vibe([40, 40, 80]); } notify(t('rebirthDone', { n: g })); selectTab('dig'); } });
 twoTap($('opt-reset'), 'resetConfirm', () => {
   wipe(); s = newState(); lastWall = Date.now(); nuggetIn = 45; nuggetLeft = 0; nuggetEl.hidden = true;
   say(t('resetDone')); persist();

@@ -10,6 +10,10 @@ Versionnage sémantique. La version courante est affichée dans le jeu (Options)
 - Chaque taupe ouvrière achetée apparaît en pixel-art dans des galeries du décor : elle tombe en rebondissant, creuse, rapporte une pépite au coffre (« +N » flottant, étincelles) puis repart ; casque et outil selon le type (6 types). Plafond d'affichage selon la taille de l'écran (24 au plus, moins sur mobile), au-delà une taupe affichée représente un groupe (petite bande de taupes).
 - Décor : rayons de lumière, poussière en deux couches (parallaxe qui réagit aux coups de pelle), cristaux qui pulsent, vers, lampes suspendues ; la teinte et le nombre de cristaux suivent la profondeur et les paliers.
 - Canvas en pixel-art minuscule, 30 images/s, à l'arrêt quand la page est cachée ; mouvement réduit : taupes ralenties, sans étincelles, poussière ni balancement.
+### Dopamine et interface
+- Pièces de terre et d'or qui volent vers le compteur (chaque arrivée sonne et fait « rebondir » le compteur), gemmes au rebirth, étincelles, confettis aux paliers, succès, pépites, combos et rebirth.
+- Compteur de terre qui roule (entiers), secousse d'écran sur les gros gains, badge de combo à quatre paliers, bannières de palier et de succès en file d'attente, bouton principal élastique, vibration discrète sur mobile.
+- Barre de progression brillante, changement d'onglet animé. Mouvement réduit : tout est instantané, sans secousse ni particules inutiles.
 
 ## 2.1.0 — 2026-11-18
 ### Sons

@@ -89,6 +89,24 @@ html, body {
   .goal { @apply overflow-hidden rounded-full border-[3px] border-ink bg-cream; box-sizing: content-box; height: 8px; }
   .goal-fill { @apply block h-full bg-gem; width: 0; transition: width 0.25s linear; }
 
+  /* V3 : dopamine et interface */
+  .hud.bump, #ico-gem.bump { animation: bump 0.22s ease-out; }
+  .goal-fill { @apply relative; }
+  .goal-fill::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; background: rgba(255,255,255,0.55); animation: shine 2.2s ease-in-out infinite; }
+  .shake1 { animation: shake1 0.28s linear; }
+  .shake2 { animation: shake2 0.4s linear; }
+  .shake3 { animation: shake2 0.52s linear; --amp: 1.6; }
+  .combo { @apply absolute left-1/2 top-[38%] z-30 -translate-x-1/2 rounded-2xl border-[3px] border-ink bg-white px-3 py-1 text-2xl font-bold text-ink shadow-hard; pointer-events: none; white-space: nowrap; }
+  .combo[data-tier="1"] { @apply bg-gold; }
+  .combo[data-tier="2"] { background: #ff8a3d; }
+  .combo[data-tier="3"] { background: #ff7aa8; font-size: 1.9rem; }
+  .combo.tick { animation: tick 0.18s ease-out; }
+  .banner { @apply absolute left-1/2 top-[18%] z-40 flex max-w-[calc(100%-1rem)] items-center gap-3 rounded-3xl border-[3px] border-ink bg-gold px-4 py-2 shadow-hard; pointer-events: none; transform: translateX(-50%); }
+  .banner-ico { @apply grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-[3px] border-ink bg-white; }
+  .banner-in { animation: banner 2.6s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  #mole-svg.jelly { transform-origin: 50% 100%; animation: jelly 0.3s ease-out; }
+  [role="tabpanel"]:not([hidden]) { animation: panein 0.24s ease-out; }
+
   /* décor et taupe */
   .stage { background: #8fd7f2; }
   .stage svg .s-b1 { fill: var(--b1); } .stage svg .s-b2 { fill: var(--b2); } .stage svg .s-b3 { fill: var(--b3); }
@@ -164,6 +182,14 @@ html, body {
   .rb-fx .shard svg { width: 100%; height: 100%; overflow: visible; }
 }
 
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.07); } 100% { transform: scale(1); } }
+@keyframes shine { from { left: -35%; } to { left: 105%; } }
+@keyframes shake1 { 0%, 100% { transform: translate(0); } 25% { transform: translate(-2px, 1px); } 50% { transform: translate(2px, -1px); } 75% { transform: translate(-1px, -1px); } }
+@keyframes shake2 { 0%, 100% { transform: translate(0); } 15% { transform: translate(calc(-5px * var(--amp, 1)), 2px); } 35% { transform: translate(calc(5px * var(--amp, 1)), -3px); } 55% { transform: translate(calc(-3px * var(--amp, 1)), -2px); } 75% { transform: translate(calc(3px * var(--amp, 1)), 2px); } }
+@keyframes tick { 0% { transform: translateX(-50%) scale(1.3); } 100% { transform: translateX(-50%) scale(1); } }
+@keyframes banner { 0% { transform: translate(-50%, -30px) scale(0.6); opacity: 0; } 14% { transform: translate(-50%, 0) scale(1.08); opacity: 1; } 22% { transform: translate(-50%, 0) scale(1); } 85% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -14px) scale(0.9); opacity: 0; } }
+@keyframes jelly { 0% { transform: scale(1, 1); } 30% { transform: scale(1.1, 0.88); } 60% { transform: scale(0.95, 1.07); } 100% { transform: scale(1, 1); } }
+@keyframes panein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 0.985); } }
 @keyframes nod { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
 @keyframes sway { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1.6deg); } }
