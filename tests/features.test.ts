@@ -110,7 +110,7 @@ describe('sauvegarde : migration et robustesse', () => {
     const r = sanitize(v2)!;
     expect(r.s.dirt).toBe(5000); expect(r.s.gens).toEqual([3, 2, 1, 0, 0, 0]); expect(r.s.perms).toEqual([1, 0, 0, 0]);
     expect(r.s.gemsEarned).toBe(7); expect(r.s.trophies).toEqual([]); expect(r.s.playTime).toBe(0);
-    expect(r.opts.sound).toBe(false); expect(r.opts.volume).toBe(60); expect(r.opts.ambient).toBe(false); expect(r.opts.mode).toBe(10);
+    expect(r.opts.sound).toBe(false); expect(r.opts.volume).toBe(60); expect(r.opts.ambient).toBe(true); expect(r.opts.mode).toBe(10);
   });
   it('une sauvegarde V1 passe aux entiers (terre ×10)', () => {
     const r = sanitize({ s: { dirt: 12, runTotal: 20, lifeTotal: 30, gens: [1] }, at: 5 })!;
@@ -129,9 +129,9 @@ describe('sauvegarde : migration et robustesse', () => {
   });
   it('export puis import redonne le même état', () => {
     const s = newState(); s.gens[0] = 12; s.dirt = 777; s.trophies = ['clic1'];
-    const text = exportText(s, { lang: 'en', reduced: true, mode: 1, sound: true, seen: 0, volume: 30, ambient: true });
+    const text = exportText(s, { lang: 'en', reduced: true, mode: 1, sound: true, seen: 0, volume: 30, ambient: true, music: false, musicVolume: 20 });
     const r = importText(text)!;
-    expect(r.s.gens[0]).toBe(12); expect(r.s.dirt).toBe(777); expect(r.s.trophies).toEqual(['clic1']); expect(r.opts.volume).toBe(30);
+    expect(r.s.gens[0]).toBe(12); expect(r.s.dirt).toBe(777); expect(r.s.trophies).toEqual(['clic1']); expect(r.opts.volume).toBe(30); expect(r.opts.music).toBe(false); expect(r.opts.musicVolume).toBe(20);
   });
   it('l\'import refuse tout ce qui n\'est pas un export valide', () => {
     expect(importText('')).toBeNull();
@@ -147,5 +147,13 @@ describe('sauvegarde : migration et robustesse', () => {
 describe('format : très grands nombres', () => {
   it('jamais de notation scientifique', () => {
     for (const n of [1e36, 1e50, 1e100, 1e300]) expect(fmt(n)).toMatch(/^\d[\d ]*[A-Za-z]{0,2}\+?$/);
+  });
+  it('une sauvegarde 2.1 (sans musique) est migrée : musique et ambiance par défaut, choix déjà faits gardés', () => {
+    const old = { v: 3, s: { dirt: 500 }, at: Date.now(), opts: { lang: 'fr', sound: false, volume: 40, ambient: false, seen: 0, mode: 1 } };
+    const r = sanitize(old)!;
+    expect(r.s.dirt).toBe(500);
+    expect(r.opts.music).toBe(true); expect(r.opts.musicVolume).toBe(35);
+    expect(r.opts.ambient).toBe(false); expect(r.opts.sound).toBe(false); expect(r.opts.volume).toBe(40);
+    expect(sanitize({ v: 3, s: {}, at: 1 })!.opts.ambient).toBe(true);
   });
 });
