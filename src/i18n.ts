@@ -3,6 +3,7 @@ type Dict = Record<string, string>;
 
 export const T: Record<Lang, Dict> = {
   fr: {
+    tabStats: 'Stats', panelDig: 'Améliorations', close: 'Fermer', hintOpen: 'Ouvre la Mine pour acheter !', badgeBuy: '{n} achat(s) possible(s)',
     updateText: 'Nouvelle version disponible', updateGo: 'Recharger', updateLater: 'Plus tard', updateReloading: 'Mise à jour…',
     tabTrophies: 'Succès', trophyTitle: 'Succès', trophyBonus: '{n} / {m} succès · +{p} % de production', trophyDone: 'Succès : {name}', trophiesMany: '{n} succès débloqués', trophyLocked: 'À débloquer', trophyOk: 'Débloqué',
     nugget: 'Pépite d’or', nuggetAppear: 'Une pépite d’or apparaît ! Attrape-la.', nuggetLabel: 'Pépite d’or : attrape-la avant qu’elle disparaisse',
@@ -14,7 +15,7 @@ export const T: Record<Lang, Dict> = {
     volume: 'Volume', ambient: 'Ambiance sonore', exportBtn: 'Exporter la sauvegarde', importBtn: 'Importer une sauvegarde', ioLabel: 'Texte de sauvegarde', ioCopied: 'Sauvegarde copiée.', ioShown: 'Sauvegarde affichée : copie-la à la main.', importOk: 'Sauvegarde importée.', importBad: 'Texte invalide : rien n’a changé.', importConfirm: 'Confirmer : remplace la partie', otherTab: 'Le jeu est ouvert dans un autre onglet : cette fenêtre ne sauvegarde plus. Recharge la page.',
     title: 'Taupe Tycoon', dirt: 'Terre', perSec: 'par seconde', gems: 'Gemmes',
     dig: 'Creuser !', digLabel: 'Creuser avec la pelle : +{n} terre',
-    tabDig: 'Creuser', tabRebirth: 'Rebirth', tabOptions: 'Options',
+    tabDig: 'Mine', tabRebirth: 'Rebirth', tabOptions: 'Options',
     buy: 'Acheter', mode: 'Quantité', max: 'Max', level: 'Niv.', cost: 'Coût', each: 'par clic',
     shovel: 'Pelle renforcée', shovelD: '+10 terre par clic',
     apprentie: 'Taupe apprentie', apprentieD: 'Creuse toute seule, doucement.',
@@ -45,6 +46,7 @@ export const T: Record<Lang, Dict> = {
     music: 'Musique', musicVolume: 'Volume de la musique', mileBanner: 'Palier !', mileSub: '{name} niveau {n} : production ×{m}', mileSubShovel: 'Pelle niveau {n} : clic ×{m}', comboLabel: 'Combo ×{n}', trophyBanner: 'Succès !', crewHint: '{n} taupes au travail',
   },
   en: {
+    tabStats: 'Stats', panelDig: 'Upgrades', close: 'Close', hintOpen: 'Open the Mine to buy!', badgeBuy: '{n} purchase(s) available',
     updateText: 'New version available', updateGo: 'Reload', updateLater: 'Later', updateReloading: 'Updating…',
     tabTrophies: 'Trophies', trophyTitle: 'Trophies', trophyBonus: '{n} / {m} trophies · +{p}% production', trophyDone: 'Trophy: {name}', trophiesMany: '{n} trophies unlocked', trophyLocked: 'Locked', trophyOk: 'Unlocked',
     nugget: 'Golden nugget', nuggetAppear: 'A golden nugget appears! Catch it.', nuggetLabel: 'Golden nugget: catch it before it vanishes',
@@ -56,7 +58,7 @@ export const T: Record<Lang, Dict> = {
     volume: 'Volume', ambient: 'Ambient sound', exportBtn: 'Export save', importBtn: 'Import a save', ioLabel: 'Save text', ioCopied: 'Save copied.', ioShown: 'Save shown: copy it by hand.', importOk: 'Save imported.', importBad: 'Invalid text: nothing changed.', importConfirm: 'Confirm: replaces your game', otherTab: 'The game is open in another tab: this window no longer saves. Reload the page.',
     title: 'Taupe Tycoon', dirt: 'Dirt', perSec: 'per second', gems: 'Gems',
     dig: 'Dig!', digLabel: 'Dig with the shovel: +{n} dirt',
-    tabDig: 'Dig', tabRebirth: 'Rebirth', tabOptions: 'Options',
+    tabDig: 'Mine', tabRebirth: 'Rebirth', tabOptions: 'Options',
     buy: 'Buy', mode: 'Amount', max: 'Max', level: 'Lv.', cost: 'Cost', each: 'per click',
     shovel: 'Stronger shovel', shovelD: '+10 dirt per click',
     apprentie: 'Apprentice mole', apprentieD: 'Digs on its own, slowly.',

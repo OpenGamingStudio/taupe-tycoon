@@ -48,7 +48,7 @@ html, body {
   .btn[aria-pressed="true"]:not(.btn-icon) { @apply bg-nugget; }
   .btn-big { @apply bg-grass text-2xl; min-height: 56px; }
   .btn:active:not([aria-disabled="true"]) { @apply translate-x-1 translate-y-1 shadow-none; }
-  .btn:focus-visible, .tab:focus-visible, .mole:focus-visible, a:focus-visible, .row:focus-visible {
+  .btn:focus-visible, .dk:focus-visible, .sheet-body :focus-visible, .mole:focus-visible, a:focus-visible, .row:focus-visible {
     outline: 3px solid #2b1d14;
     outline-offset: 3px;
     box-shadow: 0 0 0 3px #fff, 4px 4px 0 #2b1d14;
@@ -59,10 +59,6 @@ html, body {
   .panel { @apply rounded-3xl border-[3px] border-ink bg-white text-ink shadow-hard; }
   .note { @apply rounded-2xl border-[3px] border-ink bg-cream px-3 py-1; }
   .logo { @apply font-bold text-soil; -webkit-text-stroke: 1px #2b1d14; paint-order: stroke fill; text-shadow: 2px 2px 0 #2b1d14; }
-  .tab { @apply relative flex min-h-[48px] items-center justify-center gap-1 rounded-2xl border-[3px] border-ink bg-cream px-1 text-base font-bold sm:text-lg; touch-action: manipulation; }
-  .tab svg { @apply h-6 w-6 shrink-0; }
-  .tab[aria-selected="true"] { @apply bg-nugget shadow-hard; }
-  .dot { @apply absolute -right-1 -top-1 h-4 w-4 rounded-full border-[3px] border-ink bg-rose; animation: pulse 1s ease-in-out infinite; }
 
   /* lignes d'achat */
   .row {
@@ -105,7 +101,33 @@ html, body {
   .banner-ico { @apply grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-[3px] border-ink bg-white; }
   .banner-in { animation: banner 2.6s cubic-bezier(.2,.9,.3,1.2) forwards; }
   #mole-svg.jelly { transform-origin: 50% 100%; animation: jelly 0.3s ease-out; }
-  [role="tabpanel"]:not([hidden]) { animation: panein 0.24s ease-out; }
+  .sheet-body > div:not([hidden]) { animation: panein 0.24s ease-out; }
+
+  /* V4 : plein écran de jeu, tiroir de menus et dock */
+  #app { --dock: calc(4.25rem + env(safe-area-inset-bottom)); --sheet-h: min(50dvh, 26rem); --sheet-w: 0px; --sheet-b: 0px; }
+  #app:not([data-panel=""]) { --sheet-b: var(--sheet-h); }
+  #stage { padding: env(safe-area-inset-top) calc(env(safe-area-inset-right) + var(--sheet-w)) calc(var(--dock) + var(--sheet-b)) env(safe-area-inset-left); transition: padding 0.28s cubic-bezier(.2,.8,.2,1); }
+  .dock { @apply fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 gap-1.5 border-t-[3px] border-ink bg-cream px-1.5 pt-1.5; padding-bottom: max(0.375rem, env(safe-area-inset-bottom)); padding-left: max(0.375rem, env(safe-area-inset-left)); padding-right: max(0.375rem, env(safe-area-inset-right)); height: var(--dock); }
+  .dk { @apply relative flex min-h-[48px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border-[3px] border-ink bg-white px-0.5 text-[12px] font-bold leading-none; touch-action: manipulation; transition: transform 0.1s ease-out, background-color 0.15s; }
+  .dk svg { @apply h-6 w-6 shrink-0; }
+  .dk[aria-expanded="true"] { @apply bg-nugget; transform: translateY(-3px); box-shadow: 0 3px 0 #2b1d14; }
+  .dk:active { transform: translateY(1px); }
+  .dk.hot { animation: nudge 1.1s ease-in-out infinite; }
+  .badge { @apply absolute -right-1.5 -top-2 grid h-[22px] min-w-[22px] place-items-center rounded-full border-[3px] border-ink bg-rose px-1 text-[12px] font-bold leading-none text-ink; }
+  .badge[hidden] { display: none; }
+  .sheet { @apply fixed z-20 flex flex-col border-ink bg-white text-ink; left: 0; right: 0; bottom: var(--dock); height: var(--sheet-h); border-width: 3px 0 0 0; border-radius: 1.5rem 1.5rem 0 0; transform: translateY(calc(100% + var(--dock))); visibility: hidden; transition: transform 0.28s cubic-bezier(.2,.8,.2,1), visibility 0s linear 0.28s; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .sheet[data-open="true"] { transform: none; visibility: visible; transition: transform 0.28s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  @media (max-height: 640px) and (max-width: 699px) { #app { --sheet-h: 44dvh; } }
+  .sheet-head { @apply flex items-center gap-2 px-3 pb-1 pt-2; position: relative; }
+  .sheet-grip { @apply absolute left-1/2 top-1 h-1 w-10 -translate-x-1/2 rounded-full bg-ink; opacity: .35; }
+  @media (min-width: 700px), (orientation: landscape) and (max-height: 520px) {
+    #app { --sheet-w: min(28rem, 44vw); --sheet-b: 0px; }
+    #app:not([data-panel=""]) { --sheet-b: 0px; }
+    #app[data-panel=""] { --sheet-w: 0px; }
+    .dock { left: 0; right: var(--sheet-w); margin: 0 auto; width: min(34rem, calc(100% - var(--sheet-w))); border-width: 3px 3px 0; border-radius: 1.25rem 1.25rem 0 0; transition: right 0.28s cubic-bezier(.2,.8,.2,1), width 0.28s cubic-bezier(.2,.8,.2,1); }
+    .sheet { left: auto; width: min(28rem, 44vw); top: 0; bottom: 0; height: auto; border-width: 0 0 3px 3px; border-radius: 0 0 0 1.5rem; transform: translateX(105%); padding-top: env(safe-area-inset-top); }
+    .sheet[data-open="true"] { transform: none; }
+  }
 
   /* décor et taupe */
   .stage { background: #8fd7f2; }
@@ -177,7 +199,6 @@ html, body {
   .io:focus-visible, .vol:focus-visible { outline: 3px solid #2b1d14; outline-offset: 3px; }
   .welcome { margin: auto; width: min(24rem, calc(100% - 1.5rem)); padding: 1rem; }
   .welcome::backdrop { background: rgba(43, 29, 20, 0.6); }
-  @media (max-width: 399px) { .tab-ico { display: none; } .tab { font-size: 0.875rem; } }
   .rb-fx { position: absolute; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
   .rb-fx .wave { position: absolute; left: 50%; top: 60%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 999px; background: #fff; animation: wave 1.1s ease-out forwards; }
   .rb-fx .shard { position: absolute; left: 50%; top: 60%; width: 34px; height: 34px; margin: -17px 0 0 -17px; animation: shard 1.2s cubic-bezier(.2,.7,.4,1) forwards; }
@@ -213,6 +234,7 @@ html, body {
 @keyframes wave { from { transform: scale(0.5); opacity: 0.9; } to { transform: scale(40); opacity: 0; } }
 @keyframes shard { 0% { transform: translate(0, 0) rotate(0) scale(0.5); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.2); opacity: 0; } }
 
+html.reduced #stage, html.reduced .sheet, html.reduced .dock { transition: none !important; }
 html.reduced *, html.reduced *::before, html.reduced *::after { animation: none !important; transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

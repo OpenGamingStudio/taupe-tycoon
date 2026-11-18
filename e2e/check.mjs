@@ -16,8 +16,10 @@ for (const [w, h] of [[320, 568], [360, 740], [430, 932], [768, 1024], [1280, 72
   const small = await p.evaluate(() => [...document.querySelectorAll('button,a')].filter((e) => e.offsetParent && (e.getBoundingClientRect().height < 44 || e.getBoundingClientRect().width < 44)).map((e) => e.id || e.textContent.trim().slice(0, 12)));
   if (small.length) ko(`${w}: cibles < 44 px : ${small}`);
   for (let i = 0; i < 20; i++) await p.click('#mole');
+  await new Promise((r) => setTimeout(r, 700));
   const dirt = await p.$eval('#hud-dirt', (e) => e.textContent);
   if (dirt.trim() !== '200') ko(`${w}: 20 clics -> ${dirt}`);
+  await p.click('#tab-dig'); await new Promise((r) => setTimeout(r, 400));
   const first = await p.$eval('#rows button', (e) => e.getAttribute('aria-disabled'));
   if (first !== 'false') ko(`${w}: pelle non achetable après 20 clics`);
   await p.click('#rows li:first-child button');

@@ -15,16 +15,15 @@
 <script type="module" src="/src/main.ts"></script>
 </head>
 <body class="font-sans">
-<main id="app" class="fixed inset-0 grid grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 overflow-hidden px-[max(0.75rem,env(safe-area-inset-left))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] wide:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] wide:grid-rows-1">
-  <section id="stage" class="stage depth-0 relative flex min-h-0 flex-col overflow-hidden rounded-3xl border-[3px] border-ink shadow-hard" aria-label="Terrain">
+<main id="app" class="fixed inset-0 overflow-hidden" data-panel="">
+  <section id="stage" class="stage depth-0 absolute inset-0 flex min-h-0 flex-col overflow-hidden" aria-label="Terrain">
     <svg id="scene" class="absolute inset-0 h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"></svg>
     <canvas id="world" class="world absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
     <div id="stage-fx" class="pointer-events-none absolute inset-0 z-[15] overflow-hidden" aria-hidden="true"></div>
     <canvas id="fxc" class="pointer-events-none absolute inset-0 z-[25] h-full w-full" aria-hidden="true"></canvas>
     <header class="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 p-2">
-      <h1 class="logo col-span-2 hidden text-4xl wide:block" data-i18n="title">Taupe Tycoon</h1>
-      <h1 class="sr-only wide:hidden" data-i18n="title">Taupe Tycoon</h1>
-      <div id="hud" class="panel hud min-w-0 px-3 py-1">
+      <h1 class="sr-only" data-i18n="title">Taupe Tycoon</h1>
+      <div id="hud" class="panel hud min-w-0 max-w-[26rem] px-3 py-1">
         <p class="flex items-center gap-2"><span id="ico-dirt" class="shrink-0"></span><span class="sr-only" data-i18n="dirt">Terre</span><span id="hud-dirt" class="min-w-0 flex-1 truncate text-3xl font-bold leading-none sm:text-4xl">0</span><span class="shrink-0 text-right text-base font-bold leading-none"><span id="hud-ps">0</span><span class="text-sm" data-i18n="secShort">/s</span><span class="sr-only" data-i18n="perSec">par seconde</span></span></p>
         <div class="mt-1 flex items-center gap-2"><span id="ico-gem" class="shrink-0" aria-hidden="true"></span><span class="sr-only" data-i18n="gems">Gemmes</span><span id="hud-gems" class="min-w-[1.5ch] shrink-0 text-lg font-bold leading-none">0</span><div id="goal" class="goal min-w-0 flex-1" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Rebirth"><span id="goal-fill" class="goal-fill"></span></div><span id="goal-l" class="shrink-0 text-sm font-bold leading-none"></span></div>
       </div>
@@ -46,24 +45,18 @@
     <div id="rb-fx" class="rb-fx" aria-hidden="true" hidden></div>
   </section>
 
-  <section class="panel flex min-h-0 flex-col overflow-hidden p-0" aria-label="Menu">
-    <div role="tablist" class="grid grid-cols-4 gap-1.5 p-2 min-[420px]:gap-2" aria-label="Sections">
-      <button id="tab-dig" role="tab" type="button" class="tab" aria-controls="p-dig" aria-selected="true"><span class="tab-ico" data-ico="shovel"></span><span data-i18n="tabDig">Creuser</span></button>
-      <button id="tab-rebirth" role="tab" type="button" class="tab" aria-controls="p-rebirth" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="gem"></span><span data-i18n="tabRebirth">Rebirth</span><span id="rb-dot" class="dot" hidden><span class="sr-only" data-i18n="ready">(prêt)</span></span></button>
-      <button id="tab-trophies" role="tab" type="button" class="tab" aria-controls="p-trophies" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="trophy"></span><span data-i18n="tabTrophies">Succès</span></button>
-      <button id="tab-options" role="tab" type="button" class="tab" aria-controls="p-options" aria-selected="false" tabindex="-1"><span class="tab-ico" data-ico="sacoche"></span><span data-i18n="tabOptions">Options</span></button>
-    </div>
-    <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2">
-      <div id="p-dig" role="tabpanel" aria-labelledby="tab-dig" tabindex="-1">
+  <aside id="sheet" class="sheet" role="region" aria-labelledby="sheet-t" data-open="false" inert>
+    <div class="sheet-head"><span class="sheet-grip" aria-hidden="true"></span><h2 id="sheet-t" class="min-w-0 flex-1 truncate text-2xl font-bold leading-none" tabindex="-1"></h2><button id="sheet-x" type="button" class="btn btn-icon" data-i18n-label="close" aria-label="Fermer"><span data-ico="close"></span></button></div>
+    <div class="sheet-body min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 pb-3">
+      <div id="p-dig">
         <div class="mb-2 flex items-center justify-between gap-2" role="group" aria-labelledby="mode-l">
           <span id="mode-l" class="text-lg font-bold" data-i18n="mode">Quantité</span>
           <span class="flex gap-2"><button type="button" class="btn btn-sm" data-mode="1" aria-pressed="true">×1</button><button type="button" class="btn btn-sm" data-mode="10" aria-pressed="false">×10</button><button type="button" class="btn btn-sm" data-mode="max" aria-pressed="false" data-i18n="max">Max</button></span>
         </div>
         <ul id="rows" class="grid gap-2"></ul>
       </div>
-      <div id="p-rebirth" role="tabpanel" aria-labelledby="tab-rebirth" tabindex="-1" hidden>
-        <h2 class="text-2xl font-bold" data-i18n="rebirthTitle">Rebirth</h2>
-        <p class="mt-1 text-base" data-i18n="rebirthIntro"></p>
+      <div id="p-rebirth" hidden>
+        <p class="text-base" data-i18n="rebirthIntro"></p>
         <dl class="mt-2 grid grid-cols-2 gap-2 text-base">
           <div class="note"><dt data-i18n="rebirthGain">Gemmes à gagner</dt><dd id="rb-gain" class="text-2xl font-bold">0</dd></div>
           <div class="note"><dt data-i18n="mult">Bonus de production</dt><dd id="rb-mult" class="text-2xl font-bold">+0 %</dd></div>
@@ -75,14 +68,14 @@
         <h3 class="mt-4 text-xl font-bold" data-i18n="shopTitle">Boutique permanente</h3>
         <ul id="perms" class="mt-2 grid gap-2"></ul>
       </div>
-      <div id="p-trophies" role="tabpanel" aria-labelledby="tab-trophies" tabindex="-1" hidden>
-        <h2 class="text-2xl font-bold" data-i18n="trophyTitle">Succès</h2>
-        <p id="tr-sum" class="mt-1 text-base font-bold"></p>
+      <div id="p-trophies" hidden>
+        <p id="tr-sum" class="text-base font-bold"></p>
         <ul id="trophies" class="mt-2 grid gap-2"></ul>
-        <h3 class="mt-4 text-xl font-bold" data-i18n="statsTitle">Statistiques</h3>
-        <dl id="stats" class="mt-2 grid grid-cols-2 gap-2 text-base"></dl>
       </div>
-      <div id="p-options" role="tabpanel" aria-labelledby="tab-options" tabindex="-1" hidden class="grid gap-3">
+      <div id="p-stats" hidden>
+        <dl id="stats" class="grid grid-cols-2 gap-2 text-base"></dl>
+      </div>
+      <div id="p-options" hidden class="grid gap-3">
         <button id="opt-sound" type="button" class="btn w-full justify-between" aria-pressed="true"></button>
         <div class="note grid gap-1"><label for="opt-vol" class="flex justify-between text-lg font-bold"><span data-i18n="volume">Volume</span><span id="vol-v"></span></label><input id="opt-vol" type="range" min="0" max="100" step="5" class="vol w-full"></div>
         <button id="opt-ambient" type="button" class="btn w-full justify-between" aria-pressed="false"></button>
@@ -99,7 +92,14 @@
         <p class="flex flex-wrap items-center gap-x-2 text-base"><span data-i18n="about"></span> <a class="inline-flex min-h-[44px] min-w-[44px] items-center whitespace-nowrap underline" href="https://github.com/OpenGamingStudio/taupe-tycoon" rel="noopener noreferrer" data-i18n="code">Code source</a> · <span id="ver">v2.0.0</span></p>
       </div>
     </div>
-  </section>
+  </aside>
+  <nav id="dock" class="dock" aria-label="Menus">
+    <button id="tab-dig" type="button" class="dk" aria-controls="sheet" aria-expanded="false"><span class="tab-ico" data-ico="shovel"></span><span data-i18n="tabDig">Mine</span><span id="bd-dig" class="badge" hidden></span></button>
+    <button id="tab-rebirth" type="button" class="dk" aria-controls="sheet" aria-expanded="false"><span class="tab-ico" data-ico="gem"></span><span data-i18n="tabRebirth">Rebirth</span><span id="bd-rebirth" class="badge" hidden></span></button>
+    <button id="tab-trophies" type="button" class="dk" aria-controls="sheet" aria-expanded="false"><span class="tab-ico" data-ico="trophy"></span><span data-i18n="tabTrophies">Succès</span><span id="bd-trophies" class="badge" hidden></span></button>
+    <button id="tab-stats" type="button" class="dk" aria-controls="sheet" aria-expanded="false"><span class="tab-ico" data-ico="stats"></span><span data-i18n="tabStats">Stats</span></button>
+    <button id="tab-options" type="button" class="dk" aria-controls="sheet" aria-expanded="false"><span class="tab-ico" data-ico="sacoche"></span><span data-i18n="tabOptions">Options</span></button>
+  </nav>
   <dialog id="welcome" class="panel welcome" aria-labelledby="w-title">
     <h2 id="w-title" class="text-2xl font-bold" data-i18n="welcomeTitle">Bon retour !</h2>
     <p id="w-text" class="mt-2 text-lg"></p>
