@@ -85,6 +85,8 @@ export const ICONS: Record<string, string> = {
     <path d="M7 41c1-3 4-4 8-4 3 0 4 2 8 2s5-3 9-3 6 2 8 5z" fill="${C.woodDark}"/>${shine('M12 31c2-5 6-8 11-8')}
     <circle cx="17" cy="33" r="2.4" fill="${C.woodDark}"/><circle cx="31" cy="30" r="2" fill="${C.woodDark}"/>
     <path d="M32 13l3-5 5 3-2 6zM16 12l-4-4" fill="${C.wood}" ${st(2.6)}/>`,
+  close: `<path d="M10 10l28 28M38 10L10 38" fill="none" ${st(9)}/><path d="M10 10l28 28M38 10L10 38" fill="none" stroke="#ff7aa8" stroke-width="4.5" stroke-linecap="round"/>`,
+  stats: `<rect x="6" y="26" width="10" height="16" rx="2" fill="${C.gem}" ${st()}/><rect x="19" y="14" width="10" height="28" rx="2" fill="${C.gold}" ${st()}/><rect x="32" y="6" width="10" height="36" rx="2" fill="#ff7aa8" ${st()}/>`,
   soundOn: `<path d="M5 18h8l9-8v28l-9-8H5z" fill="${C.gold}" ${st()}/><path d="M30 17c3 4 3 10 0 14M36 12c6 7 6 17 0 24" fill="none" ${st(3.4)}/>`,
   soundOff: `<path d="M5 18h8l9-8v28l-9-8H5z" fill="${C.cream}" ${st()}/><path d="M31 18l11 12M42 18L31 30" fill="none" stroke="${C.red}" stroke-width="3.6" stroke-linecap="round"/>`,
   lock: `<rect x="9" y="21" width="30" height="22" rx="5" fill="${C.cream}" ${st()}/><path d="M15 21v-6c0-6 4-9 9-9s9 3 9 9v6" fill="none" ${st(3.4)}/><circle cx="24" cy="31" r="3.200" fill="${k}"/>`,

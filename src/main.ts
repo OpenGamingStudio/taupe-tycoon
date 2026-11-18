@@ -6,7 +6,7 @@ import {
 import { CHIPS, ICONS, MOLE, SCENE, icon } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
 import { Lang, setLang, t } from './i18n';
-import { Options, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
+import { Options, PANELS, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
 import * as sfx from './sound';
 import { VERSION } from './version';
 import { BUILD, watch } from './update';
@@ -23,7 +23,7 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const loaded = load();
 let s: State = loaded?.s ?? newState();
-const opts: Options = loaded?.opts ?? { lang: defaultLang(), reduced: false, mode: 1, sound: true, seen: 0, volume: 60, ambient: true, music: true, musicVolume: 35 };
+const opts: Options = loaded?.opts ?? { lang: defaultLang(), reduced: false, mode: 1, sound: true, seen: 0, volume: 60, ambient: true, music: true, musicVolume: 35, panel: '' };
 sfx.setEnabled(opts.sound);
 sfx.setVolume(opts.volume);
 sfx.setAmbient(opts.ambient);
@@ -252,7 +252,7 @@ let hintTimer = 0;
 function hintKey(): string | null {
   const any = s.shovel + s.gens.reduce((a, b) => a + b, 0) + s.rebirths > 0;
   if (rebirthGain(s) >= 1 && s.rebirths === 0 && !(opts.seen & 2)) return 'hintRebirth';
-  if (!any) return s.clicks < 3 || s.dirt < SHOVEL_BASE ? 'hintDig' : 'hintBuy';
+  if (!any) return s.clicks < 3 || s.dirt < SHOVEL_BASE ? 'hintDig' : openPanelName() ? 'hintBuy' : 'hintOpen';
   if (!(opts.seen & 1) && s.gens.some((g) => g > 0)) {
     if (!hintTimer) hintTimer = window.setTimeout(() => { opts.seen |= 1; }, 6000);
     return 'hintAuto';
@@ -309,7 +309,7 @@ function render() {
     setText(r.mile, locked ? '' : nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : `${t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm })}${milestoneMult(level) > 1 ? ` · ×${f(milestoneMult(level))}` : ''}`);
     setHtml(r.cost, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
     setDisabled(r.el, locked || s.dirt < cost);
-    const wantHot = !hot && hintKey() === 'hintBuy' && !locked && s.dirt >= cost;
+    const wantHot = !hot && (hintKey() === 'hintBuy' || hintKey() === 'hintOpen') && !locked && s.dirt >= cost;
     if (wantHot) hot = true;
     r.el.classList.toggle('hot', wantHot && !reducedMotion());
   });
@@ -321,7 +321,6 @@ function render() {
   const msg = gain < 1 ? t('rebirthNeed', { n: f(GEM_DIV) }) : rebirthAdvised(s) ? t('rebirthAdvised') : t('rebirthWait');
   setText($('rb-msg'), msg);
   setDisabled($('rb-go'), gain < 1);
-  $('rb-dot').hidden = !(rebirthAdvised(s) && !($('tab-rebirth').getAttribute('aria-selected') === 'true'));
   PERMS.forEach((p, i) => {
     const r = permRows[i];
     const lvl = s.perms[i];
@@ -338,8 +337,9 @@ function render() {
   });
   renderOwned();
   renderBuffs();
-  const sel = tabs.find((n) => $('tab-' + n).getAttribute('aria-selected') === 'true');
-  if (sel === 'trophies') renderTrophies();
+  const sel = openPanelName();
+  if (sel === 'trophies' || sel === 'stats') renderTrophies();
+  renderBadges(hot);
   const hk = hintKey();
   const hint = $('hint');
   if (hk) { setText(hint, t(hk)); hint.hidden = false; } else hint.hidden = true;
@@ -369,9 +369,29 @@ function render() {
     b.setAttribute('aria-pressed', String(String(opts.mode) === b.dataset.mode)));
 }
 
+/** Pastilles du dock : nombre d'achats possibles (Mine, Rebirth) ; le bouton de la Mine pulse quand le tout premier achat est possible. */
+function setBadge(id: string, n: number | string) {
+  const el = $('bd-' + id);
+  const v = n ? String(n) : '';
+  el.hidden = !v;
+  if (el.textContent !== v) { el.textContent = v; if (v && !reducedMotion()) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } }
+  if (v) el.setAttribute('aria-label', t('badgeBuy', { n: v }));
+}
+function renderBadges(hot: boolean) {
+  let dig = 0;
+  rows.forEach((r) => { if (r.el.getAttribute('aria-disabled') !== 'true') dig++; });
+  setBadge('dig', dig);
+  let perm = 0;
+  permRows.forEach((r) => { if (r.el.getAttribute('aria-disabled') !== 'true') perm++; });
+  setBadge('rebirth', rebirthAdvised(s) ? '!' : perm);
+  $('tab-dig').classList.toggle('hot', hot && !openPanelName() && !reducedMotion());
+}
+
 function i18nStatic() {
   setLang(opts.lang);
   document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n!); });
+  document.querySelectorAll<HTMLElement>('[data-i18n-label]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nLabel!)); });
+  if (openPanelName()) $('sheet-t').textContent = t(panelTitle[openPanelName()]);
   document.title = t('title');
   document.querySelector('.stage')?.setAttribute('aria-label', t('stage'));
   ownedKey = '';
@@ -563,27 +583,52 @@ nuggetEl.addEventListener('click', () => {
   render();
 });
 
-// ---------- onglets ----------
-const tabs = ['dig', 'rebirth', 'trophies', 'options'];
-function selectTab(name: string, focus = false) {
+// ---------- tiroir de menus et dock ----------
+const tabs = PANELS;
+const app = $('app');
+const sheet = $('sheet');
+const panelTitle: Record<string, string> = { dig: 'panelDig', rebirth: 'rebirthTitle', trophies: 'trophyTitle', stats: 'statsTitle', options: 'tabOptions' };
+const openPanelName = () => app.dataset.panel || '';
+/** Ouvre un panneau (ou le ferme si `name` est vide) ; un seul est ouvert à la fois, l'état est mémorisé. */
+function openPanel(name: string, focus = true) {
+  const prev = openPanelName();
+  const wasOpen = prev !== '';
+  if (name === prev) return;
+  const hadFocus = sheet.contains(document.activeElement);
+  app.dataset.panel = name;
+  opts.panel = name;
   tabs.forEach((n) => {
     const on = n === name;
-    const tab = $('tab-' + n);
-    tab.setAttribute('aria-selected', String(on));
-    tab.tabIndex = on ? 0 : -1;
     $('p-' + n).hidden = !on;
-    if (on && focus) tab.focus();
+    $('tab-' + n).setAttribute('aria-expanded', String(on));
     if (on && n === 'rebirth') opts.seen |= 2;
   });
+  sheet.dataset.open = String(name !== '');
+  if (name) {
+    sheet.removeAttribute('inert');
+    setText($('sheet-t'), t(panelTitle[name]));
+    sheet.scrollTo?.(0, 0); $('p-' + name).parentElement!.scrollTop = 0;
+    if (focus && !wasOpen) $('sheet-t').focus({ preventScroll: true });
+  } else {
+    sheet.setAttribute('inert', '');
+    if (hadFocus && focus) $('tab-' + prev).focus({ preventScroll: true });
+  }
+  persist();
+  render();
 }
-tabs.forEach((n, i) => {
-  $('tab-' + n).addEventListener('click', () => { sfx.tab(); selectTab(n); render(); });
-  $('tab-' + n).addEventListener('keydown', (e) => {
-    const k = e.key;
-    const m = tabs.length;
-    const to = k === 'ArrowRight' ? (i + 1) % m : k === 'ArrowLeft' ? (i + m - 1) % m : k === 'Home' ? 0 : k === 'End' ? m - 1 : -1;
-    if (to >= 0) { e.preventDefault(); selectTab(tabs[to], true); render(); }
-  });
+tabs.forEach((n) => {
+  $('tab-' + n).addEventListener('click', () => { sfx.tab(); openPanel(openPanelName() === n ? '' : n); });
+});
+$('sheet-x').addEventListener('click', () => { sfx.tab(); openPanel(''); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && openPanelName() && !welcome.open) { e.preventDefault(); openPanel(''); }
+});
+// un clic hors du tiroir et du dock le ferme (la taupe et la pépite restent jouables : on creuse sans fermer)
+document.addEventListener('pointerdown', (e) => {
+  if (!openPanelName()) return;
+  const el = e.target as Element | null;
+  if (!el || el.closest('#sheet, #dock, #update, #welcome, #mole, #nugget')) return;
+  openPanel('', false);
 });
 
 document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) =>
@@ -604,7 +649,7 @@ function twoTap(btn: HTMLElement, key: string, action: () => void) {
     i18nStatic(); render();
   });
 }
-twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.4, 90); coinsToHud(b.width / 2, b.height * 0.5, 10, 'gem'); shake(3); vibe([40, 40, 80]); } notify(t('rebirthDone', { n: g })); selectTab('dig'); } });
+twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.4, 90); coinsToHud(b.width / 2, b.height * 0.5, 10, 'gem'); shake(3); vibe([40, 40, 80]); } notify(t('rebirthDone', { n: g })); } });
 twoTap($('opt-reset'), 'resetConfirm', () => {
   wipe(); s = newState(); lastWall = Date.now(); nuggetIn = 45; nuggetLeft = 0; nuggetEl.hidden = true;
   say(t('resetDone')); persist();
@@ -685,7 +730,7 @@ window.addEventListener('pagehide', () => persist());
 
 awardTrophies(true);
 i18nStatic();
-render();
+if (opts.panel) { const p0 = opts.panel; opts.panel = ''; openPanel(p0, false); } else render();
 
 // ---------- mise à jour du jeu ----------
 const updateBar = $('update');

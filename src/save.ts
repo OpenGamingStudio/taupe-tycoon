@@ -4,12 +4,14 @@ import { TROPHIES } from './trophies';
 
 export const SAVE_KEY = 'taupe-tycoon-save';
 export const SAVE_VERSION = 3;
+export const PANELS = ['dig', 'rebirth', 'trophies', 'stats', 'options'];
 export interface Options {
   lang: 'fr' | 'en'; reduced: boolean; mode: 1 | 10 | 'max'; sound: boolean; seen: number;
   volume: number; // 0 à 100
   ambient: boolean;
   music: boolean;
   musicVolume: number; // 0 à 100
+  panel: string; // menu ouvert au dernier lancement ('' = aucun)
 }
 export interface Saved { s: State; at: number; opts: Options }
 
@@ -53,6 +55,7 @@ export function sanitize(raw: unknown): Saved | null {
     volume: typeof o.volume === 'number' && isFinite(o.volume) ? Math.max(0, Math.min(100, Math.round(o.volume))) : 60,
     ambient: o.ambient !== false, // V3 : activée par défaut (un choix « désactivé » déjà fait est gardé)
     music: o.music !== false,
+    panel: typeof o.panel === 'string' && PANELS.includes(o.panel) ? o.panel : '',
     musicVolume: typeof o.musicVolume === 'number' && isFinite(o.musicVolume) ? Math.max(0, Math.min(100, Math.round(o.musicVolume))) : 35,
   };
   return { s, at: Math.min(num(r.at, Date.now(), Date.now()), Date.now()), opts };

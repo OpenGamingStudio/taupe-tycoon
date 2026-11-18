@@ -129,7 +129,7 @@ describe('sauvegarde : migration et robustesse', () => {
   });
   it('export puis import redonne le même état', () => {
     const s = newState(); s.gens[0] = 12; s.dirt = 777; s.trophies = ['clic1'];
-    const text = exportText(s, { lang: 'en', reduced: true, mode: 1, sound: true, seen: 0, volume: 30, ambient: true, music: false, musicVolume: 20 });
+    const text = exportText(s, { lang: 'en', reduced: true, mode: 1, sound: true, seen: 0, volume: 30, ambient: true, music: false, musicVolume: 20, panel: 'dig' });
     const r = importText(text)!;
     expect(r.s.gens[0]).toBe(12); expect(r.s.dirt).toBe(777); expect(r.s.trophies).toEqual(['clic1']); expect(r.opts.volume).toBe(30); expect(r.opts.music).toBe(false); expect(r.opts.musicVolume).toBe(20);
   });

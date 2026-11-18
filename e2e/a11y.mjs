@@ -41,7 +41,7 @@ for (const [w, h] of [[320, 568], [390, 844], [430, 932], [1440, 900]]) {
     if (r.ov > 0) ko(`${w} ${tab} débordement ${r.ov}`);
   }
   // clavier : Tab parcourt, focus visible (outline) sur chaque arrêt
-  await p.click('#tab-dig'); await p.evaluate(() => document.activeElement.blur());
+  await p.click('#tab-dig'); await p.focus('#mole');
   const stops = [];
   for (let i = 0; i < 40; i++) {
     await p.keyboard.press('Tab');
@@ -50,14 +50,13 @@ for (const [w, h] of [[320, 568], [390, 844], [430, 932], [1440, 900]]) {
     stops.push(st.id);
     if (!st.outline) ko(`${w} focus sans contour : ${st.id}`);
   }
-  if (new Set(stops).size < 10) ko(`${w} parcours clavier trop court : ${stops.length}`);
+  if (new Set(stops).size < 10) ko(`${w} parcours clavier trop court : ${stops.join(',')}`);
   // Entrée sur la taupe creuse ; flèches changent d'onglet
   await p.focus('#mole'); await p.$eval('#mole', (e) => e.classList.remove('hit'));
   await p.keyboard.press('Enter');
   if (!(await p.$eval('#mole', (e) => e.classList.contains('hit')))) ko(`${w} clavier : la taupe ne creuse pas`);
-  await p.focus('#tab-dig'); await p.keyboard.press('ArrowRight');
-  const sel = await p.$eval('#tab-rebirth', (e) => e.getAttribute('aria-selected'));
-  if (sel !== 'true') ko(`${w} flèche droite sans effet`);
+  await p.keyboard.press('Escape');
+  if ((await p.$eval('#app', (e) => e.dataset.panel)) !== '') ko(`${w} Échap ne ferme pas le menu`);
   // reduced motion : aucune animation de CSS active
   await p.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   await p.click('#tab-dig'); await p.click('#mole');

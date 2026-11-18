@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.4.0 — 2026-11-18 (V4 « TYCOON » 2/3 : plein écran de jeu et menus repliables)
+- La scène (mine, taupes, effets) occupe tout l'écran ; en-tête réduit à un compteur compact (terre, /s, gemmes, progression).
+- Les menus passent dans un dock de 5 boutons en bas (Mine, Rebirth, Succès, Stats, Options). Chaque menu est un tiroir qui s'ouvre et se ferme avec animation : bottom-sheet sur mobile, panneau latéral sur grand écran/paysage. Un seul ouvert à la fois, fermé par défaut sur une nouvelle partie ; bouton ×, Échap et clic hors du tiroir ferment (creuser ou cueillir une pépite ne le ferme pas) ; le dernier menu ouvert est mémorisé (`opts.panel`, anciennes sauvegardes = fermé).
+- Pastilles de notification sur le dock : nombre d'achats possibles (Mine, Rebirth) ou « ! » quand le rebirth est conseillé ; le bouton Mine pulse quand le tout premier achat est possible.
+- Les statistiques ont leur propre menu (séparées des succès).
+
 ## 2.3.0 — 2026-11-18 (V4 « TYCOON » 1/3 : mises à jour)
 - Cause du « jeu qui ne se met pas à jour » : nginx ne donnait aucun `Cache-Control` à `index.html` ; le navigateur (ou l'appli installée) le gardait comme page « fraîche » (cache heuristique) et continuait à charger d'anciens fichiers.
 - Correctif : `index.html`, icônes et manifeste en `no-cache` (revalidés à chaque ouverture), `version.json` en `no-store`, `/assets/` à empreinte en `immutable`.

@@ -55,11 +55,9 @@ for (const w of [320, 390, 1440]) {
     check('20 succès listés', n === 20, String(n));
     const txt = await q.$eval('#p-trophies', (e) => e.textContent);
     check('aucun nombre à virgule (succès)', !/\d[.,]\d/.test(txt.replace(/\d[  ]?\d{3}/g, '')), txt.slice(0, 80));
-    // clavier : flèches entre onglets
-    await q.focus('#tab-trophies'); await q.keyboard.press('ArrowRight'); await wait(100);
-    check('flèche droite : onglet Options', (await q.$eval('#tab-options', (e) => e.getAttribute('aria-selected'))) === 'true');
-    await q.keyboard.press('End'); await q.keyboard.press('Home'); await wait(50);
-    check('Home : onglet Creuser', (await q.$eval('#tab-dig', (e) => e.getAttribute('aria-selected'))) === 'true');
+    // clavier : Échap ferme le menu, le focus revient sur le dock
+    await q.keyboard.press('Escape'); await wait(350);
+    check('Échap ferme le menu', (await q.$eval('#app', (e) => e.dataset.panel)) === '');
   }
   check(`aucune erreur console (${w})`, q.errors.length === 0, q.errors.join(' | '));
   await q.close();
