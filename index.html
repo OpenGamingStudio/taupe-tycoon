@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Taupe Tycoon</title>
 <meta name="description" content="Taupe Tycoon, un jeu web open source d'OpenGamingStudio : creuse avec une taupe à lunettes, bâtis ton empire minier et fais des rebirths.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#8a5a2b">
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="favicon.ico" sizes="32x32">
@@ -107,6 +107,7 @@
     <p id="w-cap" class="mt-2 text-base"></p>
     <button id="w-ok" type="button" class="btn btn-big mt-3 w-full" data-i18n="welcomeOk">Super !</button>
   </dialog>
+  <div id="update" class="update" role="status" hidden><span class="min-w-0 text-base font-bold leading-tight" data-i18n="updateText">Nouvelle version disponible</span><button id="update-go" type="button" class="btn btn-sm shrink-0" data-i18n="updateGo">Recharger</button><button id="update-x" type="button" class="btn btn-icon shrink-0" data-i18n="updateLater" aria-label="Plus tard">×</button></div>
   <div id="live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 </main>
 </body>

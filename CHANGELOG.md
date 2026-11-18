@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.3.0 — 2026-11-18 (V4 « TYCOON » 1/3 : mises à jour)
+- Cause du « jeu qui ne se met pas à jour » : nginx ne donnait aucun `Cache-Control` à `index.html` ; le navigateur (ou l'appli installée) le gardait comme page « fraîche » (cache heuristique) et continuait à charger d'anciens fichiers.
+- Correctif : `index.html`, icônes et manifeste en `no-cache` (revalidés à chaque ouverture), `version.json` en `no-store`, `/assets/` à empreinte en `immutable`.
+- Détection : le jeu relit `version.json` au retour au premier plan, au retour du réseau et toutes les 5 minutes ; s'il y a une nouvelle construction, bannière « Nouvelle version disponible — Recharger » (la partie est sauvegardée avant le rechargement). Pas de service worker (les anciens, s'il en reste, et leurs caches sont supprimés). `connect-src 'self'` (CSP) pour cette seule lecture.
+- Version (et identifiant de construction en infobulle) affichées dans Options.
+
 ## 2.2.0 — 2026-11-18 (V3 « JUICE »)
 ### Sons et musique
 - Sound design refait : coup de pelle (trois sons au hasard, hauteur variable, tintement de pierre précieuse), ramassage en gamme pentatonique montante, fanfare de palier, arrivée d'une taupe, accord de combo, refus à deux notes.
