@@ -226,6 +226,7 @@ function rollTo(v: number) {
   };
   rollRaf = requestAnimationFrame(step);
 }
+let permsKey = '';
 let ownedKey = '';
 let ownedPrev: number[] = [];
 function renderOwned() {
@@ -275,6 +276,7 @@ function render() {
   world.setReduced(reducedMotion());
   jfx.setReduced(reducedMotion());
   world.setRates(GENS.map((_, i) => genProd(s, i)));
+  if (permsKey !== s.perms.join(',')) { world.setPerms(s.perms, permsKey !== ''); permsKey = s.perms.join(','); }
   world.setLevel(s.gens.reduce((a, n) => a + MILESTONES.filter((m) => n >= m).length, 0));
   if (!st.classList.contains('depth-' + d)) st.className = st.className.replace(/depth-\d/, 'depth-' + d);
   const gl = goal();
