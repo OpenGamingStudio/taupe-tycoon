@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.7.0 — 2026-11-18 (la scène : paysage, fin de partie, menu ouvert)
+- Sur ordinateur et en paysage, le décor n'est plus rogné : le ciel, le soleil, les nuages et les collines restent visibles, le décor se prolonge sur les côtés, plus de piliers ni de rochers géants coupés.
+- Fin de partie : au plus quelques taupes et machines par galerie (le compteur porte le nombre réel), plus de halos translucides, gains flottants opaques à contour encre, profondeur 2 en aplats violets vifs.
+- Menu ouvert sur téléphone : la taupe garde au moins 120 px entièrement visibles (vignettes et bulle d'aide masquées, toast sous le compteur).
+- Fer de la pelle de la mascotte plus large (+30 %), plus recouvert par les vignettes.
+
 ## 2.6.1 — 2026-11-18 (correctifs de la revue des assets)
 - Plus de texte « fr » parasite sous les Succès et les Statistiques ; plus de petit tiret à côté de « Niv. N » dans la Boutique permanente.
 - Un succès n'est annoncé que par la bannière (plus de toast en double).

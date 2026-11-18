@@ -17,7 +17,7 @@
 <body class="font-sans">
 <main id="app" class="fixed inset-0 overflow-hidden" data-panel="">
   <section id="stage" class="stage depth-0 absolute inset-0 flex min-h-0 flex-col overflow-hidden" aria-label="Terrain">
-    <svg id="scene" class="absolute inset-0 h-full w-full" viewBox="0 -60 400 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"></svg>
+    <svg id="scene" class="scene" viewBox="0 -60 400 360" aria-hidden="true" focusable="false"></svg>
     <canvas id="world" class="world absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
     <div id="stage-fx" class="pointer-events-none absolute inset-0 z-[15] overflow-hidden" aria-hidden="true"></div>
     <canvas id="fxc" class="pointer-events-none absolute inset-0 z-[25] h-full w-full" aria-hidden="true"></canvas>
@@ -34,7 +34,7 @@
       <ul id="buffs" class="pointer-events-none absolute left-1 top-1 z-20 grid gap-1"></ul>
       <button id="nugget" type="button" class="nugget" hidden></button>
       <div id="fx" class="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true"></div>
-      <button id="mole" type="button" data-mood="idle" class="mole absolute inset-x-0 bottom-[-1.75rem] mx-auto h-[calc(100%+1.75rem)] max-h-[min(26rem,44%)] w-full max-w-[26rem] touch-manipulation" aria-label="Creuser">
+      <button id="mole" type="button" data-mood="idle" class="mole absolute inset-x-0 bottom-0 mx-auto h-full max-h-[min(26rem,48%)] w-full max-w-[26rem] touch-manipulation" aria-label="Creuser">
         <svg id="mole-svg" viewBox="0 0 240 240" class="h-full w-full" aria-hidden="true" focusable="false"></svg>
       </button>
     </div>
