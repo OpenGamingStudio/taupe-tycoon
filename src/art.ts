@@ -88,6 +88,8 @@ export const ICONS: Record<string, string> = {
   soundOn: `<path d="M5 18h8l9-8v28l-9-8H5z" fill="${C.gold}" ${st()}/><path d="M30 17c3 4 3 10 0 14M36 12c6 7 6 17 0 24" fill="none" ${st(3.4)}/>`,
   soundOff: `<path d="M5 18h8l9-8v28l-9-8H5z" fill="${C.cream}" ${st()}/><path d="M31 18l11 12M42 18L31 30" fill="none" stroke="${C.red}" stroke-width="3.6" stroke-linecap="round"/>`,
   lock: `<rect x="9" y="21" width="30" height="22" rx="5" fill="${C.cream}" ${st()}/><path d="M15 21v-6c0-6 4-9 9-9s9 3 9 9v6" fill="none" ${st(3.4)}/><circle cx="24" cy="31" r="3.200" fill="${k}"/>`,
+  trophy: `<path d="M13 8h22v11c0 7-5 12-11 12s-11-5-11-12z" fill="${C.gold}" ${st()}/><path d="M13 12H6c0 7 3 10 8 11M35 12h7c0 7-3 10-8 11" fill="none" ${st(3)}/><path d="M24 31v7" ${st(3.4)}/><rect x="14" y="38" width="20" height="6" rx="2" fill="${C.goldDark}" ${st()}/>${shine('M17 12v7')}`,
+  nugget: `<path d="M24 5l5 11 12 1-9 8 3 12-11-7-11 7 3-12-9-8 12-1z" fill="${C.gold}" ${st()}/><path d="M24 12l2.500 6" stroke="#fff" stroke-opacity=".75" stroke-width="2.400" stroke-linecap="round"/>`,
 };
 
 export const icon = (id: string, cls = 'h-9 w-9 shrink-0') =>

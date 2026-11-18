@@ -18,7 +18,9 @@ export function fmt(n: number, _lang: string = 'fr'): string {
   if (r < 10000) return group(r);
   let tier = Math.min(Math.floor(Math.log10(r) / 3), SUFFIX.length - 1);
   if (tier > 0 && r / Math.pow(1000, tier) < 10) tier--;
-  return group(Math.floor(r / Math.pow(1000, tier))) + SUFFIX[tier];
+  const coef = Math.floor(r / Math.pow(1000, tier));
+  if (coef >= 1e12) return group(999999999999) + SUFFIX[tier] + '+'; // au-delà : plafond d'affichage, jamais de notation scientifique
+  return group(coef) + SUFFIX[tier];
 }
 
 /** Pourcentage de bonus, entier : +25 % (fr) / +25% (en). */

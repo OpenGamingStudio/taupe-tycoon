@@ -135,6 +135,26 @@ html, body {
   /* bulle, notification, rebirth */
   .hint { @apply rounded-2xl border-[3px] border-ink bg-white px-3 py-1 text-center text-base font-bold shadow-hard; animation: pop 0.3s ease-out; }
   .toast { @apply absolute left-1/2 top-1/3 z-30 max-w-[calc(100%-1rem)] -translate-x-1/2 rounded-2xl border-[3px] border-ink bg-ink px-3 py-2 text-center text-lg font-bold text-cream shadow-hard; animation: toast 2.4s ease-out forwards; pointer-events: none; }
+
+  /* paliers, succès, pépite, bonus, volume, dialogue */
+  .row .mile { @apply block text-sm; color: #4a3a2c; }
+  .trophy { @apply grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-2xl border-[3px] border-ink bg-cream px-2 py-2; }
+  .trophy .tile { @apply grid h-12 w-12 place-items-center rounded-xl border-[3px] border-ink bg-white; }
+  .trophy .tile svg { @apply h-9 w-9; }
+  .trophy.is-on { @apply bg-white; }
+  .trophy.is-on .tile { @apply bg-nugget; }
+  .trophy.is-off { color: #4a3a2c; }
+  .buff { @apply rounded-xl border-[3px] border-ink bg-nugget px-2 py-0.5 text-base font-bold shadow-hard; }
+  .nugget { @apply absolute z-30 grid h-14 w-14 place-items-center rounded-full border-[3px] border-ink bg-white shadow-hard; touch-action: manipulation; animation: bob 1.2s ease-in-out infinite; }
+  .nugget[hidden] { display: none; }
+  .nugget svg { @apply h-10 w-10; }
+  .nugget:focus-visible { outline: 3px solid #2b1d14; outline-offset: 3px; box-shadow: 0 0 0 3px #fff, 4px 4px 0 #2b1d14; }
+  .vol { height: 44px; accent-color: #8a5a2b; background: transparent; }
+  .io { @apply w-full resize-none rounded-xl border-[3px] border-ink bg-white p-2 text-base; font-family: ui-monospace, monospace; min-height: 72px; }
+  .io:focus-visible, .vol:focus-visible { outline: 3px solid #2b1d14; outline-offset: 3px; }
+  .welcome { margin: auto; width: min(24rem, calc(100% - 1.5rem)); padding: 1rem; }
+  .welcome::backdrop { background: rgba(43, 29, 20, 0.6); }
+  @media (max-width: 399px) { .tab-ico { display: none; } .tab { font-size: 0.875rem; } }
   .rb-fx { position: absolute; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
   .rb-fx .wave { position: absolute; left: 50%; top: 60%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 999px; background: #fff; animation: wave 1.1s ease-out forwards; }
   .rb-fx .shard { position: absolute; left: 50%; top: 60%; width: 34px; height: 34px; margin: -17px 0 0 -17px; animation: shard 1.2s cubic-bezier(.2,.7,.4,1) forwards; }

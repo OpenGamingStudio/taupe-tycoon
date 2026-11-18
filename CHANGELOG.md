@@ -2,6 +2,25 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.1.0 — 2026-11-18
+### Sons
+- Moteur sonore refait : coup de pelle (choc + gravier, hauteur aléatoire), achat, amélioration permanente, succès, pépite, rebirth, ambiance de galerie (optionnelle, désactivée par défaut).
+- Volume réglable (curseur), mute enregistré ; rien ne sonne avant la première interaction ; le son se met en pause quand la page est cachée.
+### Nouveautés
+- Succès : 20 trophées, chacun donne +2 % de production pour toujours ; page Succès avec les statistiques (terre creusée, temps de jeu, meilleur run, pépites...).
+- Pépite d'or : événement aléatoire à cueillir (Ruée ×3 la production, Coup de génie ×5 le clic, ou Trésor = 5 min de production).
+- Paliers : chaque bâtiment (et la pelle) double sa production à 10, 25, 50 et 100 niveaux ; le prochain palier est affiché sur chaque ligne.
+- Fenêtre « Bon retour » : durée d'absence, terre gagnée, plafond hors-ligne et son extension par la Sacoche.
+- Export / import de la sauvegarde (texte copiable), validé et borné.
+### Équilibrage
+- Courbe simulée (bot) : premier rebirth en 18-35 min, tests d'équilibrage (aucun palier mort, aucun achat dominant). La Pelle en or et le Pécule suivent désormais la production (ils étaient dépassés en milieu de partie). Détail : BALANCE.md.
+### Corrections
+- Onglet en arrière-plan : le temps écoulé est rattrapé au retour (il était perdu au-delà d'1 s par tick).
+- Sauvegarde : valeurs bornées (une sauvegarde modifiée ne produit plus Infinity/NaN), objets permanents limités à leur maximum.
+- Deux onglets ouverts : le plus ancien ne sauvegarde plus (il écrasait la partie).
+- Très grands nombres : plus de notation scientifique.
+- Liste complète : REVIEW.md.
+
 ## 2.0.0 — 2026-11-18
 ### Visuels
 - Tous les assets refaits en SVG, dans un seul langage (aplats, contour encre, ombre d'un ton, aucun dégradé) : taupe à lunettes avec casque de mineur, salopette et pelle dans la main gauche ; 12 icônes (pelle, 6 bâtiments, 4 objets permanents) ; décor souterrain (herbe, strates, racines, fossiles, caverne étayée) qui change de profondeur avec les bâtiments débloqués ; éclats de terre, pépites et gemmes.
