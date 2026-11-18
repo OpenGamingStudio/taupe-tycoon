@@ -2,6 +2,10 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.5.1 — 2026-11-18 (correctif : lignes d'achat en x10 / Max)
+- Les pastilles « Niv. N » et « +N » sont sur une ligne propre sous le titre (retour à la ligne avec espacement), plus collées au titre.
+- « Gain : +217/s » et « Actuel : 65/s » : une valeur par libellé. Textes de palier courts (« Palier niv. 10 : clic ×2 »).
+
 ## 2.5.0 — 2026-11-18 (V4 « TYCOON » 3/3 : chaque achat passif se voit dans la mine)
 - Foreuse, Machine à creuser, Mine et Excavatrice ne sont plus des taupes : ce sont de vraies machines animées dans les galeries (foreuse à vapeur avec mèche et fumée, tunnelier avec tapis de déblais, puits de mine avec benne qui monte et descend, excavatrice au bras articulé). Apprentie et Taupinière gardent leurs taupes ouvrières.
 - Plusieurs exemplaires s'affichent avec le nombre possédé (plafonné par la place sur l'écran, une machine représente alors un groupe). Le palier (10 / 25 / 50 / 100) change l'allure : lampe, fanion, halo, dorures.

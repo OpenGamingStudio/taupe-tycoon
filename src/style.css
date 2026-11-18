@@ -72,7 +72,11 @@ html, body {
   .row:not([aria-disabled="true"]) { @apply bg-white; }
   .row:not([aria-disabled="true"]) .tile { @apply bg-nugget; }
   .row:active:not([aria-disabled="true"]) { @apply translate-x-1 translate-y-1 shadow-none; }
-  .row .lv { @apply ml-1 rounded-lg border-2 border-ink bg-cream px-1.5 text-sm font-bold; }
+  .row .badges { @apply flex flex-wrap items-center gap-1 py-0.5; }
+  .row .badges [hidden] { display: none; }
+  .row .plus { @apply rounded-lg border-2 border-ink bg-nugget px-1.5 text-sm font-bold; }
+  .row .cur { @apply block text-sm; color: #4a3a2c; }
+  .row .lv { @apply rounded-lg border-2 border-ink bg-cream px-1.5 text-sm font-bold; }
   .row .stat { @apply block text-sm font-bold; }
   .row .cost { @apply flex items-center gap-1 whitespace-nowrap rounded-xl border-[3px] border-ink bg-nugget px-2 py-1 text-base font-bold; }
   .row .cost svg { @apply h-5 w-5; }
