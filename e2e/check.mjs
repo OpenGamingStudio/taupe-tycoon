@@ -17,7 +17,7 @@ for (const [w, h] of [[320, 568], [360, 740], [430, 932], [768, 1024], [1280, 72
   if (small.length) ko(`${w}: cibles < 44 px : ${small}`);
   for (let i = 0; i < 20; i++) await p.click('#mole');
   const dirt = await p.$eval('#hud-dirt', (e) => e.textContent);
-  if (dirt.trim() !== '20') ko(`${w}: 20 clics -> ${dirt}`);
+  if (dirt.trim() !== '200') ko(`${w}: 20 clics -> ${dirt}`);
   const first = await p.$eval('#rows button', (e) => e.getAttribute('aria-disabled'));
   if (first !== 'false') ko(`${w}: pelle non achetable après 20 clics`);
   await p.click('#rows li:first-child button');

@@ -1,6 +1,6 @@
 import {
   GEM_BONUS, GEM_DIV, GENS, GROWTH, OFFLINE_BASE, OFFLINE_STEP, PERMS, PERM_CLICK_BONUS, PERM_PROD_BONUS,
-  PROD_EXP, SHOVEL_BASE, SHOVEL_POWER,
+  CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER,
 } from './config';
 
 export interface State {
@@ -29,7 +29,7 @@ const permLevel = (s: State, id: string) => s.perms[PERMS.findIndex((p) => p.id 
 export const gemMult = (s: State) => 1 + GEM_BONUS * s.gemsEarned;
 export const prodMult = (s: State) => gemMult(s) * (1 + PERM_PROD_BONUS * permLevel(s, 'lunettes'));
 export const clickPower = (s: State) =>
-  (1 + SHOVEL_POWER * s.shovel) * gemMult(s) * (1 + PERM_CLICK_BONUS * permLevel(s, 'pelleor'));
+  (CLICK_BASE + SHOVEL_POWER * s.shovel) * gemMult(s) * (1 + PERM_CLICK_BONUS * permLevel(s, 'pelleor'));
 
 export const genProd = (s: State, i: number) => GENS[i].prod * Math.pow(s.gens[i], PROD_EXP) * prodMult(s);
 export const perSecond = (s: State) => GENS.reduce((a, _, i) => a + genProd(s, i), 0);
@@ -87,7 +87,7 @@ export function buyPerm(s: State, i: number): boolean {
 export const rebirthGain = (s: State) => Math.floor(Math.sqrt(s.runTotal / GEM_DIV));
 export const startDirt = (s: State) => {
   const l = permLevel(s, 'pecule');
-  return l > 0 ? 100 * Math.pow(4, l - 1) : 0;
+  return l > 0 ? 1000 * Math.pow(4, l - 1) : 0;
 };
 /** Conseillé quand le rebirth rapporte au moins 30 % des gemmes déjà gagnées, ou dès la première gemme. */
 export const rebirthAdvised = (s: State) => {
@@ -126,7 +126,7 @@ export function bestBuy(s: State, clicksPerSec: number): number | null {
   for (let k = -1; k < GENS.length; k++) {
     const cost = costOf(k < 0 ? SHOVEL_BASE : GENS[k].cost, k < 0 ? s.shovel : s.gens[k], 1);
     let gain: number;
-    if (k < 0) gain = clicksPerSec * (clickPower(s) / (1 + SHOVEL_POWER * s.shovel)) * SHOVEL_POWER;
+    if (k < 0) gain = clicksPerSec * (clickPower(s) / (CLICK_BASE + SHOVEL_POWER * s.shovel)) * SHOVEL_POWER;
     else gain = GENS[k].prod * (Math.pow(s.gens[k] + 1, PROD_EXP) - Math.pow(s.gens[k], PROD_EXP)) * prodMult(s);
     if (base <= 0 && k < 0) gain = SHOVEL_POWER;
     if (gain <= 0) continue;

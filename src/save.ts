@@ -2,7 +2,7 @@ import { GENS, PERMS } from './config';
 import { State, newState } from './sim';
 
 export const SAVE_KEY = 'taupe-tycoon-save';
-export interface Options { lang: 'fr' | 'en'; reduced: boolean; mode: 1 | 10 | 'max' }
+export interface Options { lang: 'fr' | 'en'; reduced: boolean; mode: 1 | 10 | 'max'; sound: boolean; seen: number }
 export interface Saved { s: State; at: number; opts: Options }
 
 const num = (v: unknown, d = 0) => (typeof v === 'number' && isFinite(v) && v >= 0 ? v : d);
@@ -16,7 +16,9 @@ export function sanitize(raw: unknown): Saved | null {
   const st = r.s;
   if (!st || typeof st !== 'object') return null;
   const s = newState();
-  s.dirt = num(st.dirt); s.runTotal = num(st.runTotal); s.lifeTotal = num(st.lifeTotal);
+  // V1 (v absent ou 1) : la terre était 10 fois plus petite (décimales) ; passage aux entiers
+  const k = r.v === 2 ? 1 : 10;
+  s.dirt = num(st.dirt) * k; s.runTotal = num(st.runTotal) * k; s.lifeTotal = num(st.lifeTotal) * k;
   s.gems = Math.floor(num(st.gems)); s.gemsEarned = Math.floor(num(st.gemsEarned));
   s.rebirths = Math.floor(num(st.rebirths)); s.shovel = Math.floor(num(st.shovel));
   s.gens = arr(st.gens, GENS.length); s.perms = arr(st.perms, PERMS.length);
@@ -25,6 +27,8 @@ export function sanitize(raw: unknown): Saved | null {
   const opts: Options = {
     lang: o.lang === 'en' ? 'en' : o.lang === 'fr' ? 'fr' : defaultLang(),
     reduced: o.reduced === true,
+    sound: o.sound !== false,
+    seen: Math.floor(num(o.seen)),
     mode: o.mode === 10 || o.mode === 'max' ? o.mode : 1,
   };
   return { s, at: Math.min(num(r.at, Date.now()), Date.now()), opts };
@@ -41,7 +45,7 @@ export function load(): Saved | null {
   } catch { return null; }
 }
 export function save(s: State, opts: Options) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, s, at: Date.now(), opts })); } catch { /* stockage plein ou refusé */ }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, s, at: Date.now(), opts })); } catch { /* stockage plein ou refusé */ }
 }
 export function wipe() {
   try { localStorage.removeItem(SAVE_KEY); } catch { /* ignoré */ }
