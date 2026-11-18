@@ -9,6 +9,7 @@ import { Lang, setLang, t } from './i18n';
 import { Options, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
 import * as sfx from './sound';
 import { VERSION } from './version';
+import { BUILD, watch } from './update';
 import { createWorld } from './world';
 import { createFx } from './fx';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
@@ -685,3 +686,19 @@ window.addEventListener('pagehide', () => persist());
 awardTrophies(true);
 i18nStatic();
 render();
+
+// ---------- mise à jour du jeu ----------
+const updateBar = $('update');
+const updater = watch(() => {
+  updateBar.hidden = false;
+  say(t('updateText'));
+  $('update-go').focus({ preventScroll: true });
+});
+$('update-x').addEventListener('click', () => { updateBar.hidden = true; });
+$('update-go').addEventListener('click', () => {
+  persist();
+  setText($('update-go'), t('updateReloading'));
+  location.reload();
+});
+$('ver').title = `build ${BUILD}`;
+(window as unknown as { __tt_update?: () => Promise<boolean> }).__tt_update = () => updater.check(true);

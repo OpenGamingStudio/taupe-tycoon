@@ -3,6 +3,7 @@ type Dict = Record<string, string>;
 
 export const T: Record<Lang, Dict> = {
   fr: {
+    updateText: 'Nouvelle version disponible', updateGo: 'Recharger', updateLater: 'Plus tard', updateReloading: 'Mise à jour…',
     tabTrophies: 'Succès', trophyTitle: 'Succès', trophyBonus: '{n} / {m} succès · +{p} % de production', trophyDone: 'Succès : {name}', trophiesMany: '{n} succès débloqués', trophyLocked: 'À débloquer', trophyOk: 'Débloqué',
     nugget: 'Pépite d’or', nuggetAppear: 'Une pépite d’or apparaît ! Attrape-la.', nuggetLabel: 'Pépite d’or : attrape-la avant qu’elle disparaisse',
     nuggetRush: 'Ruée ! Production ×3 pendant 20 s', nuggetGenius: 'Coup de génie ! Clic ×5 pendant 15 s', nuggetTreasure: 'Trésor ! +{n} terre',
@@ -44,6 +45,7 @@ export const T: Record<Lang, Dict> = {
     music: 'Musique', musicVolume: 'Volume de la musique', mileBanner: 'Palier !', mileSub: '{name} niveau {n} : production ×{m}', mileSubShovel: 'Pelle niveau {n} : clic ×{m}', comboLabel: 'Combo ×{n}', trophyBanner: 'Succès !', crewHint: '{n} taupes au travail',
   },
   en: {
+    updateText: 'New version available', updateGo: 'Reload', updateLater: 'Later', updateReloading: 'Updating…',
     tabTrophies: 'Trophies', trophyTitle: 'Trophies', trophyBonus: '{n} / {m} trophies · +{p}% production', trophyDone: 'Trophy: {name}', trophiesMany: '{n} trophies unlocked', trophyLocked: 'Locked', trophyOk: 'Unlocked',
     nugget: 'Golden nugget', nuggetAppear: 'A golden nugget appears! Catch it.', nuggetLabel: 'Golden nugget: catch it before it vanishes',
     nuggetRush: 'Rush! Production ×3 for 20 s', nuggetGenius: 'Stroke of genius! Clicks ×5 for 15 s', nuggetTreasure: 'Treasure! +{n} dirt',

@@ -31,3 +31,11 @@ Voir `ACCESSIBILITY.md`. Licence MIT.
 
 ## V2.1
 Sons synthétisés (volume, ambiance), 20 succès, pépites d'or et événements, paliers de niveau, statistiques, retour hors ligne, import/export de sauvegarde. Voir `BALANCE.md`, `REVIEW.md`, `CHANGELOG.md`.
+
+## Mises à jour (PWA / navigateur)
+Pas de service worker : c'est le plus simple et le plus fiable pour un jeu en ligne. Chaque `npm run build` écrit `dist/version.json` (`{version, build}`) et embarque le même `build` dans le code.
+- nginx : `index.html`, manifeste et icônes en `Cache-Control: no-cache` (le navigateur revalide à chaque ouverture), `version.json` en `no-store`, `/assets/*` (noms hachés) en `immutable` pour un an.
+- Dans le jeu (`src/update.ts`) : lecture de `version.json` 4 s après le chargement, au retour au premier plan, au retour du réseau et toutes les 5 min ; si le `build` diffère, bannière « Nouvelle version disponible — Recharger ». Le bouton sauvegarde la partie puis recharge.
+- Les anciens service workers et caches éventuels sont supprimés au démarrage.
+- Test de bout en bout : `e2e/update.mjs` (deux images nginx, ancienne puis nouvelle version).
+- Limite : une application installée avant la 2.3.0 peut garder l'ancienne page jusqu'à un rechargement manuel (une seule fois).
