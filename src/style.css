@@ -1,0 +1,86 @@
+@import "tailwindcss";
+@source not inline("blur");
+@custom-variant wide (@media (min-width: 700px) or ((orientation: landscape) and (max-height: 520px)));
+
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./fonts/fredoka-latin-wght-normal.woff2") format("woff2");
+}
+
+/* Identité Taupe Tycoon : aplats terreux, contour encre brune 3 px, ombre dure. */
+@theme {
+  --color-*: initial;
+  --color-ink: #2b1d14;
+  --color-cream: #fff3d6;
+  --color-soil: #8a5a2b;
+  --color-grass: #4cc15a;
+  --color-nugget: #ffc21a;
+  --color-gem: #20c5c0;
+  --color-rose: #ff7aa8;
+  --color-white: #ffffff;
+  --font-sans: "Fredoka", ui-rounded, sans-serif;
+  --shadow-hard: 4px 4px 0 #2b1d14;
+}
+
+html { font-size: clamp(14px, 3.6vw, 16px); }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #fff3d6;
+  color: #2b1d14;
+  font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border-[3px] border-ink bg-white px-4 py-2 text-lg font-bold text-ink shadow-hard;
+    touch-action: manipulation;
+  }
+  .btn-sm { @apply min-h-[44px] min-w-[48px] px-3; }
+  .btn[aria-pressed="true"] { @apply bg-nugget; }
+  .btn-big { @apply bg-grass text-2xl; min-height: 56px; }
+  .btn:active:not([aria-disabled="true"]) { @apply translate-x-1 translate-y-1 shadow-none; }
+  .btn:focus-visible, .tab:focus-visible, .mole:focus-visible, a:focus-visible, .row:focus-visible {
+    outline: 3px solid #2b1d14;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px #fff, 4px 4px 0 #2b1d14;
+  }
+  .btn[aria-disabled="true"], .row[aria-disabled="true"] { background: #e2d6bd; color: #4a3a2c; box-shadow: none; }
+  .chip { @apply inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-[3px] border-ink bg-white px-3 text-xl font-bold shadow-hard; }
+  .panel { @apply rounded-3xl border-[3px] border-ink bg-white text-ink shadow-hard; }
+  .note { @apply rounded-2xl border-[3px] border-ink bg-cream px-3 py-1; }
+  .logo { @apply font-bold text-soil; -webkit-text-stroke: 1px #2b1d14; paint-order: stroke fill; text-shadow: 2px 2px 0 #2b1d14; }
+  .tab { @apply min-h-[48px] rounded-2xl border-[3px] border-ink bg-cream px-2 text-lg font-bold; touch-action: manipulation; }
+  .tab[aria-selected="true"] { @apply bg-nugget shadow-hard; }
+  .row {
+    @apply grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border-[3px] border-ink bg-cream px-3 py-2 text-left shadow-hard;
+    min-height: 64px;
+    touch-action: manipulation;
+  }
+  .row:not([aria-disabled="true"]) { @apply bg-white; }
+  .row:active:not([aria-disabled="true"]) { @apply translate-x-1 translate-y-1 shadow-none; }
+  .row .cost { @apply rounded-xl border-[3px] border-ink bg-nugget px-2 py-1 text-base font-bold; }
+  .row[aria-disabled="true"] .cost { background: #d8cbb0; }
+  .mole { background: none; border: 0; padding: 0; cursor: pointer; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  .mole svg { overflow: visible; }
+  #shovel { transform-box: view-box; transform-origin: 44px 214px; }
+  .mole.hit #shovel { animation: swing 0.22s ease-out; }
+  .mole.hit svg { animation: squash 0.22s ease-out; }
+  .fx { position: absolute; font-weight: 700; font-size: 1.5rem; color: #2b1d14; text-shadow: 2px 2px 0 #fff; animation: rise 0.9s ease-out forwards; white-space: nowrap; }
+  .chip-dirt { position: absolute; width: 12px; height: 12px; border-radius: 3px; border: 2px solid #2b1d14; animation: fling 0.7s ease-out forwards; }
+}
+
+@keyframes swing { 0% { transform: rotate(0); } 40% { transform: rotate(-24deg); } 100% { transform: rotate(0); } }
+@keyframes squash { 0% { transform: scale(1); } 40% { transform: scale(1.04, 0.96); } 100% { transform: scale(1); } }
+@keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-70px); opacity: 0; } }
+@keyframes fling { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+
+html.reduced *, html.reduced *::before, html.reduced *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
