@@ -43,7 +43,7 @@ export const T: Record<Lang, Dict> = {
     hintDig: 'Tape la taupe !', hintBuy: 'Achète une amélioration !', hintAuto: 'Ça creuse tout seul !',
     hintRebirth: 'Rebirth : +25 % pour toujours !', hintOff: 'Ta taupe a creusé pendant ton absence.',
     owned: '{name} : {n}', bonusProd: 'Bonus de production', total: 'Terre creusée', version: 'Version',
-    music: 'Musique', musicVolume: 'Volume de la musique', mileBanner: 'Palier !', mileSub: '{name} niveau {n} : production ×{m}', mileSubShovel: 'Pelle niveau {n} : clic ×{m}', comboLabel: 'Combo ×{n}', trophyBanner: 'Succès !', crewHint: '{n} taupes au travail',
+    music: 'Musique', musicVolume: 'Volume de la musique', mileBanner: 'Palier !', mileSub: '{name} niveau {n} : production ×{m}', mileSubShovel: 'Pelle niveau {n} : clic ×{m}', trophyBanner: 'Succès !', crewHint: '{n} taupes au travail',
   },
   en: {
     tabStats: 'Stats', panelDig: 'Upgrades', close: 'Close', hintOpen: 'Open the Mine to buy!', badgeBuy: '{n} purchase(s) available',
@@ -86,7 +86,7 @@ export const T: Record<Lang, Dict> = {
     hintDig: 'Tap the mole!', hintBuy: 'Buy an upgrade!', hintAuto: 'It digs by itself!',
     hintRebirth: 'Rebirth: +25% forever!', hintOff: 'Your mole kept digging while you were away.',
     owned: '{name}: {n}', bonusProd: 'Production bonus', total: 'Dirt dug', version: 'Version',
-    music: 'Music', musicVolume: 'Music volume', mileBanner: 'Milestone!', mileSub: '{name} level {n}: production ×{m}', mileSubShovel: 'Shovel level {n}: clicks ×{m}', comboLabel: 'Combo ×{n}', trophyBanner: 'Achievement!', crewHint: '{n} moles at work',
+    music: 'Music', musicVolume: 'Music volume', mileBanner: 'Milestone!', mileSub: '{name} level {n}: production ×{m}', mileSubShovel: 'Shovel level {n}: clicks ×{m}', trophyBanner: 'Achievement!', crewHint: '{n} moles at work',
   },
 };
 

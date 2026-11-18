@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.6.0 — 2026-11-18 (direction artistique « Plein soleil », combo retiré, vraie pelle)
+- Le combo est supprimé : plus de compteur, de timer ni de multiplicateur caché. Chaque coup de pelle fait la même chose, lisible : le gain affiché, des pièces vers le compteur.
+- La pelle est redessinée : manche en bois à poignée en D, douille en fer, lame plate (taupe, icône de boutique, pelle d'or).
+- Direction artistique : ciel bleu avec soleil et nuages, collines et herbe fleurie, terre orange plus chaude, caverne plus claire, taupe aux joues roses et salopette bleu vif, HUD et dock en planches de bois, ombres « posées » (sans décalage latéral). Aucun dégradé.
+- Pas d'asset externe : tout reste dessiné dans le dépôt (voir CREDITS.md).
+
 ## 2.5.1 — 2026-11-18 (correctif : lignes d'achat en x10 / Max)
 - Les pastilles « Niv. N » et « +N » sont sur une ligne propre sous le titre (retour à la ligne avec espacement), plus collées au titre.
 - « Gain : +217/s » et « Actuel : 65/s » : une valeur par libellé. Textes de palier courts (« Palier niv. 10 : clic ×2 »).
