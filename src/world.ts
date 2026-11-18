@@ -26,8 +26,8 @@ interface Bit { x: number; y: number; vx: number; vy: number; life: number; c: s
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const LANE_H = 14; // hauteur d'une galerie (pixels logiques)
 const CYCLE = 9; // secondes moyennes d'un aller-retour (sert à rapporter le gain réel)
-const TINT = ['#000000', '#2a1450', '#06323a'];
-const TINT_A = [0.0, 0.2, 0.26];
+const TINT = ['#000000', '#2a1450', '#1a0a50'];
+const TINT_A = [0.0, 0.12, 0.05];
 
 export interface World {
   setCrew(counts: number[], rates: number[], animate: boolean): void;
@@ -70,7 +70,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     H = Math.max(40, Math.ceil(r.height / PIX));
     if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
     lanes = laneCount();
-    cap = Math.min(crewCap(W, H), 14, lanes * Math.max(3, Math.floor(W / 22)));
+    cap = Math.min(crewCap(W, H), 12, lanes * Math.max(2, Math.floor(W / 40)));
     layout(false);
   }
 
@@ -104,10 +104,11 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
   const PERIOD = 6; // secondes entre deux livraisons d'une machine
   /** Une machine par type possédé (plusieurs avec le nombre, plafonnées par la place), posées sur les galeries. */
   function layoutMachines(animate: boolean, added: number[]) {
-    const room = Math.max(1, lanes * Math.floor((W - 40) / 30));
+    // au plus ~1 machine par 60 px de galerie : le nombre réel est porté par le compteur, pas par un amas de sprites
+    const room = Math.max(4, lanes * Math.max(1, Math.floor((W - 40) / 60)));
     const next: Mach[] = [];
     MACHINE_KINDS.forEach((k, ki) => {
-      const n = shownMachines(counts[k] ?? 0, Math.max(1, Math.floor(room / 2)));
+      const n = shownMachines(counts[k] ?? 0, Math.max(1, Math.floor(room / 4)));
       for (let i = 0; i < n; i++) {
         const old = machines.find((m) => m.kind === k && m.i === i);
         const lane = (ki + i) % lanes;
@@ -276,8 +277,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     for (let i = 0; i < nCry; i++) {
       const c = crystalSeeds[i];
       const x = ((c.x * (W - 10) + camOff * c.z * 1.4) % W + W) % W;
-      const glow = calm ? 0.16 : 0.12 + 0.1 * Math.sin(tt * 1.8 + i * 1.7);
-      crystal(x, c.y * H, c.h, i % 3 === 0 ? '#ff7aa8' : '#20c5c0', glow);
+      crystal(x, c.y * H, c.h, i % 3 === 0 ? '#ff7aa8' : '#20c5c0', 0);
     }
 
     // galeries
@@ -291,7 +291,6 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
         // lampe suspendue, qui pulse
         const on = calm || Math.sin(tt * 3 + x + l) > -0.4;
         rect(depth >= 2 ? '#8ff0ea' : '#fff7b0', x, y + 2, 1, 1, on ? 1 : 0.35);
-        if (on && !calm) rect(depth >= 2 ? '#8ff0ea' : '#ffc21a', x - 1, y + 2, 3, 3, 0.18);
       }
       g.drawImage(chestImg, chestX(l), y + LANE_H - 10);
     }
@@ -333,8 +332,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
       const img = spr[`${a.kind}:${pose}:${a.dir}`];
       if (a.st !== 'fall') rect('#000', a.x + 3, lane + LANE_H - 1, 10, 1, 0.25);
       // un groupe est montré par une petite bande : une taupe devant, une ou deux derrière
-      if (a.w >= 1.5) { g.globalAlpha = 0.8; g.drawImage(img, fr(a.x - 5 * a.dir), fr(y) + 1); g.globalAlpha = 1; }
-      if (a.w >= 10) { g.globalAlpha = 0.65; g.drawImage(img, fr(a.x - 10 * a.dir), fr(y) + 2); g.globalAlpha = 1; }
+      if (a.w >= 1.5) g.drawImage(img, fr(a.x - 5 * a.dir), fr(y) + 1); // groupe : une seule taupe derrière, opaque
       g.drawImage(img, fr(a.x), fr(y));
     }
 

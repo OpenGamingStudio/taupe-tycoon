@@ -157,28 +157,24 @@ export const MOLE = `
   <path d="M51 112L48 150" stroke="#fff" stroke-opacity=".45" stroke-width="2.5" stroke-linecap="round"/>
   <path d="M38 104V92q0-10 10-10h16q10 0 10 10v12" fill="none" stroke="${k}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 104V92q0-10 10-10h16q10 0 10 10v12" fill="none" stroke="${C.woodDark}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M39 176h15l2 18H37z" fill="${C.steelDark}" stroke="${k}" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M33 192h26c6 10 7 22 3 30-4 5-9 6-16 6s-12-1-16-6c-4-8-3-20 3-30z" fill="${C.steel}" stroke="${k}" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M38 200v18M54 200v18" stroke="${C.steelDark}" stroke-width="4" stroke-linecap="round"/><path d="M43 199l-1 10" stroke="#fff" stroke-opacity=".9" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M29 192h33.8c7.8 10 9.1 22 3.9 30-5.2 5-11.7 6-20.8 6s-15.6-1-20.8-6c-5.2-8-3.9-20 3.9-30z" fill="${C.steel}" stroke="${k}" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M35.6 200v18M56.4 200v18" stroke="${C.steelDark}" stroke-width="4" stroke-linecap="round"/><path d="M42 199l-1.3 10" stroke="#fff" stroke-opacity=".9" stroke-width="3.5" stroke-linecap="round"/>
   <ellipse cx="62" cy="146" rx="16" ry="19" transform="rotate(8 62 146)" fill="${C.fur}" stroke="${k}" stroke-width="5"/>
   <g fill="none" stroke="${k}" stroke-width="3.5" stroke-linecap="round"><path d="M70 136l-10 2M72 146l-11 1M70 156l-10-2"/></g>
   <g fill="${C.cream}" stroke="${k}" stroke-width="3" stroke-linejoin="round"><circle cx="50" cy="138" r="3.4"/><circle cx="48" cy="147" r="3.4"/><circle cx="50" cy="156" r="3.4"/></g>
 </g>`;
 
-/** Décor souterrain (viewBox 400×300, rempli en « slice »). Les bandes prennent leur couleur de .depth-N (style.css). */
-export const SCENE = `
-<rect width="400" height="300" class="s-b1"/>
-<rect y="92" width="400" height="208" class="s-b2"/>
-<rect y="190" width="400" height="110" class="s-b3"/>
-<path d="M0 92c25 6 40-4 70 2s40 8 70 0 50-6 80 0 45 4 70-2 70 4 110 0V84H0z" class="s-b2" stroke="${k}" stroke-width="4"/>
-<path d="M0 190c30 8 60-6 90 2s50 6 80 0 60-8 90 0 60 6 140 0v-8H0z" class="s-b3" stroke="${k}" stroke-width="4"/>
-<!-- ciel, soleil, nuages, collines, herbe -->
-<rect y="-60" width="400" height="112" fill="${C.sky}"/>
-<g stroke="${k}" stroke-width="4" stroke-linecap="round"><path d="M338-6v-8M338 54v-8M368 24h8M300 24h8M360 2l6-6M360 46l6 6M316 2l-6-6" stroke="${C.sun}" transform="translate(0 -6)"/></g>
-<circle cx="338" cy="18" r="17" fill="${C.sun}" stroke="${k}" stroke-width="4"/>
+/**
+ * Décor souterrain (viewBox 400×300 + ciel, ajusté en HAUTEUR et centré : #scene a le rapport 400/360, voir .scene).
+ * Les bandes sont élargies et la « tuile » (collines, herbe, roches, nuages) se répète à gauche et à droite : en paysage
+ * le décor reste entier (ciel, collines, herbe) au lieu d'être rogné. Les bandes prennent leur couleur de .depth-N.
+ */
+const TILE = `
+<path d="M0 92c25 6 40-4 70 2s40 8 70 0 50-6 80 0 45 4 70-2 70 4 110 0V84H0z" class="s-b2"/><path d="M0 92c25 6 40-4 70 2s40 8 70 0 50-6 80 0 45 4 70-2 70 4 110 0" fill="none" stroke="${k}" stroke-width="4"/>
+<path d="M0 190c30 8 60-6 90 0s50 6 80 0 60-8 90 0 60 6 140 0V182H0z" class="s-b3"/><path d="M0 190c30 8 60-6 90 0s50 6 80 0 60-8 90 0 60 6 140 0" fill="none" stroke="${k}" stroke-width="4"/>
 <path d="M30 20c0-10 9-15 18-13 5-8 18-8 22 1 9 0 13 7 11 12z" fill="#fff" stroke="${k}" stroke-width="3.5" stroke-linejoin="round"/>
 <path d="M180 4c0-8 7-12 14-10 4-6 14-6 17 1 7 0 10 5 9 9z" fill="#fff" stroke="${k}" stroke-width="3.5" stroke-linejoin="round"/>
-<path d="M0 52V38c40-22 70-14 100 0 30-18 60-30 100-8 30-14 80-18 100 6 30-8 70-6 100 6v10z" fill="${C.grassDark}" stroke="${k}" stroke-width="4" stroke-linejoin="round"/>
-<rect y="46" width="400" height="22" fill="${C.grass}" stroke="${k}" stroke-width="4"/><rect y="62" width="400" height="8" fill="${C.grassDark}"/>
+<path d="M0 38c40-22 70-14 100 0 30-18 60-30 100-8 30-14 80-18 100 6 30-8 70-6 100 2V52H0z" fill="${C.grassDark}"/><path d="M0 38c40-22 70-14 100 0 30-18 60-30 100-8 30-14 80-18 100 6 30-8 70-6 100 2" fill="none" stroke="${k}" stroke-width="4" stroke-linejoin="round"/>
 <path d="M0 62c8 6 14 6 20 0s14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0 14 6 20 0v6H0z" fill="${C.grassDark}"/>
 <g stroke="${k}" stroke-width="2.5"><circle cx="70" cy="56" r="4" fill="#fff"/><circle cx="70" cy="56" r="1.5" fill="${C.gold}" stroke="none"/><circle cx="250" cy="58" r="4" fill="${C.pink}"/><circle cx="250" cy="58" r="1.5" fill="#fff" stroke="none"/><circle cx="330" cy="56" r="4" fill="#fff"/><circle cx="330" cy="56" r="1.5" fill="${C.gold}" stroke="none"/><circle cx="130" cy="58" r="4" fill="${C.gold}"/><circle cx="130" cy="58" r="1.5" fill="#fff" stroke="none"/></g>
 <g stroke="${k}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
@@ -195,7 +191,17 @@ export const SCENE = `
 </g>
 <!-- veines de pépites (profondeur 1+) et cristaux (profondeur 2) -->
 <g class="s-ore" stroke="${k}" stroke-width="3.5" stroke-linejoin="round"><path d="M250 112l5 6 8-2-3 8-9 2-5-6z" fill="${C.gold}"/><path d="M286 214l5 6 8-2-3 8-9 2-5-6z" fill="${C.gold}"/><path d="M130 236l5 6 8-2-3 8-9 2-5-6z" fill="${C.gold}"/></g>
-<g class="s-crystals" stroke="${k}" stroke-width="4" stroke-linejoin="round"><path d="M20 290l6-30 10 6 6 24z" fill="${C.gem}"/><path d="M34 290l8-22 8 10 2 12z" fill="${C.gemLight}"/><path d="M360 290l6-34 12 8 6 26z" fill="${C.gem}"/><path d="M380 290l4-18 8 8 0 10z" fill="${C.gemLight}"/><path d="M270 296l6-14 10 6 4 8z" fill="${C.gem}"/></g>
+<g class="s-crystals" stroke="${k}" stroke-width="4" stroke-linejoin="round"><path d="M20 290l6-30 10 6 6 24z" fill="${C.gem}"/><path d="M34 290l8-22 8 10 2 12z" fill="${C.gemLight}"/><path d="M360 290l6-34 12 8 6 26z" fill="${C.gem}"/><path d="M380 290l4-18 8 8 0 10z" fill="${C.gemLight}"/><path d="M270 296l6-14 10 6 4 8z" fill="${C.gem}"/></g>`;
+const OFFS = [-800, -400, 0, 400, 800];
+export const SCENE = `
+<rect x="-1400" width="3000" height="300" class="s-b1"/>
+<rect x="-1400" y="92" width="3000" height="208" class="s-b2"/>
+<rect x="-1400" y="190" width="3000" height="110" class="s-b3"/>
+<rect x="-1400" y="-60" width="3000" height="112" fill="${C.sky}"/>
+<g stroke="${k}" stroke-width="4" stroke-linecap="round"><path d="M338-6v-8M338 54v-8M368 24h8M300 24h8M360 2l6-6M360 46l6 6M316 2l-6-6" stroke="${C.sun}" transform="translate(0 -6)"/></g>
+<circle cx="338" cy="18" r="17" fill="${C.sun}" stroke="${k}" stroke-width="4"/>
+<rect x="-1400" y="46" width="3000" height="22" fill="${C.grass}" stroke="${k}" stroke-width="4"/><rect x="-1400" y="62" width="3000" height="8" fill="${C.grassDark}"/>
+${OFFS.map((o) => `<g transform="translate(${o} 0)">${TILE}</g>`).join('')}
 <!-- caverne de la taupe : voûte étayée -->
 <path d="M44 300c-2-60 22-122 156-122s158 62 156 122z" class="s-cave" stroke="${k}" stroke-width="5"/>
 <path d="M60 300c-2-52 20-106 140-106s142 54 140 106z" class="s-cave2"/>

@@ -42,7 +42,7 @@ function make(g: Pen) {
 /** Décorations communes selon le palier : lampe (1), fanion (2), halo (3), dorures + étincelle (4). */
 function finish(p: ReturnType<typeof make>, x: number, top: number, w: number, tier: number, t: number, calm: boolean) {
   const { r, line } = p;
-  if (tier >= 3) r(tier >= 4 ? GOLD : TEAL, x - 3, top - 4, w + 6, 4 + 18, calm ? 0.14 : 0.1 + 0.06 * Math.sin(t * 2.4));
+  if (tier >= 3) r(tier >= 4 ? GOLD : TEAL, x - 1, top - 1, w + 2, 1); // liseré opaque (plus de halo translucide)
   if (tier >= 1) { r(INK, x + 2, top - 3, 3, 3); r(calm || Math.sin(t * 4 + x) > -0.3 ? '#fff7b0' : YELLOW, x + 3, top - 2, 1, 1); }
   if (tier >= 2) { line(INK, x + w - 3, top - 6, x + w - 3, top); r(tier >= 4 ? GOLD : PINK, x + w - 2, top - 6, 3, 2); }
   if (tier >= 4 && !calm && Math.sin(t * 5 + x) > 0.6) { r('#fff', x + (w >> 1), top - 6, 1, 3); r('#fff', x + (w >> 1) - 1, top - 5, 3, 1); }
