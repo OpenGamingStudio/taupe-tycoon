@@ -103,14 +103,14 @@ function noise(a: AudioContext, type: BiquadFilterType, freq: number, endFreq: n
 let lastDig = 0;
 /**
  * Coup de pelle : trois sons au hasard (choc sourd, grattement, tintement de pierre), hauteur variable, plus aiguë
- * quand les coups s'enchaînent (combo) ; de temps en temps une pierre précieuse tinte.
+ * de temps en temps une pierre précieuse tinte.
  */
-export function dig(step = 0) {
+export function dig() {
   const a = ac(); if (!a) return;
   const now = performance.now();
   if (now - lastDig < 40) return;
   lastDig = now;
-  const f = (130 + Math.min(step, 12) * 11) * jitter(0.15);
+  const f = 130 * jitter(0.15);
   const r = Math.random();
   if (r < 0.4) {
     tone(a, f * 1.9, f * 0.55, 0.12, 'triangle', 0.3);
@@ -123,7 +123,6 @@ export function dig(step = 0) {
     tone(a, 1500 * jitter(0.2), 1200, 0.16, 'sine', 0.09, 0.01);
     noise(a, 'bandpass', 3000, 1800, 0.05, 0.1, 0, 2);
   }
-  if (step > 0 && step % 5 === 0) tone(a, 700 * jitter(0.05), 1100, 0.08, 'sine', 0.06, 0.03);
   if (Math.random() < 0.1) tone(a, 2093 * jitter(0.04), 2093, 0.2, 'sine', 0.07, 0.04);
 }
 const PENTA = [0, 2, 4, 7, 9]; // gamme pentatonique majeure
@@ -160,12 +159,6 @@ export function moleArrive() {
   tone(a, 240, 620, 0.12, 'sine', 0.2);
   tone(a, 880 * jitter(0.04), 880, 0.1, 'triangle', 0.14, 0.1);
   tone(a, 1175 * jitter(0.04), 1175, 0.16, 'triangle', 0.12, 0.17);
-}
-/** Palier de combo : plus le palier est haut, plus l'accord est riche. */
-export function comboTier(tier: number) {
-  const a = ac(); if (!a) return;
-  const base = 440 * Math.pow(2, Math.min(tier, 4) * 2 / 12);
-  [0, 4, 7, 12].slice(0, 2 + Math.min(tier, 2)).forEach((s, i) => tone(a, base * Math.pow(2, s / 12), base * Math.pow(2, s / 12), 0.2, 'triangle', 0.13, i * 0.05));
 }
 /** Achat : petite pièce, deux notes. */
 export function buy() {

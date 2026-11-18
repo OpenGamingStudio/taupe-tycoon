@@ -14,24 +14,25 @@
 @theme {
   --color-*: initial;
   --color-ink: #2b1d14;
-  --color-cream: #fff3d6;
-  --color-soil: #8a5a2b;
-  --color-grass: #4cc15a;
+  --color-cream: #fff0c4;
+  --color-soil: #8f4f1e;
+  --color-grass: #62d13c;
   --color-nugget: #ffc21a;
   --color-gem: #20c5c0;
-  --color-rose: #ff7aa8;
+  --color-rose: #ff6f9c;
   --color-white: #ffffff;
-  --color-denim: #3b6fb6;
+  --color-denim: #2f7fe0;
   --font-sans: "Fredoka", ui-rounded, sans-serif;
-  --shadow-hard: 4px 4px 0 #2b1d14;
+  --shadow-hard: 0 4px 0 #2b1d14;
 }
 
+:root { --sky: #5ec6f5; --plank: #6b3a1a; --plank-d: #4a260f; }
 html { font-size: clamp(14px, 3.6vw, 16px); }
 html, body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background: #fff3d6;
+  background: #fff0c4;
   color: #2b1d14;
   font-weight: 500;
   -webkit-tap-highlight-color: transparent;
@@ -90,17 +91,14 @@ html, body {
   .goal-fill { @apply block h-full bg-gem; width: 0; transition: width 0.25s linear; }
 
   /* V3 : dopamine et interface */
+  .hud { background: var(--plank); color: #fff0c4; }
+  .hud .sr-only { color: inherit; }
   .hud.bump, #ico-gem.bump { animation: bump 0.22s ease-out; }
   .goal-fill { @apply relative; }
   .goal-fill::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; background: rgba(255,255,255,0.55); animation: shine 2.2s ease-in-out infinite; }
   .shake1 { animation: shake1 0.28s linear; }
   .shake2 { animation: shake2 0.4s linear; }
   .shake3 { animation: shake2 0.52s linear; --amp: 1.6; }
-  .combo { @apply absolute left-1/2 top-[38%] z-30 -translate-x-1/2 rounded-2xl border-[3px] border-ink bg-white px-3 py-1 text-2xl font-bold text-ink shadow-hard; pointer-events: none; white-space: nowrap; }
-  .combo[data-tier="1"] { @apply bg-nugget; }
-  .combo[data-tier="2"] { background: #ff8a3d; }
-  .combo[data-tier="3"] { background: #ff7aa8; font-size: 1.9rem; }
-  .combo.tick { animation: tick 0.18s ease-out; }
   .banner { @apply absolute left-1/2 top-[18%] z-40 flex max-w-[calc(100%-1rem)] items-center gap-3 rounded-3xl border-[3px] border-ink bg-nugget px-4 py-2 shadow-hard; pointer-events: none; transform: translateX(-50%); }
   .banner-ico { @apply grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-[3px] border-ink bg-white; }
   .banner-in { animation: banner 2.6s cubic-bezier(.2,.9,.3,1.2) forwards; }
@@ -111,7 +109,7 @@ html, body {
   #app { --dock: calc(4.25rem + env(safe-area-inset-bottom)); --sheet-h: min(50dvh, 26rem); --sheet-w: 0px; --sheet-b: 0px; }
   #app:not([data-panel=""]) { --sheet-b: var(--sheet-h); }
   #stage { padding: env(safe-area-inset-top) calc(env(safe-area-inset-right) + var(--sheet-w)) calc(var(--dock) + var(--sheet-b)) env(safe-area-inset-left); transition: padding 0.28s cubic-bezier(.2,.8,.2,1); }
-  .dock { @apply fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 gap-1.5 border-t-[3px] border-ink bg-cream px-1.5 pt-1.5; padding-bottom: max(0.375rem, env(safe-area-inset-bottom)); padding-left: max(0.375rem, env(safe-area-inset-left)); padding-right: max(0.375rem, env(safe-area-inset-right)); height: var(--dock); }
+  .dock { @apply fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 gap-1.5 border-t-[3px] border-ink px-1.5 pt-1.5; background: var(--plank); padding-bottom: max(0.375rem, env(safe-area-inset-bottom)); padding-left: max(0.375rem, env(safe-area-inset-left)); padding-right: max(0.375rem, env(safe-area-inset-right)); height: var(--dock); }
   .dk { @apply relative flex min-h-[48px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border-[3px] border-ink bg-white px-0.5 text-[12px] font-bold leading-none; touch-action: manipulation; transition: transform 0.1s ease-out, background-color 0.15s; }
   .dk svg { @apply h-6 w-6 shrink-0; }
   .dk[aria-expanded="true"] { @apply bg-nugget; transform: translateY(-3px); box-shadow: 0 3px 0 #2b1d14; }
@@ -134,13 +132,13 @@ html, body {
   }
 
   /* décor et taupe */
-  .stage { background: #8fd7f2; }
+  .stage { background: var(--sky); }
   .stage svg .s-b1 { fill: var(--b1); } .stage svg .s-b2 { fill: var(--b2); } .stage svg .s-b3 { fill: var(--b3); }
   .stage svg .s-rock { fill: var(--rock); } .stage svg .s-fossil { fill: #e8d7b6; }
-  .stage svg .s-cave { fill: #3a2618; } .stage svg .s-cave2 { fill: var(--cave2); }
+  .stage svg .s-cave { fill: #4a2813; } .stage svg .s-cave2 { fill: var(--cave2); }
   .stage .s-ore, .stage .s-crystals { display: none; }
-  .depth-0 { --b1: #c28a4c; --b2: #a06a3a; --b3: #84552e; --rock: #b39b82; --cave2: #55361f; }
-  .depth-1 { --b1: #a8744a; --b2: #86593a; --b3: #6a452d; --rock: #a28f80; --cave2: #4a2f1d; }
+  .depth-0 { --b1: #e0903a; --b2: #c4742a; --b3: #a45a22; --rock: #c9b49a; --cave2: #5a3017 }
+  .depth-1 { --b1: #c27a3e; --b2: #a15f30; --b3: #824a28; --rock: #b8a38e; --cave2: #4a2814 }
   .depth-2 { --b1: #8a6a58; --b2: #6c5149; --b3: #523f42; --rock: #8f8590; --cave2: #3f2a22; }
   .depth-1 .s-ore, .depth-2 .s-ore, .depth-2 .s-crystals { display: inline; }
   .depth-2 .s-lamp { display: none; }
@@ -213,7 +211,6 @@ html, body {
 @keyframes shine { from { left: -35%; } to { left: 105%; } }
 @keyframes shake1 { 0%, 100% { transform: translate(0); } 25% { transform: translate(-2px, 1px); } 50% { transform: translate(2px, -1px); } 75% { transform: translate(-1px, -1px); } }
 @keyframes shake2 { 0%, 100% { transform: translate(0); } 15% { transform: translate(calc(-5px * var(--amp, 1)), 2px); } 35% { transform: translate(calc(5px * var(--amp, 1)), -3px); } 55% { transform: translate(calc(-3px * var(--amp, 1)), -2px); } 75% { transform: translate(calc(3px * var(--amp, 1)), 2px); } }
-@keyframes tick { 0% { transform: translateX(-50%) scale(1.3); } 100% { transform: translateX(-50%) scale(1); } }
 @keyframes banner { 0% { transform: translate(-50%, -30px) scale(0.6); opacity: 0; } 14% { transform: translate(-50%, 0) scale(1.08); opacity: 1; } 22% { transform: translate(-50%, 0) scale(1); } 85% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -14px) scale(0.9); opacity: 0; } }
 @keyframes jelly { 0% { transform: scale(1, 1); } 30% { transform: scale(1.1, 0.88); } 60% { transform: scale(0.95, 1.07); } 100% { transform: scale(1, 1); } }
 @keyframes panein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

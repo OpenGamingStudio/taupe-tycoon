@@ -446,15 +446,7 @@ function burst(power: number, x: number, y: number) {
   }
 }
 
-let combo = 0, lastDigAt = 0, cheerAt = 0, comboHide = 0;
-const comboEl = $('combo');
-function showCombo(n: number) {
-  const tier = n >= 100 ? 3 : n >= 50 ? 2 : n >= 25 ? 1 : 0;
-  comboEl.hidden = false; comboEl.dataset.tier = String(tier);
-  setText(comboEl, t('comboLabel', { n: f(n) }));
-  comboEl.classList.remove('tick'); void comboEl.offsetWidth; comboEl.classList.add('tick');
-  window.clearTimeout(comboHide); comboHide = window.setTimeout(() => { comboEl.hidden = true; }, 900);
-}
+let cheerAt = 0;
 let jellyT = 0;
 /** Écrasement élastique du bouton principal (CSS), sauf quand la taupe joue déjà une humeur forte. */
 function jelly() {
@@ -467,22 +459,15 @@ let skipClick = false;
 function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
   const p = click(s);
   const now = performance.now();
-  combo = now - lastDigAt < 450 ? combo + 1 : 0;
-  lastDigAt = now;
-  sfx.dig(combo);
-  if (combo === 10 || combo === 25 || combo === 50 || combo === 100) {
-    sfx.comboTier(combo === 10 ? 0 : combo === 25 ? 1 : combo === 50 ? 2 : 3);
-    const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.45, combo === 10 ? 20 : 40); if (combo >= 25) shake(combo >= 50 ? 3 : 2);
-  }
+  sfx.dig();
   const box = fx.getBoundingClientRect();
   const hasPos = 'clientX' in e && (e.clientX || e.clientY);
   const x = hasPos ? (e as MouseEvent).clientX - box.left : box.width / 2;
   const y = hasPos ? (e as MouseEvent).clientY - box.top : box.height * 0.6;
   burst(p, x, y);
-  coinsToHud(x, y, combo >= 25 ? 3 : combo >= 8 ? 2 : 1, 'dirt');
-  if (combo >= 10) showCombo(combo + 1); 
+  coinsToHud(x, y, 1, 'dirt');
   if (p >= s.dirt * 0.2 && p > 50) { shake(1); jfx.sparks(x, y, 10, '#ffc21a'); }
-  vibe(combo >= 10 ? 14 : 8);
+  vibe(8);
   jelly();
   mood('dig', 260);
   mole.classList.remove('hit');
