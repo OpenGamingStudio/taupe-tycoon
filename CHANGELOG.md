@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.10.0 — 2026-11-19 (interface : direction « Galerie », choix du propriétaire)
+- Le menu devient le sous-sol : fond terre sombre (#3b2416) à cailloux, planches claires clouées pour les cartes, HUD et notes en roche, dock brun.
+- Chaque icône est posée dans une alcôve étayée éclairée par une lanterne à la couleur de l'objet ; plus de taches ni d'autocollants penchés.
+- États conservés : planche claire = abordable (prix or) ; planche éteinte + jauge = trop cher ; roche pointillée + silhouette = verrouillé ; étiquette MAX gemme = « Complet ».
+- Succès, boutons, dock et manifeste (fond #3b2416) repeints dans la même palette.
+
 ## 2.9.0 — 2026-11-19 (refonte de l'interface : « Autocollants »)
 - Fond bleu nuit en aplat (étoiles discrètes), plus aucune grande surface blanche : feuille de menu, HUD, dock, boutons et notes repeints.
 - Cartes d'achat en couleur : chaque objet a sa teinte, sa tache de peinture et son icône détourée (52 px, penchée). Trois lignes de texte : nom, badges (niveau, gain), valeur actuelle et palier en barre.
