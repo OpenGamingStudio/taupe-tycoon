@@ -15,6 +15,7 @@ for (const [w, h] of [[320, 568], [390, 844], [430, 932], [1440, 900]]) {
   await p.goto(url, { waitUntil: 'load' });
   for (const tab of ['dig', 'rebirth', 'options']) {
     await p.click('#tab-' + tab);
+    await new Promise((r) => setTimeout(r, 450));
     const r = await p.evaluate(() => {
       const lum = (c) => { const a = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; };
       const parse = (s) => (s.match(/[\d.]+/g) || []).map(Number);

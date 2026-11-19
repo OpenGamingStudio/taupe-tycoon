@@ -25,12 +25,12 @@ for (const [w, h] of [[390, 844], [1440, 900]]) {
   await p.evaluateOnNewDocument((v) => { if (!sessionStorage.getItem('x')) { localStorage.setItem('taupe-tycoon-save', v); sessionStorage.setItem('x', '1'); } }, save({ gens: [2, 1, 0, 0, 0, 0] }));
   await p.goto(url, { waitUntil: 'load' }); await sleep(600);
   await p.click('#tab-dig'); await sleep(450);
-  const names = await p.$$eval('#rows li', (a) => a.map((x) => x.querySelector('h3,strong,.name')?.textContent ?? x.textContent.slice(0, 14)));
+  const names = await p.$$eval('#rows li, #crew li', (a) => a.map((x) => x.querySelector('h3,strong,.name')?.textContent ?? x.textContent.slice(0, 14)));
   const idx = names.findIndex((n) => /Foreuse/.test(n));
   ok(idx >= 0, 'ligne Foreuse trouvée');
   const countFx = () => p.evaluate(() => document.querySelectorAll('#stage-fx *, #fx *').length);
   const before = await p.evaluate(() => document.getElementById('hud-ps').textContent);
-  await (await p.$$('#rows li button'))[idx + 1].click();
+  await (await p.$$('#rows li button, #crew li button'))[idx + 1].click();
   let seenN = false;
   for (let i = 0; i < 12 && !seenN; i++) { await sleep(120); seenN = await p.evaluate(() => [...document.querySelectorAll('.fx-n')].some((e) => /\+1/.test(e.textContent))); }
   ok(seenN, 'achat : un « +1 » sort de la machine construite');

@@ -16,13 +16,13 @@ for (const [w, h] of [[320, 640], [360, 740], [390, 844], [430, 900], [1440, 900
     const tag = `${w}px x${mode} niv${lv}`;
     const r = await p.evaluate(() => {
       const bad = [];
-      const rows = [...document.querySelectorAll('#rows .row')].filter((e) => !e.classList.contains('is-locked'));
+      const rows = [...document.querySelectorAll('#rows .row, #crew .row')].filter((e) => !e.classList.contains('is-locked'));
       for (const e of rows) {
         const bd = e.querySelector('.badges'), lv = e.querySelector('.lv'), pl = e.querySelector('.plus');
         const name = e.querySelector('.name').getBoundingClientRect();
         if (bd.getBoundingClientRect().top < name.bottom - 1) bad.push('badges collés au titre');
         if (!pl.hidden && Math.abs(pl.getBoundingClientRect().top - lv.getBoundingClientRect().top) > 2 && pl.getBoundingClientRect().left > lv.getBoundingClientRect().left) bad.push('+N pas sur la ligne de Niv.');
-        for (const c of ['.stat', '.cur', '.mile']) { const t = e.querySelector(c); if (t.scrollWidth > t.clientWidth + 1 || /,/.test(t.textContent)) bad.push(c + ' coupé ou virgule : ' + t.textContent); }
+        for (const c of ['.plus', '.cur', '.mile']) { const t = e.querySelector(c); if (!t || t.hidden) continue; if (t.scrollWidth > t.clientWidth + 1 || /,/.test(t.textContent)) bad.push(c + ' coupé ou virgule : ' + t.textContent); }
         const rr = e.getBoundingClientRect(); if (rr.height < 44) bad.push('ligne < 44 px');
       }
       return { bad, n: rows.length, sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, txt: rows[0].innerText.replace(/\n/g, ' | ') };
