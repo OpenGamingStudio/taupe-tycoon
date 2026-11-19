@@ -104,8 +104,10 @@ export const ACC: Record<string, [string, string]> = {
 };
 
 /** Tache de peinture et étincelles derrière l'icône d'une carte (viewBox 64, aplats). */
-export const plate = (id: string) =>
-  `<svg class="plate" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M10 22C12 8 30 2 42 8s20 16 14 30-14 22-30 20S6 40 10 22z" fill="${(ACC[id] ?? ACC.shovel)[1]}"/><path d="M54 6l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM8 48l1.500 3.500L13 53l-3.500 1.500L8 58l-1.500-3.500L3 53l3.500-1.500z" fill="${C.cream}" stroke="${k}" stroke-width="1.500" stroke-linejoin="round"/></svg>`;
+export const plate = (id: string) => {
+  const lamp = (ACC[id] ?? ACC.shovel)[0];
+  return `<svg class="plate" viewBox="0 0 64 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect width="64" height="64" fill="#4a2813"/><path d="M6 64V26Q6 6 32 6t26 20v38z" fill="#7a4626"/><circle cx="32" cy="30" r="19" fill="${lamp}"/><circle cx="32" cy="30" r="13" fill="${C.cream}"/><path d="M0 52h64v12H0z" fill="#c9742c"/><path d="M0 52h64" stroke="${k}" stroke-width="2.5"/><path d="M5 0v52M59 0v52" stroke="#d98a3d" stroke-width="6"/><path d="M0 4h64" stroke="#d98a3d" stroke-width="7"/><path d="M8.5 8v44M55.5 8v44M0 8h64" stroke="${k}" stroke-width="2" fill="none"/><path d="M10 58h6M44 60h9M26 57h4" stroke="#8f4f1e" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+};
 
 export const icon = (id: string, cls = 'h-9 w-9 shrink-0') =>
   `<svg class="${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false">${ICONS[id] ?? ''}</svg>`;
