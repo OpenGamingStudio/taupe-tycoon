@@ -2,6 +2,14 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.9.0 — 2026-11-19 (refonte de l'interface : « Autocollants »)
+- Fond bleu nuit en aplat (étoiles discrètes), plus aucune grande surface blanche : feuille de menu, HUD, dock, boutons et notes repeints.
+- Cartes d'achat en couleur : chaque objet a sa teinte, sa tache de peinture et son icône détourée (52 px, penchée). Trois lignes de texte : nom, badges (niveau, gain), valeur actuelle et palier en barre.
+- États lisibles : en couleur = abordable ; bleu éteint avec jauge de terre réunie = trop cher ; pointillés et silhouette = verrouillé ; étiquette MAX = acheté à fond (« Complet »).
+- Titres de section (« Équipe de creuseurs », compteur débloqués / 6), succès en autocollants, menu plus haut (56 % de l'écran).
+- Icônes enrichies : taupinière avec sa taupe, wagonnet d'or de la mine, sac de pièces pour le pécule.
+- Focus clavier crème visible sur le bleu nuit ; couleur de fond du manifeste alignée.
+
 ## 2.8.0 — 2026-11-18 (icônes et finitions)
 - Icônes de l'application (favicon, apple-touch-icon, 192, 512) redessinées depuis la mascotte actuelle : casque, lunettes, pelle, fond ciel (`tools/picto.mjs`).
 - Icônes : Options = engrenage, Pécule = pile de pièces, Taupinière simplifiée (monticule et trou), les trois premiers succès de clic ont chacun leur icône (pelle, patte, poignet d'acier), pépites = pépite.

@@ -40,6 +40,7 @@ export const ICONS: Record<string, string> = {
   taupiniere: `<path d="M3 45C6 33 14 27 24 27s18 6 21 18z" fill="${C.wood}" ${st()}/>
     <path d="M3 45C5 40 8 36 13 34 9 38 7 41 8 45z" fill="${C.woodDark}"/>
     <ellipse cx="24" cy="38" rx="9" ry="5.5" fill="${C.cave}" ${st()}/>
+    <path d="M16 38c0-8 3-11 8-11s8 3 8 11z" fill="${C.fur}" ${st(2.6)}/><circle cx="20.500" cy="33" r="1.600" fill="${k}"/><circle cx="27.500" cy="33" r="1.600" fill="${k}"/><ellipse cx="24" cy="36" rx="2.600" ry="1.800" fill="${C.pink}" ${st(1.600)}/>
     <circle cx="9" cy="24" r="3" fill="${C.wood}" ${st(2)}/><circle cx="40" cy="22" r="2.4" fill="${C.woodDark}" ${st(2)}/><circle cx="33" cy="16" r="1.8" fill="${C.wood}" ${st(2)}/>`,
   foreuse: `<circle cx="14" cy="8" r="4" fill="#fff" ${st(2.4)}/><circle cx="21" cy="5" r="3" fill="#fff" ${st(2.4)}/>
     <rect x="9" y="12" width="9" height="7" rx="2" fill="${C.steel}" ${st()}/>
@@ -55,7 +56,7 @@ export const ICONS: Record<string, string> = {
   mine: `<path d="M2 45V30L24 6l22 24v15z" fill="${C.steelDark}" ${st()}/><path d="M24 6l22 24v8L24 14z" fill="${C.steel}"/>
     <path d="M2 45V30L24 6l22 24v15z" fill="none" ${st()}/>
     <path d="M9 45V28h30v17z" fill="${C.cave}" ${st()}/><path d="M7 45V26h5v19M36 45V26h5v19M6 25h36" fill="${C.wood}" ${st()}/>
-    <path d="M12 41h24" ${st(2.6)} fill="none"/><path d="M14 38h20v-6H14z" fill="${C.gold}" ${st(2.6)}/><circle cx="17.5" cy="42.5" r="2.2" fill="${C.steel}" ${st(2)}/><circle cx="30.5" cy="42.5" r="2.2" fill="${C.steel}" ${st(2)}/>
+    <path d="M12 41h24" ${st(2.6)} fill="none"/><path d="M14 38h20v-6H14z" fill="${C.gold}" ${st(2.6)}/><circle cx="19" cy="31" r="3.400" fill="${C.gold}" ${st(2)}/><circle cx="26" cy="29.500" r="3.800" fill="${C.gold}" ${st(2)}/><circle cx="32" cy="31.500" r="3" fill="${C.gold}" ${st(2)}/><path d="M24.500 28.500l1.500-1" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="42.5" r="2.2" fill="${C.steel}" ${st(2)}/><circle cx="30.5" cy="42.5" r="2.2" fill="${C.steel}" ${st(2)}/>
     <path d="M18 32l2-3 3 3 2-4 3 4 2-2" fill="none" stroke="${C.goldDark}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`,
   excavatrice: `<path d="M3 44h24" ${st(5)} fill="none"/><rect x="3" y="34" width="22" height="10" rx="4" fill="${C.cave}" ${st()}/>
     <path d="M12 34L16 12h9l5 22z" fill="${C.gold}" ${st()}/><path d="M25 14L38 8" ${st(7)} fill="none"/><path d="M25 14L38 8" stroke="${C.goldDark}" stroke-width="3" stroke-linecap="round"/>
@@ -68,7 +69,7 @@ export const ICONS: Record<string, string> = {
     <circle cx="14" cy="27" r="6.2" fill="#fff6c9" ${st(2.4)}/><circle cx="34" cy="27" r="6.2" fill="#fff6c9" ${st(2.4)}/>
     <path d="M23.5 25q.5-2.600 1-0 .5-2.6 1 0" ${st(3)} fill="none"/>${shine('M10.500 25c1-2 2.500-3 4-3M30.500 25c1-2 2.500-3 4-3')}
     <path d="M40 8l1.5 3.5L45 13l-3.500 1.500L40 18l-1.500-3.500L35 13l3.500-1.500z" fill="#fff" ${st(2)}/>`,
-  pecule: `<path d="M8 33v6c0 3.500 7 6 16 6s16-2.500 16-6v-6z" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="33" rx="16" ry="6" fill="${C.gold}" ${st()}/><path d="M8 25v6c0 3.500 7 6 16 6s16-2.500 16-6v-6z" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="25" rx="16" ry="6" fill="${C.gold}" ${st()}/><path d="M8 17v6c0 3.500 7 6 16 6s16-2.500 16-6v-6z" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="17" rx="16" ry="6" fill="${C.gold}" ${st()}/><ellipse cx="24" cy="17" rx="8" ry="3" fill="none" stroke="${C.goldDark}" stroke-width="2"/>${shine('M12 15c2-2 5-3 8-3')}`,
+  pecule: `<path d="M17 12l-3-7h20l-3 7" fill="${C.wood}" ${st(2.6)}/><path d="M16 13c-9 6-12 15-11 25 1 6 7 9 19 9s18-3 19-9c1-10-2-19-11-25z" fill="${C.gold}" ${st()}/><path d="M33 14c8 6 10 14 9 24-1 4-4 6-9 7 4-9 4-21 0-31z" fill="${C.goldDark}"/><path d="M16 13h16" stroke="${C.woodDark}" stroke-width="5" stroke-linecap="round"/><path d="M16 13h16" stroke="${C.wood}" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="30" r="8.500" fill="${C.cream}" ${st(2.6)}/><path d="M24 25v10M21 27.500h5a2 2 0 0 1 0 4h-4a2 2 0 0 0 0 4h5" fill="none" stroke="${C.goldDark}" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/>${shine('M12 24c1-3 3-5 6-6')}`,
   gear: `<g fill="${C.steel}" ${st(3)}>${[0, 45, 90, 135].map((a) => `<rect x="20.500" y="3" width="7" height="42" rx="2.500" transform="rotate(${a} 24 24)"/>`).join('')}</g><circle cx="24" cy="24" r="13.500" fill="${C.steel}" ${st(3)}/><circle cx="24" cy="24" r="5.500" fill="${C.cave}" ${st(3)}/>${shine('M15 21a10 10 0 0 1 6-7')}`,
   paw: `<ellipse cx="24" cy="32" rx="11.500" ry="9.500" fill="${C.fur}" ${st()}/><ellipse cx="24" cy="33" rx="5" ry="4" fill="${C.pink}" ${st(2)}/><ellipse cx="10.500" cy="22" rx="4" ry="5.500" transform="rotate(-20 10.500 22)" fill="${C.fur}" ${st()}/><ellipse cx="19" cy="13" rx="4" ry="5.500" fill="${C.fur}" ${st()}/><ellipse cx="29" cy="13" rx="4" ry="5.500" fill="${C.fur}" ${st()}/><ellipse cx="37.500" cy="22" rx="4" ry="5.500" transform="rotate(20 37.500 22)" fill="${C.fur}" ${st()}/>`,
   cuff: `<rect x="5" y="13" width="38" height="22" rx="7" fill="${C.steel}" ${st()}/><rect x="11" y="19" width="26" height="10" rx="4" fill="${C.steelDark}" ${st(2.400)}/><circle cx="17" cy="24" r="2" fill="${C.steel}"/><circle cx="24" cy="24" r="2" fill="${C.steel}"/><circle cx="31" cy="24" r="2" fill="${C.steel}"/>${shine('M10 19c1-2 3-3 5-3')}`,
@@ -91,6 +92,20 @@ export const ICONS: Record<string, string> = {
   trophy: `<path d="M13 8h22v11c0 7-5 12-11 12s-11-5-11-12z" fill="${C.gold}" ${st()}/><path d="M13 12H6c0 7 3 10 8 11M35 12h7c0 7-3 10-8 11" fill="none" ${st(3)}/><path d="M24 31v7" ${st(3.4)}/><rect x="14" y="38" width="20" height="6" rx="2" fill="${C.goldDark}" ${st()}/>${shine('M17 12v7')}`,
   nugget: `<path d="M24 5l5 11 12 1-9 8 3 12-11-7-11 7 3-12-9-8 12-1z" fill="${C.gold}" ${st()}/><path d="M24 12l2.500 6" stroke="#fff" stroke-opacity=".75" stroke-width="2.400" stroke-linecap="round"/>`,
 };
+
+/** Couleur d'un objet : [vive, sombre]. Sert aux cartes d'achat (variables --acc / --accd). */
+export const ACC: Record<string, [string, string]> = {
+  shovel: ['#ffc21a', '#e08a0c'], pelleor: ['#ffc21a', '#e08a0c'],
+  apprentie: ['#62d13c', '#34a02a'], pecule: ['#62d13c', '#34a02a'],
+  taupiniere: ['#ff8a3d', '#c9562a'], sacoche: ['#ff8a3d', '#c9562a'],
+  foreuse: ['#ff6f9c', '#d6447a'],
+  machine: ['#5ec6f5', '#2f7fe0'], lunettes: ['#5ec6f5', '#2f7fe0'],
+  mine: ['#b79bff', '#7a55d6'], excavatrice: ['#20d0c8', '#0f9490'],
+};
+
+/** Tache de peinture et étincelles derrière l'icône d'une carte (viewBox 64, aplats). */
+export const plate = (id: string) =>
+  `<svg class="plate" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M10 22C12 8 30 2 42 8s20 16 14 30-14 22-30 20S6 40 10 22z" fill="${(ACC[id] ?? ACC.shovel)[1]}"/><path d="M54 6l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM8 48l1.500 3.500L13 53l-3.500 1.500L8 58l-1.500-3.500L3 53l3.500-1.500z" fill="${C.cream}" stroke="${k}" stroke-width="1.500" stroke-linejoin="round"/></svg>`;
 
 export const icon = (id: string, cls = 'h-9 w-9 shrink-0') =>
   `<svg class="${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false">${ICONS[id] ?? ''}</svg>`;

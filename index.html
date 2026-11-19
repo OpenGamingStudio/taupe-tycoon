@@ -45,14 +45,16 @@
   </section>
 
   <aside id="sheet" class="sheet" role="region" aria-labelledby="sheet-t" data-open="false" inert>
-    <div class="sheet-head"><span class="sheet-grip" aria-hidden="true"></span><h2 id="sheet-t" class="min-w-0 flex-1 truncate text-2xl font-bold leading-none" tabindex="-1"></h2><button id="sheet-x" type="button" class="btn btn-icon" data-i18n-label="close" aria-label="Fermer"><span data-ico="close"></span></button></div>
-    <div class="sheet-body min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 pb-3">
+    <div class="sheet-head"><span class="sheet-grip" aria-hidden="true"></span><h2 id="sheet-t" class="min-w-0 flex-1 truncate text-2xl font-bold leading-none" tabindex="-1"></h2><button id="sheet-x" type="button" class="btn btn-icon btn-close" data-i18n-label="close" aria-label="Fermer"><span data-ico="close"></span></button></div>
+    <div class="sheet-body min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-3">
       <div id="p-dig">
         <div class="mb-2 flex items-center justify-between gap-2" role="group" aria-labelledby="mode-l">
           <span id="mode-l" class="text-lg font-bold" data-i18n="mode">Quantité</span>
           <span class="flex gap-2"><button type="button" class="btn btn-sm" data-mode="1" aria-pressed="true">×1</button><button type="button" class="btn btn-sm" data-mode="10" aria-pressed="false">×10</button><button type="button" class="btn btn-sm" data-mode="max" aria-pressed="false" data-i18n="max">Max</button></span>
         </div>
-        <ul id="rows" class="grid gap-2"></ul>
+        <ul id="rows" class="rows"></ul>
+        <h3 class="sec"><span data-i18n="teamTitle">Équipe de creuseurs</span><span id="crew-n" class="sec-n"></span></h3>
+        <ul id="crew" class="rows"></ul>
       </div>
       <div id="p-rebirth" hidden>
         <p class="text-base" data-i18n="rebirthIntro"></p>
@@ -64,8 +66,8 @@
         </dl>
         <p id="rb-msg" class="mt-2 text-lg font-bold"></p>
         <button id="rb-go" type="button" class="btn btn-big mt-2 w-full" data-i18n="rebirthGo">Faire un rebirth</button>
-        <h3 class="mt-4 text-xl font-bold" data-i18n="shopTitle">Boutique permanente</h3>
-        <ul id="perms" class="mt-2 grid gap-2"></ul>
+        <h3 class="sec"><span data-i18n="shopTitle">Boutique permanente</span></h3>
+        <ul id="perms" class="rows"></ul>
       </div>
       <div id="p-trophies" hidden>
         <p id="tr-sum" class="text-base font-bold"></p>

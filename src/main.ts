@@ -3,7 +3,7 @@ import {
   GENS, MILESTONES, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
   NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME,
 } from './config';
-import { CHIPS, ICONS, MOLE, SCENE, icon } from './art';
+import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
 import { Lang, setLang, t } from './i18n';
 import { Options, PANELS, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
@@ -48,7 +48,7 @@ document.querySelectorAll<HTMLElement>('[data-ico]').forEach((el) => { el.innerH
 $('ver').textContent = `v${VERSION}`;
 
 // ---------- lignes ----------
-interface Row { el: HTMLButtonElement; tile: HTMLElement; name: HTMLElement; lv: HTMLElement; plus: HTMLElement; cur: HTMLElement; desc: HTMLElement; stat: HTMLElement; mile: HTMLElement; cost: HTMLElement; kind: number; id: string }
+interface Row { el: HTMLButtonElement; tile: HTMLElement; name: HTMLElement; lv: HTMLElement; plus: HTMLElement; cur: HTMLElement; desc: HTMLElement; mile: HTMLElement; cost: HTMLElement; kind: number; id: string }
 const rows: Row[] = [];
 const permRows: Row[] = [];
 
@@ -57,12 +57,16 @@ function mkRow(id: string, kind: number): Row {
   const el = document.createElement('button');
   el.type = 'button';
   el.className = 'row';
-  el.innerHTML = `<span class="tile"></span><span class="min-w-0"><span class="block text-lg font-bold leading-tight"><span class="name"></span></span><span class="badges"><span class="lv"></span><span class="plus"></span></span><span class="desc block text-sm leading-tight"></span><span class="stat"></span><span class="cur"></span><span class="mile"></span></span><span class="cost"></span>`;
+  const [acc, accd] = ACC[id] ?? ACC.shovel;
+  el.style.setProperty('--acc', acc);
+  el.style.setProperty('--accd', accd);
+  el.innerHTML = `<span class="tile">${plate(id)}${icon(id, 'ico')}<span class="padlock">${icon('lock', 'ico')}</span><span class="maxtag">${t('maxTag')}</span></span><span class="min-w-0"><span class="block text-lg font-bold leading-tight"><span class="name"></span></span><span class="badges"><span class="lv"></span><span class="plus"></span></span><span class="desc"></span><span class="cur"></span><span class="mile"><span class="bar"><i></i></span><span class="mile-t"></span></span></span><span class="cost"><span class="cb"></span><span class="need" hidden><i></i></span></span>`;
   li.append(el);
   const q = (c: string) => el.querySelector<HTMLElement>('.' + c)!;
-  return { el, tile: q('tile'), name: q('name'), lv: q('lv'), plus: q('plus'), cur: q('cur'), desc: q('desc'), stat: q('stat'), mile: q('mile'), cost: q('cost'), kind, id };
+  return { el, tile: q('tile'), name: q('name'), lv: q('lv'), plus: q('plus'), cur: q('cur'), desc: q('desc'), mile: q('mile'), cost: q('cost'), kind, id };
 }
 const rowsUl = $('rows');
+const crewUl = $('crew');
 const permsUl = $('perms');
 const ids = ['shovel', ...GENS.map((g) => g.id)];
 ids.forEach((id, i) => {
@@ -80,7 +84,7 @@ ids.forEach((id, i) => {
     }
   });
   rows.push(r);
-  rowsUl.append(r.el.parentElement!);
+  (i === 0 ? rowsUl : crewUl).append(r.el.parentElement!);
 });
 PERMS.forEach((p, i) => {
   const r = mkRow(p.id, i);
@@ -128,6 +132,12 @@ const notify = (msg: string) => { say(msg); toast(msg); };
 
 function setText(el: HTMLElement, v: string) { if (el.textContent !== v) el.textContent = v; }
 function setHtml(el: HTMLElement, v: string) { if (el.dataset.h !== v) { el.dataset.h = v; el.innerHTML = v; } }
+/** Jauge « terre déjà réunie » sous le prix (entier 0-100) ; -1 = cachée. */
+function setNeed(cost: HTMLElement, pct: number) {
+  const need = cost.lastElementChild as HTMLElement;
+  need.hidden = pct < 0;
+  if (pct >= 0) (need.firstElementChild as HTMLElement).style.width = Math.min(100, pct) + '%';
+}
 function setDisabled(el: HTMLElement, off: boolean) { el.setAttribute('aria-disabled', off ? 'true' : 'false'); }
 
 const depthOf = () => (s.gens[4] > 0 || s.gens[5] > 0 ? 2 : s.gens[2] > 0 || s.gens[3] > 0 ? 1 : 0);
@@ -292,35 +302,43 @@ function render() {
     const locked = r.kind >= 0 && !revealed(r.kind);
     const n = opts.mode === 'max' ? Math.max(1, maxAffordable(base, level, s.dirt)) : opts.mode;
     const cost = costOf(base, level, n);
+    const no = !locked && s.dirt < cost;
     r.el.classList.toggle('is-locked', locked);
-    setHtml(r.tile, icon(locked ? 'lock' : ids[i], 'h-11 w-11'));
-    setText(r.name, locked ? t('locked') : t(ids[i]));
-    setText(r.lv, locked ? '' : `${t('level')} ${f(level)}`);
+    r.el.classList.toggle('is-no', no);
+    setText(r.name, t(ids[i]));
+    setText(r.lv, locked ? '' : `${t('level')} ${f(level)}${n > 1 ? ` ×${f(n)}` : ''}`);
     r.lv.hidden = locked;
-    setText(r.plus, locked || n <= 1 ? '' : `+${f(n)}`);
-    r.plus.hidden = locked || n <= 1;
+    r.plus.hidden = locked;
     if (locked) {
+      setText(r.plus, '');
       setText(r.desc, t('lockedD', { n: f(Math.ceil(GENS[r.kind].cost * 0.4)) }));
-      setText(r.stat, '');
       setText(r.cur, '');
     } else if (r.kind < 0) {
+      setText(r.plus, `+${f(clickBase({ ...s, shovel: s.shovel + n }) - clickBase(s))} ${t('per')}`);
       setText(r.desc, t('shovelD'));
-      setText(r.stat, `${t('gain')} : +${f(clickBase({ ...s, shovel: s.shovel + n }) - clickBase(s))} ${t('per')}`);
       setText(r.cur, `${t('nowVal')} : ${f(clickBase(s))} ${t('per')}`);
     } else {
       const gain = genProdAt(s, r.kind, level + n) - genProd(s, r.kind);
+      setText(r.plus, `+${f(gain)}${t('secShort')}`);
       setText(r.desc, t(ids[i] + 'D'));
-      setText(r.stat, `${t('gain')} : +${f(gain)}${t('secShort')}`);
       setText(r.cur, `${t('nowVal')} : ${f(genProd(s, r.kind))}${t('secShort')}`);
     }
+    r.el.title = locked ? '' : r.desc.textContent ?? '';
     const nm = locked ? null : nextMilestone(level);
-    setText(r.mile, locked ? '' : nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm }));
-    setHtml(r.cost, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
-    setDisabled(r.el, locked || s.dirt < cost);
+    r.mile.hidden = locked;
+    if (!locked) {
+      setText(r.mile.lastElementChild as HTMLElement, nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm }));
+      (r.mile.querySelector('i') as HTMLElement).style.width = (nm === null ? 100 : Math.min(100, Math.floor(level / nm * 100))) + '%';
+    }
+    setHtml(r.cost.firstElementChild as HTMLElement, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
+    setNeed(r.cost, no ? Math.floor(s.dirt / cost * 100) : -1);
+    r.cost.classList.toggle('is-lock', locked);
+    setDisabled(r.el, locked || no);
     const wantHot = !hot && (hintKey() === 'hintBuy' || hintKey() === 'hintOpen') && !locked && s.dirt >= cost;
     if (wantHot) hot = true;
     r.el.classList.toggle('hot', wantHot && !reducedMotion());
   });
+  setText($('crew-n'), `${f(GENS.filter((_, k) => revealed(k)).length)} / ${f(GENS.length)}`);
   const gain = rebirthGain(s);
   setText($('rb-gain'), f(gain));
   setText($('rb-mult'), fmtPct(100 * (prodMult(s) - 1), L));
@@ -335,14 +353,21 @@ function render() {
     const maxed = lvl >= p.max;
     const extra = p.id === 'lunettes' ? bonusPct(lvl, PERM_PROD_BONUS) : p.id === 'pelleor' ? bonusPct(lvl, PERM_CLICK_PS)
       : p.id === 'pecule' ? `${f(startDirt(s))}` : p.id === 'sacoche' ? `+${f(lvl)} h` : '';
-    setHtml(r.tile, icon(p.id, 'h-11 w-11'));
+    const pc = permCost(s, i);
+    const no = !maxed && s.gems < pc;
+    r.el.classList.toggle('is-max', maxed);
+    r.el.classList.toggle('is-no', no);
     setText(r.name, t(p.id));
     setText(r.lv, `${t('level')} ${f(lvl)}`);
     setText(r.desc, t(p.id + 'D'));
-    setText(r.stat, extra);
+    r.el.title = r.desc.textContent ?? '';
+    setText(r.cur, extra);
+    r.cur.hidden = extra === '';
     r.plus.hidden = true;
-    setHtml(r.cost, maxed ? t('maxed') : `${icon('gem', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(permCost(s, i))}`);
-    setDisabled(r.el, maxed || s.gems < permCost(s, i));
+    r.mile.hidden = true;
+    setHtml(r.cost.firstElementChild as HTMLElement, maxed ? `${icon('trophy', 'h-5 w-5')}${t('full')}` : `${icon('gem', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(pc)}`);
+    setNeed(r.cost, no ? Math.floor(s.gems / pc * 100) : -1);
+    setDisabled(r.el, maxed || no);
   });
   renderOwned();
   renderBuffs();
