@@ -2,6 +2,13 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.12.1 — 2026-11-21 (correctifs de revue)
+- **Équilibrage** : l'Auto-tap ne compte plus que 2 % de la production/s par tap pour la Pelle en or (`AUTO_PS_CAP`), au lieu de 3 % × niveau (+240 % au niv. 100, cumulé avec Turbo et Génie). Le plancher en clics de la Pluie et du Gain instantané ignore aussi la part de la Pelle en or. Le critique (×2, clics manuels seulement) ajoute ~+10 % aux clics : bilan revérifié dans `tests/bonus.test.ts`.
+- Sauvegarde : une version inconnue (>= 5) ne multiplie plus la terre par 10.
+- Pluie de pépites : ne perd plus ses pépites quand l'onglet est caché. Un glissé hors de la taupe ne fait plus avaler une activation clavier.
+- Perf : repeinture de la scène une fois sur 8 (au lieu de toutes les 8 s) ; positions de l'Auto-tap en cache ; chute des pépites animée en `transform`.
+- Textes des bonus alimentés par `config.ts` ; commentaire du Coup de génie corrigé (×5).
+
 ## 2.12.0 — 2026-11-21 (clic critique, panneaux dégagés)
 - **Clic critique** : 10 % de chance par clic (RNG injectable) de doubler le gain, arrondi entier ; chiffre plus gros en aplat rouge et tintement léger. Se cumule avec la pioche en or (×5) et le turbo (×2) ; ni la production passive, ni l'Auto-tap, ni le prestige ne sont touchés.
 - Panneau ouvert (boutique, rebirth, succès, stats, options) : la barre de bonus et les pastilles de gain flottantes sont cachées (les effets actifs continuent), la taupe garde toute la zone visible. Cause : la classe `flex` de la barre l'emportait sur la règle qui la cachait.

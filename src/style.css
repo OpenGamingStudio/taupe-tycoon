@@ -317,7 +317,7 @@ html, body {
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
 @keyframes bnpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 @keyframes ftap { 0%, 100% { transform: translate(0, 0) rotate(-12deg); } 50% { transform: translate(-6px, 10px) rotate(-12deg); } }
-@keyframes dropfall { from { top: -64px; } to { top: 105%; } }
+@keyframes dropfall { from { transform: translateY(0); } to { transform: translateY(calc(var(--fall, 600px) * 1.05 + 64px)); } }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 @keyframes flash { 0% { background: #ffc21a; } 100% { background: var(--acc); } }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 10px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
