@@ -65,6 +65,7 @@ export const BONUSES: BonusDef[] = [
   { id: 'burst', cd: 600, dur: 0 }, // Gain instantané : 2 min de production
 ];
 export const AUTO_RATE = 8; // taps par seconde pendant l'Auto-tap
+export const AUTO_PS_CAP = 0.02; // Auto-tap : part de la production/s comptée par tap, plafonnée (la Pelle en or n'y compte pas au-delà)
 export const TURBO_MULT = 2;
 export const CRIT_CHANCE = 0.1; // clic critique : 10 % de chance par clic
 export const CRIT_MULT = 2; // ... qui double le gain du clic

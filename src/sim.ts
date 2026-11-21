@@ -2,7 +2,7 @@ import {
   GEM_BONUS, GEM_DIV, GENS, GROWTH, OFFLINE_BASE, OFFLINE_STEP, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, PECULE_SEC, PECULE_MIN,
   CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER, MILESTONES, MILESTONE_MULT, TROPHY_BONUS,
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
-  BONUSES, BonusId, AUTO_RATE, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, CREW_MULT, RAIN_COUNT, RAIN_SEC, RAIN_CLICKS, BURST_SEC, BURST_CLICKS,
+  BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, CREW_MULT, RAIN_COUNT, RAIN_SEC, RAIN_CLICKS, BURST_SEC, BURST_CLICKS,
 } from './config';
 
 export interface State {
@@ -53,11 +53,14 @@ export const nextMilestone = (level: number) => MILESTONES.find((m) => m > level
 export const prodMult = (s: State) => gemMult(s) * trophyMult(s) * (1 + PERM_PROD_BONUS * permLevel(s, 'lunettes'));
 export const clickBase = (s: State) =>
   (CLICK_BASE + SHOVEL_POWER * s.shovel) * milestoneMult(s.shovel) * gemMult(s);
-/** Gain d'un clic : base + part de la production (Pelle en or), ×10 pendant « Coup de génie ». */
+/** Gain d'un clic : base + part de la production (Pelle en or), ×5 pendant « Coup de génie ». */
 export const clickPower = (s: State) =>
   clickRaw(s) * (s.genius > 0 ? GENIUS_MULT : 1) * (s.turbo > 0 ? TURBO_MULT : 1);
 /** Gain d'un clic sans bonus temporaire. */
 export const clickRaw = (s: State) => clickBase(s) + PERM_CLICK_PS * permLevel(s, 'pelleor') * perSecondBase(s);
+/** Gain d'un tap de l'Auto-tap : comme un clic, mais la part de production (Pelle en or) est plafonnée à AUTO_PS_CAP. */
+export const autoTapRaw = (s: State) =>
+  clickBase(s) + Math.min(PERM_CLICK_PS * permLevel(s, 'pelleor'), AUTO_PS_CAP) * perSecondBase(s);
 
 /** Production d'un type de bâtiment, sans bonus temporaire. */
 export const genProd = (s: State, i: number) => genProdAt(s, i, s.gens[i]);
@@ -122,7 +125,7 @@ export function tick(s: State, dt: number) {
     const whole = Math.floor(taps);
     s.autoAcc = taps - whole;
     s.clicks += whole;
-    earn(s, clickRaw(s) * AUTO_RATE * w);
+    earn(s, autoTapRaw(s) * AUTO_RATE * w);
   } else s.autoAcc = 0;
   s.rush = Math.max(0, s.rush - dt);
   s.genius = Math.max(0, s.genius - dt);
@@ -149,7 +152,7 @@ export function bonusActive(s: State, id: BonusId): number {
   return id === 'auto' ? s.auto : id === 'turbo' ? s.turbo : id === 'crew' ? s.crew : 0;
 }
 /** Production d'un instant, au minimum équivalente à `clicks` clics (utile au tout début, sans bâtiment). */
-const worth = (s: State, sec: number, clicks: number) => Math.floor(Math.max(perSecondBase(s) * sec, clickRaw(s) * clicks));
+const worth = (s: State, sec: number, clicks: number) => Math.floor(Math.max(perSecondBase(s) * sec, clickBase(s) * clicks)); // plancher en clics SANS la part de production de la Pelle en or (sinon ×3 la production au niv. 100)
 /** Valeur d'une pépite de la pluie. */
 export const rainValue = (s: State) => worth(s, RAIN_SEC, RAIN_CLICKS);
 /** Valeur du Gain instantané. */

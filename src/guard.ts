@@ -80,7 +80,9 @@ export function installGuard(d: GuardDeps): () => void {
     d.reviveWorld();
   };
   const timer = window.setInterval(run, 1000);
-  const paintTimer = window.setInterval(() => { if (!document.hidden) repaint(d); }, 8000);
+  // toutes les 8 s : bascule de couleur (légère) ; la scène n'est réécrite qu'une fois sur 8 (~1 min), jamais à chaque passage
+  let paints = 0;
+  const paintTimer = window.setInterval(() => { if (!document.hidden) repaint(d, ++paints % 8 === 0); }, 8000);
   const onVis = () => refresh();
   document.addEventListener('visibilitychange', onVis);
   window.addEventListener('pageshow', refresh);

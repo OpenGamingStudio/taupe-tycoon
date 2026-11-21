@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { AUTO_RATE, BONUSES, BURST_SEC, CREW_MULT, TURBO_MULT } from '../src/config';
+import { AUTO_PS_CAP, AUTO_RATE, BONUSES, BURST_SEC, CREW_MULT, CRIT_CHANCE, CRIT_MULT, GENIUS_MULT, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from '../src/config';
+import { T } from '../src/i18n';
 import { sanitize } from '../src/save';
 import {
-  applyOffline, boostOver, bonusLeft, bonusReady, bonusReadyCount, burstValue, clickPower, clickRaw, newState, perSecond,
+  applyOffline, autoTapRaw, boostOver, clickBase, bonusLeft, bonusReady, bonusReadyCount, burstValue, clickPower, clickRaw, newState, perSecond,
   perSecondBase, rainCatch, rainValue, tick, useBonus,
 } from '../src/sim';
 
@@ -158,5 +159,56 @@ describe('sauvegarde', () => {
     const r = sanitize(JSON.parse(JSON.stringify({ v: 4, at: Date.now(), s })))!;
     expect(r.s.crew).toBe(45);
     expect(r.s.ready[2]).toBeGreaterThan(Date.now());
+  });
+});
+
+describe('revue 2.12.1', () => {
+  const goldRich = () => { const s = rich(); s.perms[1] = 100; s.shovel = 10; return s; };
+  it('Auto-tap : la Pelle en or niveau 100 ne fait pas exploser le gain (part de production plafonnée)', () => {
+    const s = goldRich();
+    const p = perSecondBase(s);
+    expect(autoTapRaw(s)).toBeLessThanOrEqual(clickBase(s) + AUTO_PS_CAP * p + 1e-6);
+    expect(autoTapRaw(s)).toBeLessThan(clickRaw(s));
+    // gain de l'Auto-tap pendant 1 s, sans autre bonus, en part de la production/s
+    const a = newState(); Object.assign(a, { gens: s.gens, perms: s.perms, shovel: s.shovel, auto: 30 });
+    const b = newState(); Object.assign(b, { gens: s.gens, perms: s.perms, shovel: s.shovel });
+    tick(a, 1); tick(b, 1);
+    expect((a.dirt - b.dirt) / p).toBeLessThan(AUTO_RATE * (clickBase(s) / p + AUTO_PS_CAP) + 1e-6);
+    // sans Pelle en or, mêmes bâtiments : l'écart dû à la Pelle en or pendant l'Auto-tap reste <= AUTO_PS_CAP x taps/s de production
+    const c = newState(); Object.assign(c, { gens: s.gens, perms: [0, 0, 0, 0], shovel: s.shovel, auto: 30 }); tick(c, 1);
+    expect((a.dirt - c.dirt) / p).toBeLessThanOrEqual(AUTO_PS_CAP * AUTO_RATE + 1e-6);
+  });
+  it('Auto-tap avec Turbo et Génie cumulés reste borné', () => {
+    const s = goldRich(); s.auto = 30; s.turbo = 30; s.genius = 15;
+    const p = perSecondBase(s), d0 = s.dirt;
+    tick(s, 1);
+    expect(s.dirt - d0).toBeLessThan(p * (TURBO_MULT + AUTO_RATE * GENIUS_MULT * TURBO_MULT * (AUTO_PS_CAP + clickBase(s) / p)) + 1);
+  });
+  it('équilibre avec auto et critique : bonus ensemble sous +60 %, profil Pelle en or compris', () => {
+    for (const s of [rich(), goldRich()]) {
+      const p = perSecondBase(s);
+      const auto = (autoTapRaw(s) * AUTO_RATE * BONUSES[0].dur) / BONUSES[0].cd / p;
+      const crit = (CRIT_CHANCE * (CRIT_MULT - 1)); // +10 % sur les clics (manuels seulement)
+      expect(auto).toBeLessThan(0.25); // profil pelle forte (niv. 25) : la part de pelle est payée par le joueur
+      expect(crit).toBeLessThan(0.2);
+      const per = BONUSES.reduce((a, b) => a + (b.id === 'turbo' ? p * b.dur * (TURBO_MULT - 1) / b.cd : b.id === 'crew' ? p * b.dur * (CREW_MULT - 1) / b.cd : b.id === 'burst' ? burstValue(s) / b.cd : b.id === 'rain' ? rainValue(s) * RAIN_COUNT / b.cd : 0), 0) / p;
+      expect(per).toBeLessThan(0.6);
+      expect(per + auto).toBeLessThan(0.8);
+    }
+  });
+  it('sauvegarde : version inconnue (>= 5) ou non numérique ne multiplie pas la terre par 10', () => {
+    expect(sanitize({ v: 9, s: { dirt: 100 } })!.s.dirt).toBe(100);
+    expect(sanitize({ v: '2', s: { dirt: 100 } })!.s.dirt).toBe(1000);
+    expect(sanitize({ s: { dirt: 100 } })!.s.dirt).toBe(1000);
+    expect(sanitize({ v: 2, s: { dirt: 100 } })!.s.dirt).toBe(100);
+  });
+  it('textes des bonus : durées et chiffres suivent config.ts', () => {
+    for (const lang of ['fr', 'en'] as const) {
+      expect(T[lang].bAutoD).toContain(`${AUTO_RATE}`); expect(T[lang].bAutoD).toContain(`${BONUSES[0].dur} s`);
+      expect(T[lang].bTurboD).toContain(`${BONUSES[1].dur} s`);
+      expect(T[lang].bCrewD).toContain(`${BONUSES[2].dur} s`);
+      expect(T[lang].bRainD).toContain(`${RAIN_COUNT}`); expect(T[lang].bRainD).toContain(`${RAIN_SEC} s`);
+      expect(T[lang].bBurstD).toContain(`${BURST_SEC / 60}`);
+    }
   });
 });

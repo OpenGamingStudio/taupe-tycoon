@@ -1,7 +1,7 @@
 import './style.css';
 import {
   GENS, MILESTONES, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
-  NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, RAIN_COUNT,
+  NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, RAIN_COUNT, TURBO_MULT, GENIUS_MULT,
 } from './config';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
@@ -18,7 +18,7 @@ import { statsHtml, trophiesHtml } from './lists';
 import {
   State, applyEvent, applyOffline, buyN, buyPerm, click, clickRoll, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
   milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
-  rollEvent, startDirt, tick, trophyMult, bonusActive, bonusLeft, bonusReadyCount, rainCatch, useBonus,
+  rollEvent, startDirt, tick, trophyMult, bonusActive, bonusLeft, bonusReadyCount, rainCatch, useBonus, autoTapRaw,
 } from './sim';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -511,6 +511,8 @@ function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
 }
 mole.addEventListener('pointerdown', (e) => { if (e.button === 0 || e.pointerType !== 'mouse') { skipClick = true; dig(e); } });
 mole.addEventListener('click', (e) => { if (skipClick) { skipClick = false; return; } dig(e); });
+// un appui glissé hors de la taupe n'émet pas de click : on lève le drapeau pour ne pas avaler une activation clavier
+for (const ev of ['pointerup', 'pointercancel'] as const) document.addEventListener(ev, () => { if (skipClick) window.setTimeout(() => { skipClick = false; }, 350); });
 
 function rebirthFx() {
   mood('rebirth', 1100);
@@ -642,12 +644,21 @@ const fingerEl = document.createElement('span');
 fingerEl.className = 'finger'; fingerEl.hidden = true; fingerEl.innerHTML = icon('auto', 'h-12 w-12');
 fx.append(fingerEl);
 let autoVis = 0, autoN = 0;
+// positions mises en cache (au plus toutes les 500 ms) : évite 3 relevés de mise en page à chaque pas de 100 ms
+let rectsAt = 0, rects: { box: DOMRect; mb: DOMRect; cb: DOMRect } | null = null;
+const dropRects = () => { rects = null; };
+window.addEventListener('resize', dropRects); window.addEventListener('orientationchange', dropRects);
+function autoRects() {
+  const n = performance.now();
+  if (!rects || n - rectsAt > 500) { rects = { box: fx.getBoundingClientRect(), mb: mole.getBoundingClientRect(), cb: fxBox() }; rectsAt = n; }
+  return rects;
+}
 /** Effets visuels de l'Auto-tap (les gains sont dans sim.tick) : doigt qui tape, ondes, éclats ; léger. */
 function autoFx(gap: number) {
   const on = s.auto > 0 && !document.hidden;
   if (fingerEl.hidden === on) fingerEl.hidden = !on;
   if (!on) { autoVis = 0; return; }
-  const box = fx.getBoundingClientRect(), mb = mole.getBoundingClientRect(), cb = fxBox();
+  const { box, mb, cb } = autoRects();
   const ox = box.left - cb.left, oy = box.top - cb.top;
   const cx = mb.left - box.left + mb.width / 2, cy = mb.top - box.top + mb.height * 0.45;
   fingerEl.style.left = `${cx + 18}px`; fingerEl.style.top = `${cy - 10}px`;
@@ -665,7 +676,7 @@ function autoFx(gap: number) {
     fx.append(ring); ring.addEventListener('animationend', () => ring.remove());
     if (autoN % 3 === 0) {
       const tag = document.createElement('span');
-      tag.className = 'fx'; tag.textContent = '+' + f(clickPower(s)); tag.style.left = `${x}px`; tag.style.top = `${y - 14}px`;
+      tag.className = 'fx'; tag.textContent = '+' + f(autoTapRaw(s) * (s.turbo > 0 ? TURBO_MULT : 1) * (s.genius > 0 ? GENIUS_MULT : 1)); tag.style.left = `${x}px`; tag.style.top = `${y - 14}px`;
       fx.append(tag); tag.addEventListener('animationend', () => tag.remove());
       jfx.sparks(x + ox, y + oy, 4, '#ffc21a');
     }
@@ -686,6 +697,7 @@ function rainDrop() {
   d.style.left = `${rnd(4, 82)}%`;
   const still = reducedMotion();
   if (still) d.style.top = `${rnd(8, 60)}%`;
+  d.style.setProperty('--fall', `${rainEl.clientHeight}px`);
   rainEl.append(d);
   const gone = window.setTimeout(() => d.remove(), still ? 5000 : 4300);
   d.addEventListener('click', () => {
@@ -711,8 +723,7 @@ function rainStep() {
     window.setTimeout(() => { if (rainCaught > 0) notify(t('bonusRainEnd', { n: rainCaught })); }, 4400);
     return;
   }
-  rainLeft--;
-  if (!document.hidden) rainDrop();
+  if (!document.hidden) { rainLeft--; rainDrop(); } // onglet caché : la pluie attend, rien n'est perdu
   window.setTimeout(rainStep, 800);
 }
 function startRain() { rainCaught = 0; rainLeft = RAIN_COUNT; rainStep(); }

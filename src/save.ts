@@ -33,7 +33,7 @@ export function sanitize(raw: unknown): Saved | null {
   if (!st || typeof st !== 'object') return null;
   const s = newState();
   // V1 (v absent ou 1) : la terre était 10 fois plus petite (décimales) ; passage aux entiers
-  const k = r.v === 2 || r.v === 3 || r.v === 4 ? 1 : 10;
+  const k = typeof r.v === 'number' && r.v >= 2 ? 1 : 10;
   s.dirt = num(st.dirt, MAX_DIRT) * k; s.runTotal = num(st.runTotal, MAX_DIRT) * k; s.lifeTotal = num(st.lifeTotal, MAX_DIRT) * k;
   s.dirt = Math.min(s.dirt, MAX_DIRT); s.runTotal = Math.min(s.runTotal, MAX_DIRT); s.lifeTotal = Math.min(s.lifeTotal, MAX_DIRT);
   s.gems = int(st.gems, MAX_GEMS); s.gemsEarned = int(st.gemsEarned, MAX_GEMS);
