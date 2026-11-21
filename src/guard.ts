@@ -59,6 +59,16 @@ export function checkAndRepair(d: GuardDeps, now = performance.now()): Problem[]
   return probs;
 }
 
+/**
+ * Repeinture forcée (2.11.1). Sur Chrome Android, après une longue session avec beaucoup d'onglets, le navigateur peut
+ * jeter les tuiles graphiques du fond : le décor devient noir alors que le DOM est intact (rien à « diagnostiquer »).
+ * On force donc un nouveau dessin : couleur de fond décalée d'un cran (classe rp) et scène réécrite.
+ */
+export function repaint(d: Pick<GuardDeps, 'stage' | 'scene' | 'sceneHtml'>, scene = true): void {
+  d.stage.classList.toggle('rp');
+  if (scene) d.scene.innerHTML = d.sceneHtml;
+}
+
 /** Installe les déclencheurs : surveillance régulière, retour d'onglet, rotation, perte de contexte canvas. */
 export function installGuard(d: GuardDeps): () => void {
   const run = () => { try { checkAndRepair(d); } catch { /* le garde-fou ne doit jamais casser le jeu */ } };
@@ -66,19 +76,24 @@ export function installGuard(d: GuardDeps): () => void {
   const refresh = () => {
     if (document.hidden) return;
     run();
+    repaint(d);
     d.reviveWorld();
   };
   const timer = window.setInterval(run, 1000);
+  const paintTimer = window.setInterval(() => { if (!document.hidden) repaint(d); }, 8000);
   const onVis = () => refresh();
   document.addEventListener('visibilitychange', onVis);
   window.addEventListener('pageshow', refresh);
-  window.addEventListener('orientationchange', run);
+  window.addEventListener('orientationchange', refresh);
+  window.addEventListener('resize', run);
   d.world.addEventListener('contextlost', (e) => e.preventDefault());
   d.world.addEventListener('contextrestored', () => d.reviveWorld());
   return () => {
     clearInterval(timer);
+    clearInterval(paintTimer);
     document.removeEventListener('visibilitychange', onVis);
     window.removeEventListener('pageshow', refresh);
-    window.removeEventListener('orientationchange', run);
+    window.removeEventListener('orientationchange', refresh);
+    window.removeEventListener('resize', run);
   };
 }

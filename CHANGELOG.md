@@ -2,6 +2,11 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.11.1 — 2026-11-21 (correctif : fond noir sur Chrome Android)
+- Cause probable : après une longue session avec beaucoup d'onglets, Chrome Android jette les tuiles graphiques du fond (le DOM reste intact, d'où l'absence de détection par 2.10.1) : décor noir, taupe et HUD intacts.
+- Repeinture forcée (`repaint` dans `src/guard.ts`) toutes les 8 s, au retour d'onglet, à la rotation et au redimensionnement : bascule de la classe `rp` (fond décalé d'un cran) et scène SVG réécrite.
+- Fond de repli ciel aussi sur `#app`.
+
 ## 2.11.0 — 2026-11-21 (nouveauté : bonus à recharge)
 - Barre de 5 bonus sous la taupe (anneau de recharge, compte à rebours m:ss, pastille et pulsation quand prêt) : **Auto-tap** (8 coups/s, 30 s, recharge 5 min, doigt et ondes à l'écran), **Turbo ×2** (gains, 30 s, 6 min), **Ruée d'ouvrières** (production ×2, 45 s, 8 min), **Pluie de pépites** (10 pépites à cueillir, 12 s de production chacune, 9 min), **Gain instantané** (2 min de production, 10 min).
 - Recharges en horodatage (horloge du mur) : elles continuent hors-ligne, onglet caché ou en veille ; une horloge reculée ne les rallonge jamais. Sauvegarde v4 (`ready`, `auto`, `turbo`, `crew`), les v1 à v3 s'ouvrent sans perte, valeurs corrompues bornées.
