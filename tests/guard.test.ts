@@ -40,3 +40,17 @@ describe('garde-fou du décor', () => {
     expect(calls).toContain('fx');
   });
 });
+
+import { repaint } from '../src/guard';
+describe('repeinture forcée', () => {
+  it('bascule la classe rp et réécrit la scène', () => {
+    const cls = new Set<string>();
+    const stage = { classList: { toggle: (c: string) => (cls.has(c) ? cls.delete(c) : cls.add(c)) } } as unknown as HTMLElement;
+    const scene = { innerHTML: '' } as unknown as Element;
+    repaint({ stage, scene, sceneHtml: '<g/>' });
+    expect(cls.has('rp')).toBe(true);
+    expect((scene as unknown as { innerHTML: string }).innerHTML).toBe('<g/>');
+    repaint({ stage, scene, sceneHtml: '<g/>' }, false);
+    expect(cls.has('rp')).toBe(false);
+  });
+});
