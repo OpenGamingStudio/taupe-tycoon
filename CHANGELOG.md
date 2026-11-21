@@ -2,6 +2,13 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.11.0 — 2026-11-21 (nouveauté : bonus à recharge)
+- Barre de 5 bonus sous la taupe (anneau de recharge, compte à rebours m:ss, pastille et pulsation quand prêt) : **Auto-tap** (8 coups/s, 30 s, recharge 5 min, doigt et ondes à l'écran), **Turbo ×2** (gains, 30 s, 6 min), **Ruée d'ouvrières** (production ×2, 45 s, 8 min), **Pluie de pépites** (10 pépites à cueillir, 12 s de production chacune, 9 min), **Gain instantané** (2 min de production, 10 min).
+- Recharges en horodatage (horloge du mur) : elles continuent hors-ligne, onglet caché ou en veille ; une horloge reculée ne les rallonge jamais. Sauvegarde v4 (`ready`, `auto`, `turbo`, `crew`), les v1 à v3 s'ouvrent sans perte, valeurs corrompues bornées.
+- Équilibre : tous les bonus ensemble ajoutent moins de 60 % de production moyenne ; aucune monétisation ; gains entiers.
+- Aide : section « Aide : les bonus » dans Stats. Mouvements réduits : pas d'ondes ni de chute animée (les pépites de la pluie restent en place).
+- Tests : `tests/bonus.test.ts` (recharge, durée, hors-ligne, multiplicateurs, sauvegarde), `e2e/bonus.mjs` (320 / 390 / 1280 px).
+
 ## 2.10.1 — 2026-11-21 (correctif : fond perdu après un long moment de jeu)
 - Garde-fou du décor (`src/guard.ts`) : chaque seconde, la scène SVG, la classe de profondeur et les deux canvas sont vérifiés ; au retour d'onglet, à la rotation et à la perte de contexte du canvas, le décor est redessiné sans recharger la page.
 - Les boucles de dessin (sous-sol, effets) ne peuvent plus mourir sur une erreur d'effet (son, texte flottant, particule) : chaque étape est isolée, une particule fautive disparaît seule, la caméra est remise à zéro si elle devient invalide.

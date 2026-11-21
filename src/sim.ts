@@ -2,6 +2,7 @@ import {
   GEM_BONUS, GEM_DIV, GENS, GROWTH, OFFLINE_BASE, OFFLINE_STEP, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, PECULE_SEC, PECULE_MIN,
   CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER, MILESTONES, MILESTONE_MULT, TROPHY_BONUS,
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
+  BONUSES, BonusId, AUTO_RATE, TURBO_MULT, CREW_MULT, RAIN_COUNT, RAIN_SEC, RAIN_CLICKS, BURST_SEC, BURST_CLICKS,
 } from './config';
 
 export interface State {
@@ -23,6 +24,12 @@ export interface State {
   lastPs: number; // production par seconde atteinte à la fin du run précédent (base du Pécule)
   rush: number; // secondes restantes de « Ruée » (non sauvegardé)
   genius: number; // secondes restantes de « Coup de génie » (non sauvegardé)
+  // --- bonus à recharge (2.11.0) ---
+  ready: number[]; // par bonus : date (ms, horloge du mur) où il est de nouveau prêt ; 0 = prêt
+  auto: number; // secondes restantes d'Auto-tap
+  autoAcc: number; // taps en attente (fraction, < 1)
+  turbo: number; // secondes restantes de Turbo (gains ×2)
+  crew: number; // secondes restantes de Ruée d'ouvrières (production ×2)
 }
 
 export function newState(): State {
@@ -30,6 +37,7 @@ export function newState(): State {
     dirt: 0, runTotal: 0, lifeTotal: 0, gems: 0, gemsEarned: 0, rebirths: 0, shovel: 0,
     gens: GENS.map(() => 0), perms: PERMS.map(() => 0), clicks: 0, runTime: 0,
     playTime: 0, bestRun: 0, caught: 0, trophies: [], lastPs: 0, rush: 0, genius: 0,
+    ready: BONUSES.map(() => 0), auto: 0, autoAcc: 0, turbo: 0, crew: 0,
   };
 }
 
@@ -47,7 +55,9 @@ export const clickBase = (s: State) =>
   (CLICK_BASE + SHOVEL_POWER * s.shovel) * milestoneMult(s.shovel) * gemMult(s);
 /** Gain d'un clic : base + part de la production (Pelle en or), ×10 pendant « Coup de génie ». */
 export const clickPower = (s: State) =>
-  (clickBase(s) + PERM_CLICK_PS * permLevel(s, 'pelleor') * perSecondBase(s)) * (s.genius > 0 ? GENIUS_MULT : 1);
+  clickRaw(s) * (s.genius > 0 ? GENIUS_MULT : 1) * (s.turbo > 0 ? TURBO_MULT : 1);
+/** Gain d'un clic sans bonus temporaire. */
+export const clickRaw = (s: State) => clickBase(s) + PERM_CLICK_PS * permLevel(s, 'pelleor') * perSecondBase(s);
 
 /** Production d'un type de bâtiment, sans bonus temporaire. */
 export const genProd = (s: State, i: number) => genProdAt(s, i, s.gens[i]);
@@ -55,7 +65,7 @@ export const genProdAt = (s: State, i: number, level: number) =>
   GENS[i].prod * Math.pow(level, PROD_EXP) * milestoneMult(level) * prodMult(s);
 /** Production par seconde permanente (sans « Ruée »). */
 export const perSecondBase = (s: State) => GENS.reduce((a, _, i) => a + genProd(s, i), 0);
-export const perSecond = (s: State) => perSecondBase(s) * (s.rush > 0 ? RUSH_MULT : 1);
+export const perSecond = (s: State) => perSecondBase(s) * (s.rush > 0 ? RUSH_MULT : 1) * (s.crew > 0 ? CREW_MULT : 1) * (s.turbo > 0 ? TURBO_MULT : 1);
 
 /** Coût de `n` niveaux à partir du niveau `level` d'une base donnée. */
 export function costOf(base: number, level: number, n: number): number {
@@ -76,13 +86,83 @@ export function click(s: State): number {
 }
 function earn(s: State, v: number) { s.dirt += v; s.runTotal += v; s.lifeTotal += v; }
 
+/** Intégrale, sur `dt` secondes, du produit des multiplicateurs temporaires (chacun actif `left` secondes depuis maintenant). */
+export function boostOver(dt: number, mults: { left: number; m: number }[]): number {
+  const cuts = [...new Set(mults.map((x) => x.left).filter((l) => l > 0 && l < dt))].sort((a, b) => a - b);
+  cuts.push(dt);
+  let total = 0, prev = 0;
+  for (const c of cuts) {
+    let m = 1;
+    for (const x of mults) if (x.left > prev) m *= x.m;
+    total += m * (c - prev);
+    prev = c;
+  }
+  return total;
+}
+
 export function tick(s: State, dt: number) {
-  const boosted = Math.min(dt, s.rush);
-  earn(s, perSecondBase(s) * (dt + (RUSH_MULT - 1) * boosted));
+  if (dt <= 0) return;
+  const prodSecs = boostOver(dt, [
+    { left: s.rush, m: RUSH_MULT }, { left: s.crew, m: CREW_MULT }, { left: s.turbo, m: TURBO_MULT },
+  ]);
+  earn(s, perSecondBase(s) * prodSecs);
+  const autoSecs = Math.min(dt, s.auto);
+  if (autoSecs > 0) {
+    // taps de l'Auto-tap : chacun vaut un clic, avec les bonus de clic encore actifs à ce moment-là
+    const w = boostOver(autoSecs, [{ left: s.genius, m: GENIUS_MULT }, { left: s.turbo, m: TURBO_MULT }]);
+    const taps = s.autoAcc + AUTO_RATE * autoSecs;
+    const whole = Math.floor(taps);
+    s.autoAcc = taps - whole;
+    s.clicks += whole;
+    earn(s, clickRaw(s) * AUTO_RATE * w);
+  } else s.autoAcc = 0;
   s.rush = Math.max(0, s.rush - dt);
   s.genius = Math.max(0, s.genius - dt);
+  s.auto = Math.max(0, s.auto - dt);
+  s.turbo = Math.max(0, s.turbo - dt);
+  s.crew = Math.max(0, s.crew - dt);
   s.runTime += dt;
   s.playTime += dt;
+}
+
+// ---------- bonus à recharge ----------
+const bonusIdx = (id: BonusId) => BONUSES.findIndex((b) => b.id === id);
+/** Secondes avant que le bonus soit prêt (entier, 0 = prêt). Une horloge reculée ne rallonge jamais au-delà de la recharge. */
+export function bonusLeft(s: State, id: BonusId, now: number): number {
+  const i = bonusIdx(id);
+  const left = Math.ceil(((s.ready[i] ?? 0) - now) / 1000);
+  return Math.max(0, Math.min(left, BONUSES[i].cd));
+}
+export const bonusReady = (s: State, id: BonusId, now: number) => bonusLeft(s, id, now) === 0;
+/** Nombre de bonus prêts (pastille). */
+export const bonusReadyCount = (s: State, now: number) => BONUSES.filter((b) => bonusReady(s, b.id, now)).length;
+/** Secondes d'effet restantes d'un bonus actif (0 = inactif). */
+export function bonusActive(s: State, id: BonusId): number {
+  return id === 'auto' ? s.auto : id === 'turbo' ? s.turbo : id === 'crew' ? s.crew : 0;
+}
+/** Production d'un instant, au minimum équivalente à `clicks` clics (utile au tout début, sans bâtiment). */
+const worth = (s: State, sec: number, clicks: number) => Math.floor(Math.max(perSecondBase(s) * sec, clickRaw(s) * clicks));
+/** Valeur d'une pépite de la pluie. */
+export const rainValue = (s: State) => worth(s, RAIN_SEC, RAIN_CLICKS);
+/** Valeur du Gain instantané. */
+export const burstValue = (s: State) => worth(s, BURST_SEC, BURST_CLICKS);
+/** Cueille une pépite de la pluie ; renvoie la terre gagnée. */
+export function rainCatch(s: State): number {
+  const g = rainValue(s);
+  s.caught++;
+  earn(s, g);
+  return g;
+}
+/** Déclenche un bonus s'il est prêt (et pas déjà actif) ; renvoie false sinon. Lance la recharge, effet appliqué. Gain instantané : terre gagnée dans `out.gain`. */
+export function useBonus(s: State, id: BonusId, now: number, out: { gain: number } = { gain: 0 }): boolean {
+  if (!bonusReady(s, id, now) || bonusActive(s, id) > 0) return false;
+  const i = bonusIdx(id), def = BONUSES[i];
+  s.ready[i] = now + def.cd * 1000;
+  if (id === 'auto') { s.auto = def.dur; s.autoAcc = 0; }
+  else if (id === 'turbo') s.turbo = def.dur;
+  else if (id === 'crew') s.crew = def.dur;
+  else if (id === 'burst') { out.gain = burstValue(s); earn(s, out.gain); }
+  return true;
 }
 
 export type EventKind = 'rush' | 'genius' | 'treasure';

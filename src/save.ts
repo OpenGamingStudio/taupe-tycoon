@@ -1,9 +1,9 @@
-import { GENS, PERMS } from './config';
+import { BONUSES, GENS, PERMS } from './config';
 import { State, newState } from './sim';
 import { TROPHIES } from './trophies';
 
 export const SAVE_KEY = 'taupe-tycoon-save';
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4; // 4 : bonus à recharge (ready, auto, turbo, crew) ; les sauvegardes 1 à 3 s'ouvrent sans ces champs
 export const PANELS = ['dig', 'rebirth', 'trophies', 'stats', 'options'];
 export interface Options {
   lang: 'fr' | 'en'; reduced: boolean; mode: 1 | 10 | 'max'; sound: boolean; seen: number;
@@ -33,7 +33,7 @@ export function sanitize(raw: unknown): Saved | null {
   if (!st || typeof st !== 'object') return null;
   const s = newState();
   // V1 (v absent ou 1) : la terre était 10 fois plus petite (décimales) ; passage aux entiers
-  const k = r.v === 2 || r.v === 3 ? 1 : 10;
+  const k = r.v === 2 || r.v === 3 || r.v === 4 ? 1 : 10;
   s.dirt = num(st.dirt, MAX_DIRT) * k; s.runTotal = num(st.runTotal, MAX_DIRT) * k; s.lifeTotal = num(st.lifeTotal, MAX_DIRT) * k;
   s.dirt = Math.min(s.dirt, MAX_DIRT); s.runTotal = Math.min(s.runTotal, MAX_DIRT); s.lifeTotal = Math.min(s.lifeTotal, MAX_DIRT);
   s.gems = int(st.gems, MAX_GEMS); s.gemsEarned = int(st.gemsEarned, MAX_GEMS);
@@ -43,6 +43,17 @@ export function sanitize(raw: unknown): Saved | null {
   s.clicks = int(st.clicks, MAX_COUNT); s.runTime = num(st.runTime, MAX_SECONDS);
   s.playTime = num(st.playTime, MAX_SECONDS); s.bestRun = num(st.bestRun, MAX_SECONDS);
   s.caught = int(st.caught, MAX_COUNT); s.lastPs = num(st.lastPs, MAX_DIRT);
+  // Bonus à recharge : dates bornées à « maintenant + recharge » (une date lointaine ou une horloge changée ne bloque jamais)
+  const nowMs = Date.now();
+  s.ready = BONUSES.map((b, i) => {
+    const v = Array.isArray(st.ready) ? st.ready[i] : 0;
+    return typeof v === 'number' && isFinite(v) && v > nowMs ? Math.min(Math.floor(v), nowMs + b.cd * 1000) : 0;
+  });
+  const dur = (id: string) => BONUSES.find((b) => b.id === id)!.dur;
+  s.auto = Math.min(Math.ceil(num(st.auto, MAX_SECONDS)), dur('auto'));
+  s.turbo = Math.min(Math.ceil(num(st.turbo, MAX_SECONDS)), dur('turbo'));
+  s.crew = Math.min(Math.ceil(num(st.crew, MAX_SECONDS)), dur('crew'));
+  s.autoAcc = Math.min(num(st.autoAcc, 1), 0.999);
   const ids = new Set(TROPHIES.map((x) => x.id));
   s.trophies = Array.isArray(st.trophies) ? [...new Set(st.trophies.filter((x: unknown) => typeof x === 'string' && ids.has(x)))] as string[] : [];
   const o = r.opts ?? {};

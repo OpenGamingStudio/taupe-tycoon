@@ -30,7 +30,7 @@ Voir `ACCESSIBILITY.md`. Licence MIT.
 - Contrôles : `e2e/shots.mjs` (captures), `e2e/a11y.mjs` (contrastes, cibles 44 px, clavier, focus, mouvement réduit), `e2e/check.mjs`.
 
 ## V2.1
-Sons synthétisés (volume, ambiance), 20 succès, pépites d'or et événements, paliers de niveau, statistiques, retour hors ligne, import/export de sauvegarde. Voir `BALANCE.md`, `REVIEW.md`, `CHANGELOG.md`.
+Sons synthétisés (volume, ambiance), 20 succès, pépites d'or et événements, 5 bonus à recharge (Auto-tap, Turbo, Ruée d'ouvrières, Pluie de pépites, Gain instantané), paliers de niveau, statistiques, retour hors ligne, import/export de sauvegarde. Voir `BALANCE.md`, `REVIEW.md`, `CHANGELOG.md`.
 
 ## Mises à jour (PWA / navigateur)
 Pas de service worker : c'est le plus simple et le plus fiable pour un jeu en ligne. Chaque `npm run build` écrit `dist/version.json` (`{version, build}`) et embarque le même `build` dans le code.

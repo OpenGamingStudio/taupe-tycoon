@@ -50,3 +50,25 @@ export const PERM_PROD_BONUS = 0.25;
 export const PERM_CLICK_PS = 0.03; // Pelle en or : chaque clic rapporte en plus 3 % de la production par seconde, par niveau
 export const PECULE_SEC = 20; // Pécule : terre de départ = 20 s par niveau de la production atteinte au rebirth précédent
 export const PECULE_MIN = 100; // plancher (utile aux premiers rebirths) : 100 × 4^(niveau-1), niveau plafonné à 5 pour le calcul
+
+/**
+ * Bonus à recharge (2.11.0). `cd` = recharge en secondes (horloge du mur : elle continue hors-ligne), `dur` = durée de
+ * l'effet en secondes (0 = instantané ou géré à part).
+ */
+export type BonusId = 'auto' | 'turbo' | 'crew' | 'rain' | 'burst';
+export interface BonusDef { id: BonusId; cd: number; dur: number }
+export const BONUSES: BonusDef[] = [
+  { id: 'auto', cd: 300, dur: 30 }, // Auto-tap : la taupe creuse toute seule
+  { id: 'turbo', cd: 360, dur: 30 }, // Turbo : tous les gains ×2
+  { id: 'crew', cd: 480, dur: 45 }, // Ruée d'ouvrières : production des bâtiments ×2
+  { id: 'rain', cd: 540, dur: 8 }, // Pluie de pépites : à cueillir (durée de la chute)
+  { id: 'burst', cd: 600, dur: 0 }, // Gain instantané : 2 min de production
+];
+export const AUTO_RATE = 8; // taps par seconde pendant l'Auto-tap
+export const TURBO_MULT = 2;
+export const CREW_MULT = 2;
+export const RAIN_COUNT = 10; // pépites par pluie
+export const RAIN_SEC = 12; // chaque pépite vaut 12 s de production (ou 30 clics)
+export const RAIN_CLICKS = 30;
+export const BURST_SEC = 120; // Gain instantané : 2 min de production (ou 150 clics)
+export const BURST_CLICKS = 150;

@@ -38,6 +38,7 @@
         <svg id="mole-svg" viewBox="0 0 240 240" class="h-full w-full" aria-hidden="true" focusable="false"></svg>
       </button>
     </div>
+    <ul id="bonus" class="bonus relative z-10 flex flex-wrap items-center justify-center gap-1.5 px-1" aria-label="Bonus"></ul>
     <ul id="owned" class="owned relative z-10 flex min-h-[3.25rem] flex-wrap items-end justify-center gap-1 px-2 pb-2"></ul>
     <p id="toast" class="toast" role="presentation" hidden></p>
     <div id="banner" class="banner" role="presentation" aria-hidden="true" hidden><span id="banner-ico" class="banner-ico"></span><span class="min-w-0"><span id="banner-t" class="block text-2xl font-bold leading-tight"></span><span id="banner-s" class="block text-base font-bold leading-tight"></span></span></div>
@@ -75,6 +76,9 @@
       </div>
       <div id="p-stats" hidden>
         <dl id="stats" class="grid grid-cols-2 gap-2 text-base"></dl>
+        <h3 class="sec"><span data-i18n="bonusHelpTitle">Aide : les bonus</span></h3>
+        <p class="text-base" data-i18n="bonusHelpIntro"></p>
+        <ul id="bonus-help" class="mt-2 grid gap-2"></ul>
       </div>
       <div id="p-options" hidden class="grid gap-3">
         <button id="opt-sound" type="button" class="btn w-full justify-between" aria-pressed="true"></button>

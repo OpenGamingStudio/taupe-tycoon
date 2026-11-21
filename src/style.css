@@ -232,6 +232,30 @@ html, body {
   .owned .n { @apply absolute -bottom-2 -right-1 rounded-lg border-2 border-ink bg-cream px-1 text-sm font-bold leading-tight; }
   .owned li.pop { animation: pop 0.4s ease-out; }
 
+  /* bonus à recharge : anneau SVG (aplat, jamais de dégradé), pastille quand prêt, pulsation */
+  .bonus { @apply list-none pb-2; }
+  #app:not([data-panel=""]) .bonus { @apply hidden; }
+  @media (min-width: 700px) { #app:not([data-panel=""]) .bonus { display: flex; } }
+  .bn { @apply relative grid h-[52px] w-[52px] place-items-center rounded-full bg-cream text-ink; touch-action: manipulation; transition: transform 0.1s ease-out; box-shadow: 0 4px 0 #1a100a; }
+  .bn:active { transform: translateY(2px); box-shadow: 0 2px 0 #1a100a; }
+  .bn-ring { @apply pointer-events-none absolute inset-0 h-full w-full; }
+  .bn-bg { fill: #fff0c4; stroke: #2b1d14; stroke-width: 6; }
+  .bn-arc { fill: none; stroke-width: 4.5; stroke-linecap: butt; stroke: #8f4f1e; }
+  .bn[data-st="ready"] .bn-arc { stroke: #62d13c; }
+  .bn[data-st="active"] .bn-arc { stroke: #ff8a3d; }
+  .bn[data-st="active"] { background-color: #ffc21a; }
+  .bn[data-st="ready"] { animation: bnpulse 1.4s ease-in-out infinite; }
+  .bn[data-st="cool"] .bn-ico { opacity: 0.45; }
+  .bn-ico { @apply relative grid place-items-center; }
+  .bn-t { @apply absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border-2 border-ink bg-ink px-1 text-[12px] font-bold leading-tight text-cream; }
+  .bn-t[hidden], .bn-dot[hidden] { display: none; }
+  .bn-dot { @apply absolute -right-1 -top-1 h-[18px] w-[18px] rounded-full border-[3px] border-ink bg-rose; }
+  .bn:focus-visible { outline: 3px solid #fff0c4; outline-offset: 3px; }
+  .finger { @apply pointer-events-none absolute z-20; margin: -6px 0 0 -6px; animation: ftap 0.25s ease-in-out infinite; }
+  .finger[hidden] { display: none; }
+  .drop { @apply pointer-events-auto absolute grid h-[48px] w-[48px] place-items-center rounded-full border-[3px] border-ink bg-cream; top: -64px; touch-action: manipulation; box-shadow: 0 3px 0 #1a100a; animation: dropfall 4.2s linear forwards; }
+  .drop svg { @apply h-9 w-9; }
+
   /* bulle, notification, rebirth */
   .hint { @apply rounded-2xl border-[3px] border-ink bg-cream px-3 py-1 text-center text-base font-bold shadow-hard; animation: pop 0.3s ease-out; }
   .update { @apply fixed left-1/2 top-[max(0.5rem,env(safe-area-inset-top))] z-50 flex w-[calc(100%-1rem)] max-w-md -translate-x-1/2 items-center gap-2 rounded-2xl border-[3px] border-ink bg-nugget px-3 py-1.5 text-ink shadow-hard; }
@@ -285,6 +309,9 @@ html, body {
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+@keyframes bnpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes ftap { 0%, 100% { transform: translate(0, 0) rotate(-12deg); } 50% { transform: translate(-6px, 10px) rotate(-12deg); } }
+@keyframes dropfall { from { top: -64px; } to { top: 105%; } }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 @keyframes flash { 0% { background: #ffc21a; } 100% { background: var(--acc); } }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 10px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
