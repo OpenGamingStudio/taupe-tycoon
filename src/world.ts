@@ -38,9 +38,18 @@ export interface World {
   setPerms(levels: number[], animate: boolean): void;
   kick(power: number): void;
   resize(): void;
+  /** Instant (performance.now) du dernier dessin réussi : le garde-fou s'en sert pour détecter une boucle morte. */
+  lastDraw(): number;
+  /** Relance la boucle de dessin et remet le canvas à la bonne taille (sans recharger la page). */
+  revive(): void;
 }
 
-export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World {
+export function createWorld(canvas: HTMLCanvasElement, rawHooks: WorldHooks): World {
+  // un effet visuel (son, texte flottant) qui échoue ne doit jamais arrêter le dessin du décor
+  const hooks: WorldHooks = {
+    deliver(...a) { try { rawHooks.deliver(...a); } catch { /* ignoré */ } },
+    arrive(...a) { try { rawHooks.arrive(...a); } catch { /* ignoré */ } },
+  };
   const g = canvas.getContext('2d', { alpha: true })!;
   const spr = sprites();
   const chestImg = chest();
@@ -350,7 +359,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
 
   }
 
-  let raf = 0;
+  let raf = 0, drawnAt = performance.now();
   function frame(ts: number) {
     raf = requestAnimationFrame(frame);
     if (document.hidden) { last = ts; return; }
@@ -359,13 +368,26 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     last = ts;
     const d = Math.min(dt / 1000, 0.1);
     clock += d;
-    update(d);
-    draw(ts);
+    // la simulation et le dessin sont isolés : une erreur de l'une ne fige jamais l'autre (décor jamais perdu)
+    try { update(d); } catch { /* ignoré : on redessine quand même */ }
+    try {
+      if (!Number.isFinite(camX) || !Number.isFinite(camV)) { camX = 0; camV = 0; }
+      g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+      draw(ts);
+      drawnAt = performance.now();
+    } catch { g.globalAlpha = 1; }
+  }
+  function revive() {
+    cancelAnimationFrame(raf);
+    camX = 0; camV = 0;
+    canvas.width = 1; // force une nouvelle mémoire de dessin ; resize() remet la bonne taille
+    resize();
+    last = 0;
+    raf = requestAnimationFrame(frame);
   }
   resize();
   new ResizeObserver(() => resize()).observe(canvas);
   raf = requestAnimationFrame(frame);
-  void raf;
 
   return {
     setCrew,
@@ -376,5 +398,7 @@ export function createWorld(canvas: HTMLCanvasElement, hooks: WorldHooks): World
     setPerms,
     kick(p) { camV += (Math.random() < 0.5 ? -1 : 1) * Math.min(p, 40); },
     resize,
+    lastDraw: () => drawnAt,
+    revive,
   };
 }

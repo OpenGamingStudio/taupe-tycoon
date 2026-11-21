@@ -22,6 +22,10 @@ export interface Fx {
   sparks(x: number, y: number, n: number, color?: string): void;
   setReduced(r: boolean): void;
   resize(): void;
+  /** Vide les particules et relance la boucle si elle est morte (garde-fou). */
+  revive(): void;
+  /** Des particules attendent mais aucune image n'est programmée : la boucle est morte. */
+  stuck(): boolean;
 }
 
 export function createFx(canvas: HTMLCanvasElement): Fx {
@@ -75,13 +79,24 @@ export function createFx(canvas: HTMLCanvasElement): Fx {
   }
 
   function loop(now: number) {
+    raf = 0; // la boucle se reprogramme elle-même en fin de passe, quoi qu'il arrive
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.globalAlpha = 1;
     g.clearRect(0, 0, W, H);
     for (let i = ps.length - 1; i >= 0; i--) {
       const p = ps[i];
-      if (p.delay && p.delay > 0) { p.delay -= dt; continue; }
+      try { step(p, i, dt); } catch { if (ps[i] === p) ps.splice(i, 1); g.restore(); g.globalAlpha = 1; } // une particule fautive disparaît seule
+    }
+    g.globalAlpha = 1;
+    if (ps.length) raf = requestAnimationFrame(loop); else g.clearRect(0, 0, W, H);
+  }
+
+  /** Avance et dessine une particule. */
+  function step(p: P, i: number, dt: number) {
+    {
+      if (p.delay && p.delay > 0) { p.delay -= dt; return; }
       p.age += dt;
       if (p.t === 'coin') {
         const [tx, ty] = (p as P & { tg: () => [number, number] }).tg();
@@ -91,25 +106,32 @@ export function createFx(canvas: HTMLCanvasElement): Fx {
           p.x += (tx - p.x) * k; p.y += (ty - p.y) * k;
         }
         p.a += p.va * dt;
-        if ((p.age > 0.32 && Math.hypot(tx - p.x, ty - p.y) < 14) || p.age > 1.7) { ps.splice(i, 1); p.land?.(); continue; }
+        if ((p.age > 0.32 && Math.hypot(tx - p.x, ty - p.y) < 14) || p.age > 1.7) { ps.splice(i, 1); p.land?.(); return; }
         drawCoin(p);
       } else if (p.t === 'confetti') {
         p.vy += 700 * dt; p.vx *= 1 - dt * 1.6; p.vy *= 1 - dt * 1.2;
         p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt;
-        if (p.age > p.life || p.y > H + 20) { ps.splice(i, 1); continue; }
+        if (p.age > p.life || p.y > H + 20) { ps.splice(i, 1); return; }
         g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.globalAlpha = Math.min(1, (p.life - p.age) * 3);
         g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s * 0.3 * Math.abs(Math.cos(p.age * 9 + p.va)) - 1, p.s, p.s * 0.6 * Math.abs(Math.cos(p.age * 9 + p.va)) + 2);
         g.restore();
       } else {
         p.vy += 260 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
-        if (p.age > p.life) { ps.splice(i, 1); continue; }
+        if (p.age > p.life) { ps.splice(i, 1); return; }
         g.globalAlpha = Math.min(1, (p.life - p.age) * 4);
         g.fillStyle = p.c; g.save(); g.translate(p.x, p.y); g.rotate(Math.PI / 4); g.fillRect(-p.s / 2, -p.s / 2, p.s, p.s); g.restore();
         g.globalAlpha = 1;
       }
     }
-    raf = ps.length ? requestAnimationFrame(loop) : 0;
-    if (!raf) g.clearRect(0, 0, W, H);
+  }
+
+  function revive() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    ps.length = 0;
+    resize();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
   }
 
   return {
@@ -144,5 +166,7 @@ export function createFx(canvas: HTMLCanvasElement): Fx {
     },
     setReduced(r) { reduced = r; },
     resize,
+    revive,
+    stuck: () => ps.length > 0 && !raf && !document.hidden,
   };
 }

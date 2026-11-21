@@ -12,6 +12,7 @@ import { VERSION } from './version';
 import { BUILD, watch } from './update';
 import { createWorld } from './world';
 import { createFx } from './fx';
+import { installGuard } from './guard';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
 import { statsHtml, trophiesHtml } from './lists';
 import {
@@ -736,6 +737,10 @@ window.setInterval(() => {
   if (acc >= 5) { acc = 0; persist(); }
   if (renderAcc >= 0.25 || gap > 1) { renderAcc = 0; render(); }
 }, 100);
+installGuard({
+  stage: $('stage'), scene: $('scene'), sceneHtml: SCENE, world: $<HTMLCanvasElement>('world'), depth: depthOf,
+  worldLastDraw: () => world.lastDraw(), reviveWorld: () => world.revive(), reviveFx: () => jfx.revive(), fxStuck: () => jfx.stuck(),
+});
 document.addEventListener('visibilitychange', () => {
   sfx.onVisibility(document.hidden);
   if (document.hidden) persist();
