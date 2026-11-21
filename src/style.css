@@ -178,7 +178,8 @@ html, body {
   }
 
   /* décor et taupe */
-  .stage { background: var(--sky); }
+  /* fond de repli : toujours un aplat opaque, même si la scène ou une variable est perdue */
+  .stage { background-color: #5ec6f5; background-color: var(--sky, #5ec6f5); }
   /* décor ajusté en hauteur et centré (rapport 400/360) ; en paysage les bandes élargies prolongent les côtés */
   .scene { position: absolute; top: 0; left: 50%; height: 100%; aspect-ratio: 400 / 360; transform: translateX(-50%); overflow: visible; }
   .stage svg .s-b1 { fill: var(--b1); } .stage svg .s-b2 { fill: var(--b2); } .stage svg .s-b3 { fill: var(--b3); }

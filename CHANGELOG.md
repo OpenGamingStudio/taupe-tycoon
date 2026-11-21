@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.10.1 — 2026-11-21 (correctif : fond perdu après un long moment de jeu)
+- Garde-fou du décor (`src/guard.ts`) : chaque seconde, la scène SVG, la classe de profondeur et les deux canvas sont vérifiés ; au retour d'onglet, à la rotation et à la perte de contexte du canvas, le décor est redessiné sans recharger la page.
+- Les boucles de dessin (sous-sol, effets) ne peuvent plus mourir sur une erreur d'effet (son, texte flottant, particule) : chaque étape est isolée, une particule fautive disparaît seule, la caméra est remise à zéro si elle devient invalide.
+- Fond de repli CSS toujours opaque (ciel #5ec6f5) même si la variable de couleur est perdue.
+- Tests : `tests/guard.test.ts` et `e2e/fond.mjs` (sabotage du décor, réparation attendue en moins de 3 s).
+
 ## 2.10.0 — 2026-11-19 (interface : direction « Galerie », choix du propriétaire)
 - Le menu devient le sous-sol : fond terre sombre (#3b2416) à cailloux, planches claires clouées pour les cartes, HUD et notes en roche, dock brun.
 - Chaque icône est posée dans une alcôve étayée éclairée par une lanterne à la couleur de l'objet ; plus de taches ni d'autocollants penchés.
