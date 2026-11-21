@@ -16,7 +16,7 @@ import { installGuard } from './guard';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
 import { statsHtml, trophiesHtml } from './lists';
 import {
-  State, applyEvent, applyOffline, buyN, buyPerm, click, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
+  State, applyEvent, applyOffline, buyN, buyPerm, click, clickRoll, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
   milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
   rollEvent, startDirt, tick, trophyMult, bonusActive, bonusLeft, bonusReadyCount, rainCatch, useBonus,
 } from './sim';
@@ -449,11 +449,11 @@ function mood(m: Mood, ms: number) {
 }
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 
-function burst(power: number, x: number, y: number) {
+function burst(power: number, x: number, y: number, crit = false) {
   if (reducedMotion()) return;
   while (fx.children.length > 40) fx.firstElementChild!.remove();
   const tag = document.createElement('span');
-  tag.className = 'fx';
+  tag.className = crit ? 'fx fx-crit' : 'fx';
   tag.textContent = '+' + f(power);
   tag.style.left = `${x}px`; tag.style.top = `${y - 10}px`;
   fx.append(tag);
@@ -488,14 +488,15 @@ function jelly() {
 }
 let skipClick = false;
 function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
-  const p = click(s);
+  const { gain: p, crit } = clickRoll(s);
   const now = performance.now();
   sfx.dig();
+  if (crit) sfx.crit();
   const box = fx.getBoundingClientRect();
   const hasPos = 'clientX' in e && (e.clientX || e.clientY);
   const x = hasPos ? (e as MouseEvent).clientX - box.left : box.width / 2;
   const y = hasPos ? (e as MouseEvent).clientY - box.top : box.height * 0.6;
-  burst(p, x, y);
+  burst(p, x, y, crit);
   coinsToHud(x, y, 1, 'dirt');
   if (p >= s.dirt * 0.2 && p > 50) { shake(1); jfx.sparks(x, y, 10, '#ffc21a'); }
   vibe(8);

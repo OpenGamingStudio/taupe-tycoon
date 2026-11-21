@@ -66,6 +66,8 @@ export const BONUSES: BonusDef[] = [
 ];
 export const AUTO_RATE = 8; // taps par seconde pendant l'Auto-tap
 export const TURBO_MULT = 2;
+export const CRIT_CHANCE = 0.1; // clic critique : 10 % de chance par clic
+export const CRIT_MULT = 2; // ... qui double le gain du clic
 export const CREW_MULT = 2;
 export const RAIN_COUNT = 10; // pépites par pluie
 export const RAIN_SEC = 12; // chaque pépite vaut 12 s de production (ou 30 clics)

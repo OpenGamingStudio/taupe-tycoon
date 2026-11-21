@@ -192,6 +192,11 @@ export function nuggetCatch() {
   tone(a, 300, 1500, 0.25, 'sawtooth', 0.07);
   [659, 880, 1109, 1319].forEach((f, i) => tone(a, f, f, 0.22, 'triangle', 0.15, 0.06 + i * 0.06));
 }
+/** Clic critique : petit tintement clair, léger. */
+export function crit() {
+  const a = ac(); if (!a) return;
+  tone(a, 1175, 1175, 0.12, 'triangle', 0.09); tone(a, 1568, 1568, 0.18, 'sine', 0.08, 0.05);
+}
 export function deny() {
   const a = ac(); if (!a) return;
   tone(a, 190 * jitter(0.05), 150, 0.09, 'square', 0.08);

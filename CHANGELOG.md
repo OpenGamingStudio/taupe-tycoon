@@ -2,6 +2,10 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.12.0 — 2026-11-21 (clic critique, panneaux dégagés)
+- **Clic critique** : 10 % de chance par clic (RNG injectable) de doubler le gain, arrondi entier ; chiffre plus gros en aplat rouge et tintement léger. Se cumule avec la pioche en or (×5) et le turbo (×2) ; ni la production passive, ni l'Auto-tap, ni le prestige ne sont touchés.
+- Panneau ouvert (boutique, rebirth, succès, stats, options) : la barre de bonus et les pastilles de gain flottantes sont cachées (les effets actifs continuent), la taupe garde toute la zone visible. Cause : la classe `flex` de la barre l'emportait sur la règle qui la cachait.
+
 ## 2.11.1 — 2026-11-21 (correctif : fond noir sur Chrome Android)
 - Cause probable : après une longue session avec beaucoup d'onglets, Chrome Android jette les tuiles graphiques du fond (le DOM reste intact, d'où l'absence de détection par 2.10.1) : décor noir, taupe et HUD intacts.
 - Repeinture forcée (`repaint` dans `src/guard.ts`) toutes les 8 s, au retour d'onglet, à la rotation et au redimensionnement : bascule de la classe `rp` (fond décalé d'un cran) et scène SVG réécrite.

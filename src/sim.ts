@@ -2,7 +2,7 @@ import {
   GEM_BONUS, GEM_DIV, GENS, GROWTH, OFFLINE_BASE, OFFLINE_STEP, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, PECULE_SEC, PECULE_MIN,
   CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER, MILESTONES, MILESTONE_MULT, TROPHY_BONUS,
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
-  BONUSES, BonusId, AUTO_RATE, TURBO_MULT, CREW_MULT, RAIN_COUNT, RAIN_SEC, RAIN_CLICKS, BURST_SEC, BURST_CLICKS,
+  BONUSES, BonusId, AUTO_RATE, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, CREW_MULT, RAIN_COUNT, RAIN_SEC, RAIN_CLICKS, BURST_SEC, BURST_CLICKS,
 } from './config';
 
 export interface State {
@@ -78,6 +78,14 @@ export function maxAffordable(base: number, level: number, budget: number): numb
   return Math.floor(Math.log(1 + (budget * (GROWTH - 1)) / first) / Math.log(GROWTH) + 1e-9);
 }
 
+/** Clic avec chance de critique : `rng` injectable (tests). Le critique double le gain final (×5 or, ×2 turbo compris), arrondi entier ; ni production passive ni prestige. */
+export function clickRoll(s: State, rng: () => number = Math.random): { gain: number; crit: boolean } {
+  const crit = rng() < CRIT_CHANCE;
+  const g = crit ? Math.round(clickPower(s) * CRIT_MULT) : clickPower(s);
+  s.clicks++;
+  earn(s, g);
+  return { gain: g, crit };
+}
 export function click(s: State): number {
   const g = clickPower(s);
   s.clicks++;
