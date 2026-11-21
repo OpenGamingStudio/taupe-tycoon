@@ -224,6 +224,7 @@ html, body {
   /* effets de clic */
   .world { image-rendering: pixelated; }
   .fx-s { font-size: 1rem; color: #ffe27a; -webkit-text-stroke: 4px #2b1d14; }
+  .fx.fx-crit { font-size: 2.1rem; color: #ff5a3c; -webkit-text-stroke: 6px #2b1d14; }
   .fx-n { font-size: 1.7rem; color: #4cc15a; -webkit-text-stroke: 6px #2b1d14; animation-duration: 1.3s; }
   .fx { position: absolute; font-weight: 700; font-size: 1.6rem; color: #fff; -webkit-text-stroke: 5px #2b1d14; paint-order: stroke fill; animation: rise 0.9s ease-out forwards; white-space: nowrap; transform: translateX(-50%); }
   .chip-dirt { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; animation: fling 0.7s cubic-bezier(.2,.7,.4,1) forwards; }
@@ -238,8 +239,9 @@ html, body {
 
   /* bonus à recharge : anneau SVG (aplat, jamais de dégradé), pastille quand prêt, pulsation */
   .bonus { @apply list-none pb-2; }
-  #app:not([data-panel=""]) .bonus { @apply hidden; }
-  @media (min-width: 700px) { #app:not([data-panel=""]) .bonus { display: flex; } }
+  /* panneau ouvert : barre de bonus et pastilles de gain cachées (les effets continuent de tourner) */
+  #app:not([data-panel=""]) .bonus { display: none !important; }
+  #app:not([data-panel=""]) #stage-fx, #app:not([data-panel=""]) #fx { visibility: hidden; }
   .bn { @apply relative grid h-[52px] w-[52px] place-items-center rounded-full bg-cream text-ink; touch-action: manipulation; transition: transform 0.1s ease-out; box-shadow: 0 4px 0 #1a100a; }
   .bn:active { transform: translateY(2px); box-shadow: 0 2px 0 #1a100a; }
   .bn-ring { @apply pointer-events-none absolute inset-0 h-full w-full; }
