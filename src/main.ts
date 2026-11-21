@@ -1,7 +1,7 @@
 import './style.css';
 import {
   GENS, MILESTONES, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
-  NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME,
+  NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, RAIN_COUNT,
 } from './config';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
@@ -18,7 +18,7 @@ import { statsHtml, trophiesHtml } from './lists';
 import {
   State, applyEvent, applyOffline, buyN, buyPerm, click, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
   milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
-  rollEvent, startDirt, tick, trophyMult,
+  rollEvent, startDirt, tick, trophyMult, bonusActive, bonusLeft, bonusReadyCount, rainCatch, useBonus,
 } from './sim';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -278,6 +278,7 @@ function render() {
   document.documentElement.lang = L;
   rollTo(s.dirt);
   setText($('hud-ps'), f(perSecond(s)));
+  renderBonus();
   setText($('hud-gems'), f(s.gems));
   const power = clickPower(s);
   $('mole').setAttribute('aria-label', t('digLabel', { n: f(power) }));
@@ -430,6 +431,8 @@ function i18nStatic() {
   document.title = t('title');
   document.querySelector('.stage')?.setAttribute('aria-label', t('stage'));
   ownedKey = '';
+  bnEls.forEach((b) => { b.key = ''; });
+  bonusHelp();
 }
 
 // ---------- taupe : humeurs et effets ----------
@@ -598,6 +601,144 @@ nuggetEl.addEventListener('click', () => {
   render();
 });
 
+
+// ---------- bonus à recharge (2.11.0) ----------
+const bonusUl = $('bonus');
+const bname = (id: BonusId) => t('b' + id[0].toUpperCase() + id.slice(1));
+const RING = 2 * Math.PI * 23;
+bonusUl.innerHTML = BONUSES.map((b) => `<li><button type="button" class="bn" data-id="${b.id}" data-st="ready"><svg class="bn-ring" viewBox="0 0 52 52" aria-hidden="true" focusable="false"><circle class="bn-bg" cx="26" cy="26" r="23"/><circle class="bn-arc" cx="26" cy="26" r="23" transform="rotate(-90 26 26)"/></svg><span class="bn-ico">${icon(b.id, 'h-7 w-7')}</span><span class="bn-t" hidden></span><span class="bn-dot" hidden></span></button></li>`).join('');
+const bnEls = BONUSES.map((b) => {
+  const el = bonusUl.querySelector<HTMLButtonElement>(`[data-id="${b.id}"]`)!;
+  return { def: b, el, arc: el.querySelector<SVGElement>('.bn-arc')!, tm: el.querySelector<HTMLElement>('.bn-t')!, dot: el.querySelector<HTMLElement>('.bn-dot')!, key: '' };
+});
+const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+function renderBonus() {
+  const now = Date.now();
+  bnEls.forEach((b) => {
+    const left = bonusLeft(s, b.def.id, now), act = Math.ceil(bonusActive(s, b.def.id));
+    const st = act > 0 ? 'active' : left > 0 ? 'cool' : 'ready';
+    const key = st + (st === 'active' ? act : st === 'cool' ? left : '') + lang();
+    if (key === b.key) return;
+    b.key = key;
+    b.el.dataset.st = st;
+    const frac = st === 'active' ? act / b.def.dur : st === 'cool' ? 1 - left / b.def.cd : 1;
+    b.arc.setAttribute('stroke-dashoffset', String(Math.round((1 - Math.max(0, Math.min(1, frac))) * RING * 10) / 10));
+    b.arc.setAttribute('stroke-dasharray', String(Math.round(RING * 10) / 10));
+    const txt = st === 'active' ? act + ' s' : st === 'cool' ? mmss(left) : '';
+    b.tm.hidden = !txt; setText(b.tm, txt);
+    b.dot.hidden = st !== 'ready';
+    b.el.setAttribute('aria-disabled', st === 'ready' ? 'false' : 'true');
+    b.el.setAttribute('aria-label', st === 'ready' ? t('bonusReady', { name: bname(b.def.id) }) + '. ' + t(b.def.id === 'auto' ? 'bAutoD' : b.def.id === 'turbo' ? 'bTurboD' : b.def.id === 'crew' ? 'bCrewD' : b.def.id === 'rain' ? 'bRainD' : 'bBurstD')
+      : st === 'active' ? t('bonusActive', { name: bname(b.def.id), s: act }) : t('bonusCool', { name: bname(b.def.id), t: fmtDuration(left, lang()) }));
+  });
+  const n = bonusReadyCount(s, now);
+  bonusUl.setAttribute('aria-label', t('bonusBar') + (n ? ' · ' + t('bonusReadyN', { n }) : ''));
+}
+function bonusHelp() {
+  setHtml($('bonus-help'), BONUSES.map((b) => `<li class="note flex items-center gap-2"><span class="shrink-0">${icon(b.id, 'h-9 w-9')}</span><span class="min-w-0"><strong class="block text-lg">${bname(b.id)}</strong><span class="block text-base">${t('b' + b.id[0].toUpperCase() + b.id.slice(1) + 'D')}</span><span class="block text-sm">${t('bonusCd', { t: fmtDuration(b.cd, lang()) })}</span></span></li>`).join(''));
+}
+const fingerEl = document.createElement('span');
+fingerEl.className = 'finger'; fingerEl.hidden = true; fingerEl.innerHTML = icon('auto', 'h-12 w-12');
+fx.append(fingerEl);
+let autoVis = 0, autoN = 0;
+/** Effets visuels de l'Auto-tap (les gains sont dans sim.tick) : doigt qui tape, ondes, éclats ; léger. */
+function autoFx(gap: number) {
+  const on = s.auto > 0 && !document.hidden;
+  if (fingerEl.hidden === on) fingerEl.hidden = !on;
+  if (!on) { autoVis = 0; return; }
+  const box = fx.getBoundingClientRect(), mb = mole.getBoundingClientRect(), cb = fxBox();
+  const ox = box.left - cb.left, oy = box.top - cb.top;
+  const cx = mb.left - box.left + mb.width / 2, cy = mb.top - box.top + mb.height * 0.45;
+  fingerEl.style.left = `${cx + 18}px`; fingerEl.style.top = `${cy - 10}px`;
+  autoVis += Math.min(gap, 0.5) * AUTO_RATE;
+  const n = Math.min(Math.floor(autoVis), 3);
+  autoVis -= Math.floor(autoVis);
+  for (let i = 0; i < n; i++) {
+    autoN++;
+    const x = cx + rnd(-mb.width * 0.18, mb.width * 0.18), y = cy + rnd(-mb.height * 0.12, mb.height * 0.12);
+    if (autoN % 2 === 0) { sfx.dig(); jelly(); mole.classList.remove('hit'); void mole.offsetWidth; mole.classList.add('hit'); world.kick(3); }
+    if (reducedMotion()) continue;
+    while (fx.children.length > 40) { const k = fx.children[1] ?? fx.firstElementChild!; if (k === fingerEl) break; k.remove(); }
+    const ring = document.createElement('span');
+    ring.className = 'ring'; ring.style.left = `${x}px`; ring.style.top = `${y}px`;
+    fx.append(ring); ring.addEventListener('animationend', () => ring.remove());
+    if (autoN % 3 === 0) {
+      const tag = document.createElement('span');
+      tag.className = 'fx'; tag.textContent = '+' + f(clickPower(s)); tag.style.left = `${x}px`; tag.style.top = `${y - 14}px`;
+      fx.append(tag); tag.addEventListener('animationend', () => tag.remove());
+      jfx.sparks(x + ox, y + oy, 4, '#ffc21a');
+    }
+  }
+  if (autoN % 4 === 0) rollTo(s.dirt);
+}
+
+// Pluie de pépites : des pépites tombent, chacune se cueille d'un tap.
+const rainEl = document.createElement('div');
+rainEl.className = 'rain pointer-events-none absolute inset-0 z-20 overflow-hidden';
+fx.parentElement!.insertBefore(rainEl, fx);
+let rainCaught = 0, rainLeft = 0;
+function rainDrop() {
+  const d = document.createElement('button');
+  d.type = 'button'; d.className = 'drop';
+  d.innerHTML = icon('nugget', 'h-9 w-9');
+  d.setAttribute('aria-label', t('bonusRainLabel'));
+  d.style.left = `${rnd(4, 82)}%`;
+  const still = reducedMotion();
+  if (still) d.style.top = `${rnd(8, 60)}%`;
+  rainEl.append(d);
+  const gone = window.setTimeout(() => d.remove(), still ? 5000 : 4300);
+  d.addEventListener('click', () => {
+    if (!d.isConnected) return;
+    window.clearTimeout(gone);
+    const b = d.getBoundingClientRect(), o = fxBox(), fb = fx.getBoundingClientRect();
+    const x = b.left - o.left + b.width / 2, y = b.top - o.top + b.height / 2; // canvas d'effets
+    const lx = b.left - fb.left + b.width / 2, ly = b.top - fb.top + b.height / 2; // couche DOM
+    const g = rainCatch(s);
+    rainCaught++;
+    d.remove();
+    sfx.nuggetCatch(); vibe(15);
+    coinsToHud(x, y, 3, 'gold'); jfx.sparks(x, y, 8, '#ffc21a');
+    const tag = document.createElement('span');
+    tag.className = 'fx'; tag.textContent = '+' + f(g); tag.style.left = `${lx}px`; tag.style.top = `${ly - 10}px`;
+    fx.append(tag); tag.addEventListener('animationend', () => tag.remove());
+    awardTrophies();
+    render();
+  });
+}
+function rainStep() {
+  if (rainLeft <= 0) {
+    window.setTimeout(() => { if (rainCaught > 0) notify(t('bonusRainEnd', { n: rainCaught })); }, 4400);
+    return;
+  }
+  rainLeft--;
+  if (!document.hidden) rainDrop();
+  window.setTimeout(rainStep, 800);
+}
+function startRain() { rainCaught = 0; rainLeft = RAIN_COUNT; rainStep(); }
+
+bonusUl.addEventListener('click', (e) => {
+  const el = (e.target as HTMLElement).closest<HTMLButtonElement>('.bn');
+  if (!el) return;
+  const id = el.dataset.id as BonusId;
+  const out = { gain: 0 };
+  if (!useBonus(s, id, Date.now(), out)) {
+    sfx.deny();
+    notify(el.getAttribute('aria-label') ?? '');
+    return;
+  }
+  const b = el.getBoundingClientRect(), o = fxBox();
+  const x = b.left - o.left + b.width / 2, y = b.top - o.top + b.height / 2;
+  sfx.upgrade(); vibe([15, 25, 30]);
+  jfx.confetti(x, y, 18);
+  mood('happy', 700);
+  if (id === 'rain') startRain();
+  if (id === 'burst') { coinsToHud(x, y, 10, 'gold'); notify(t('bonusBurst', { n: f(out.gain) })); }
+  else notify(t('bonusUsed', { name: bname(id) }));
+  awardTrophies();
+  persist();
+  render();
+});
+
 // ---------- tiroir de menus et dock ----------
 const tabs = PANELS;
 const app = $('app');
@@ -733,6 +874,7 @@ window.setInterval(() => {
   else tick(s, gap);
   awardTrophies();
   nuggetTick(Math.min(gap, 1));
+  autoFx(gap);
   acc += gap; renderAcc += gap;
   if (acc >= 5) { acc = 0; persist(); }
   if (renderAcc >= 0.25 || gap > 1) { renderAcc = 0; render(); }
