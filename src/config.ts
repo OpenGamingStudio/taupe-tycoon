@@ -48,10 +48,6 @@ export const PERMS: PermDef[] = [
   { id: 'pelleor', cost: 1, growth: 1.8, max: 999 }, // +2 % de la production par clic, par niveau
   { id: 'pecule', cost: 2, growth: 2.2, max: 12 }, // terre de départ au rebirth
   { id: 'sacoche', cost: 3, growth: 1.9, max: OFFLINE_MAX_LEVEL }, // +1 h de hors-ligne
-  // --- 2.14.0 : bonus à recharge, achat unique (max 1) ---
-  { id: 'auto', cost: 3, growth: 1, max: 1 },
-  { id: 'turbo', cost: 5, growth: 1, max: 1 },
-  { id: 'rain', cost: 8, growth: 1, max: 1 },
   // --- 2.14.0 : nouveaux objets, un effet distinct chacun ---
   { id: 'trefle', cost: 2, growth: 1.7, max: 20 }, // +1 point de chance de coup critique par niveau (base 10 %)
   { id: 'casque', cost: 4, growth: 1.9, max: 15 }, // −2 % sur le prix des bâtiments et de la pelle, par niveau
@@ -86,3 +82,15 @@ export const CRIT_MULT = 2; // ... qui double le gain du clic
 export const RAIN_COUNT = 12; // pépites par pluie (absorbe le Gain instantané)
 export const RAIN_SEC = 12; // chaque pépite vaut 12 s de production (ou 30 clics)
 export const RAIN_CLICKS = 30;
+
+/**
+ * Pépites (2.17.0) : monnaie des bonus à recharge, distincte des gemmes (rebirth). Elle survit au rebirth.
+ * Sources : paliers de multiplicateur (le 1er palier de chaque ligne ne compte pas, une seule fois à vie par palier),
+ * pépite d'or cueillie (plafonnée par heure), succès (1 à 3 selon la difficulté).
+ */
+export const PEP_COSTS: Record<BonusId, number[]> = { auto: [20, 45, 85], turbo: [24, 55, 100], rain: [30, 65, 120] }; // coût du niveau 1 (achat), 2 et 3 (amélioration)
+export const BONUS_MAX_LV = 3;
+export const BONUS_LV_MULT = [1, 1.5, 2]; // durée (Auto-tap, Turbo) et nombre de pépites de la Pluie, selon le niveau
+export const PEP_TIER_SKIP = 1; // les N premiers paliers de chaque ligne de bâtiments ne donnent pas de pépite (le 1er qui compte : niveau 25)
+export const PEP_TIER_SKIP_SHOVEL = 2; // idem pour la pelle (1er palier qui compte : niveau 25)
+export const PEP_NUGGET_PER_HOUR = 8; // pépites gagnées au plus par heure en cueillant des pépites d'or

@@ -10,7 +10,7 @@ import {
 
 const NOW = 1_700_000_000_000;
 /** État de départ où les trois bonus à recharge sont déjà achetés (achat unique en boutique, voir tests/shop.test.ts). */
-const newState = () => { const s = freshState(); s.perms = PERMS.map((p) => (BONUSES.some((b) => b.id === p.id) ? 1 : 0)); return s; };
+const newState = () => { const s = freshState(); s.bonusLv = BONUSES.map(() => 1); return s; };
 const goldProfile = () => { const s = rich(); s.perms[1] = 100; s.shovel = 10; return s; };
 const midGame = () => { const s = newState(); play(s, 3600, true, 99); return s; };
 const lateGame = () => { const s = newState(); play(s, 3 * 3600, true, 99); return s; };
@@ -146,7 +146,7 @@ describe('sauvegarde', () => {
     expect(r.s.ready[0]).toBeLessThanOrEqual(now + BONUSES[0].cd * 1000 + 5);
     expect(r.s.ready[1]).toBe(0);
     expect(r.s.ready[2]).toBeGreaterThan(now);
-    expect(r.s.auto).toBe(30);
+    expect(r.s.auto).toBe(30); // migré = niveau 1 : durée plafonnée à 30 s
     expect(r.s.turbo).toBe(0);
     expect(r.s.autoAcc).toBeLessThan(1);
     expect(r.s.ready).toHaveLength(BONUSES.length);

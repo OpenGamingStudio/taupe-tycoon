@@ -1,4 +1,4 @@
-import { State } from './sim';
+import { State, gainPep } from './sim';
 
 export interface Trophy { id: string; icon: string; test: (s: State) => boolean; fr: [string, string]; en: [string, string] }
 
@@ -27,11 +27,15 @@ export const TROPHIES: Trophy[] = [
   { id: 'pepite10', icon: 'nugget', test: (s) => s.caught >= 10, fr: ['Œil de lynx', 'Cueille 10 pépites d’or.'], en: ['Eagle eye', 'Catch 10 golden nuggets.'] },
   { id: 'temps', icon: 'sacoche', test: (s) => s.playTime >= 3600, fr: ['Une heure sous terre', 'Joue pendant une heure.'], en: ['An hour underground', 'Play for one hour.'] },
 ];
+/** Pépites données par un succès : 1 (facile), 2 (moyen), 3 (difficile). */
+const HARD = new Set(['clic10k', 'terre4', 'empire', 'rebirth25', 'gemmes', 'temps']);
+const MID = new Set(['clic1k', 'terre2', 'terre3', 'equipe', 'rebirth5', 'pepite10']);
+export const trophyPep = (id: string) => (HARD.has(id) ? 3 : MID.has(id) ? 2 : 1);
 export const TROPHY_COUNT = TROPHIES.length;
 
 /** Débloque les succès atteints ; renvoie ceux qui viennent de l'être. */
 export function checkTrophies(s: State): Trophy[] {
   const fresh: Trophy[] = [];
-  for (const tr of TROPHIES) if (!s.trophies.includes(tr.id) && tr.test(s)) { s.trophies.push(tr.id); fresh.push(tr); }
+  for (const tr of TROPHIES) if (!s.trophies.includes(tr.id) && tr.test(s)) { s.trophies.push(tr.id); gainPep(s, trophyPep(tr.id)); fresh.push(tr); }
   return fresh;
 }

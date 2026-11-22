@@ -36,3 +36,7 @@ Avant -> après (bot, 4 clics/s, `tools/play.ts`) :
 | 3 h : rebirths, gemmes | 31, 7 257 | 17, 172 (`GEM_DIV` 3e9) |
 | runs suivantes | 19, 14, 10, 12, 9, 5, 2... min | 20, 17, 13, 16, 13, 8, 6... min |
 Garde-fous : `tests/bonus.test.ts` (tous les bonus, Auto-tap compris, < +80 % de la production sur 4 profils, aucun > 45 %), `tests/features.test.ts` (paliers >= ×30 au niv. 100, clic >= 30 % du revenu passif).
+
+## Pépites (V5 lot 4)
+Bot CPS 4, rebirths conseillés. Pépites gagnées cumulées à 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240 min : 16, 18, 23, 29, 34, 37, 40, 54, 66, 84, 93.
+Premier bonus (Auto-tap, 20) vers 11 min ; Turbo (24) vers 60-75 min ; Averse (30) vers 2 h. Les sources (paliers faciles, succès) tarissent après ~20 min : le rythme visé « un bonus toutes les 15-30 min » n'est pas tenu au-delà. Leviers : `PEP_COSTS`, `PEP_NUGGET_PER_HOUR`, `PEP_TIER_SKIP*` dans `src/config.ts`.
