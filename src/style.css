@@ -376,3 +376,8 @@ html.reduced *, html.reduced *::before, html.reduced *::after { animation: none 
 @keyframes d-worm { from { transform: translateX(-40px); } to { transform: translateX(40px); } }
 html.reduced .decor .d-rain, html.reduced .decor .d-snow { display: none; }
 @media (prefers-reduced-motion: reduce) { .decor .d-rain, .decor .d-snow { display: none; } }
+/* éclair de récompense (2.16.0) : aplat plein cadre qui s'efface, jamais en mouvements réduits */
+.flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; animation: flash 0.45s ease-out forwards; }
+@keyframes flash { 0% { opacity: .5; } 100% { opacity: 0; } }
+html.reduced .flash { display: none; }
+@media (prefers-reduced-motion: reduce) { .flash { display: none; } }
