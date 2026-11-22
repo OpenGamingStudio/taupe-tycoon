@@ -4,7 +4,7 @@ export const PROD_EXP = 0.8; // production d'un type = base × niveaux^PROD_EXP 
 export const CLICK_BASE = 10; // terre par clic sans pelle (toutes les quantités sont des entiers : unité = 1/10 de la V1)
 export const SHOVEL_BASE = 120; // coût du premier niveau de pelle
 export const SHOVEL_POWER = 10; // gain de terre par clic et par niveau de pelle
-export const GEM_DIV = 3e8; // terre d'un run pour 1 gemme (gain = racine carrée de total / GEM_DIV)
+export const GEM_DIV = 3e9; // terre d'un run pour 1 gemme (gain = racine carrée de total / GEM_DIV)
 export const GEM_BONUS = 0.25; // bonus de production par gemme gagnée (cumulé, jamais dépensé)
 export const OFFLINE_BASE = 2 * 3600; // plafond hors-ligne de base (s)
 export const OFFLINE_STEP = 3600; // + par niveau de Sacoche
@@ -12,8 +12,11 @@ export const OFFLINE_MAX_LEVEL = 10;
 
 
 /** Paliers : à chaque seuil de niveaux atteint, la production du bâtiment (ou le clic de la pelle) est doublée. */
-export const MILESTONES = [10, 25, 50, 100];
-export const MILESTONE_MULT = 2;
+export const MILESTONE_TABLE: [number, number][] = [[10, 2], [25, 2], [50, 3], [100, 3], [150, 4], [200, 4], [300, 5], [400, 5], [500, 8]];
+export const MILESTONES = MILESTONE_TABLE.map((m) => m[0]);
+/** Paliers de la pelle (clic) : leurs propres seuils et multiplicateurs. */
+export const SHOVEL_TABLE: [number, number][] = [[5, 2], [10, 2], [25, 2], [50, 2], [100, 3], [150, 3], [200, 4], [300, 4], [400, 5], [500, 8]];
+export const SHOVEL_PS = 0.0012; // la pelle ajoute à chaque clic cette part de la production/s, par niveau (clic = vrai revenu dans la durée)
 
 /** Succès : chacun donne un petit bonus de production permanent (points de pourcentage entiers). */
 export const TROPHY_BONUS = 0.02;
@@ -55,23 +58,18 @@ export const PECULE_MIN = 100; // plancher (utile aux premiers rebirths) : 100 �
  * Bonus à recharge (2.11.0). `cd` = recharge en secondes (horloge du mur : elle continue hors-ligne), `dur` = durée de
  * l'effet en secondes (0 = instantané ou géré à part).
  */
-export type BonusId = 'auto' | 'turbo' | 'crew' | 'rain' | 'burst';
+export type BonusId = 'auto' | 'turbo' | 'rain';
 export interface BonusDef { id: BonusId; cd: number; dur: number }
 export const BONUSES: BonusDef[] = [
   { id: 'auto', cd: 300, dur: 30 }, // Auto-tap : la taupe creuse toute seule
-  { id: 'turbo', cd: 360, dur: 30 }, // Turbo : tous les gains ×2
-  { id: 'crew', cd: 480, dur: 45 }, // Ruée d'ouvrières : production des bâtiments ×2
-  { id: 'rain', cd: 540, dur: 8 }, // Pluie de pépites : à cueillir (durée de la chute)
-  { id: 'burst', cd: 600, dur: 0 }, // Gain instantané : 2 min de production
+  { id: 'turbo', cd: 360, dur: 30 }, // Turbo : production ×2 (absorbe la Ruée d'ouvrières)
+  { id: 'rain', cd: 420, dur: 8 }, // Pluie de pépites : à cueillir (durée de la chute)
 ];
 export const AUTO_RATE = 8; // taps par seconde pendant l'Auto-tap
 export const AUTO_PS_CAP = 0.02; // Auto-tap : part de la production/s comptée par tap, plafonnée (la Pelle en or n'y compte pas au-delà)
 export const TURBO_MULT = 2;
 export const CRIT_CHANCE = 0.1; // clic critique : 10 % de chance par clic
 export const CRIT_MULT = 2; // ... qui double le gain du clic
-export const CREW_MULT = 2;
-export const RAIN_COUNT = 10; // pépites par pluie
+export const RAIN_COUNT = 12; // pépites par pluie (absorbe le Gain instantané)
 export const RAIN_SEC = 12; // chaque pépite vaut 12 s de production (ou 30 clics)
 export const RAIN_CLICKS = 30;
-export const BURST_SEC = 120; // Gain instantané : 2 min de production (ou 150 clics)
-export const BURST_CLICKS = 150;

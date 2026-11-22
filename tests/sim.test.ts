@@ -63,7 +63,7 @@ describe('rebirth', () => {
     const s = newState(); s.runTotal = 10; expect(rebirth(s)).toBe(0); expect(s.rebirths).toBe(0);
   });
   it('réinitialise le run et garde les gemmes', () => {
-    const s = newState(); s.runTotal = 1e10; s.dirt = 5; s.gens[0] = 9; s.shovel = 4;
+    const s = newState(); s.runTotal = 1e11; s.dirt = 5; s.gens[0] = 9; s.shovel = 4;
     const g = rebirthGain(s); expect(g).toBeGreaterThan(1);
     expect(rebirth(s)).toBe(g);
     expect(s.gems).toBe(g); expect(s.gens.every((x) => x === 0)).toBe(true); expect(s.shovel).toBe(0);

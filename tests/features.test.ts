@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { GENS, MILESTONES, PERMS, TROPHY_BONUS, RUSH_MULT, GENIUS_MULT, RUSH_TIME, GENIUS_TIME } from '../src/config';
+import { GENS, MILESTONES, MILESTONE_TABLE, SHOVEL_TABLE, PERMS, TROPHY_BONUS, RUSH_MULT, GENIUS_MULT, RUSH_TIME, GENIUS_TIME } from '../src/config';
 import {
-  applyEvent, applyOffline, clickPower, genProd, milestoneMult, newState, nextMilestone, perSecond, perSecondBase,
+  applyEvent, applyOffline, clickPower, clickRaw, genProd, milestoneCount, milestoneMult, newState, nextMilestone, perSecond, perSecondBase,
   prodMult, rebirth, rollEvent, tick, trophyMult,
 } from '../src/sim';
 import { TROPHIES, checkTrophies } from '../src/trophies';
@@ -9,23 +9,41 @@ import { SAVE_VERSION, exportText, importText, sanitize } from '../src/save';
 import { fmt } from '../src/format';
 
 describe('paliers', () => {
-  it('×2 à chaque seuil de niveau, pas avant', () => {
-    expect(milestoneMult(MILESTONES[0] - 1)).toBe(1);
-    expect(milestoneMult(MILESTONES[0])).toBe(2);
-    expect(milestoneMult(MILESTONES[1])).toBe(4);
-    expect(milestoneMult(10000)).toBe(2 ** MILESTONES.length);
-    expect(nextMilestone(0)).toBe(MILESTONES[0]);
+  const [a, b] = MILESTONE_TABLE;
+  it('multiplicateur au seuil, pas avant ; produit cumulé ; seuil suivant', () => {
+    expect(milestoneMult(a[0] - 1)).toBe(1);
+    expect(milestoneMult(a[0])).toBe(a[1]);
+    expect(milestoneMult(b[0])).toBe(a[1] * b[1]);
+    expect(milestoneMult(10000)).toBe(MILESTONE_TABLE.reduce((x, m) => x * m[1], 1));
+    expect(nextMilestone(0)).toEqual(a);
     expect(nextMilestone(MILESTONES[MILESTONES.length - 1])).toBeNull();
+    expect(milestoneCount(10000)).toBe(MILESTONES.length);
   });
-  it('la production d\'un bâtiment double au palier', () => {
+  it('les paliers comptent vraiment : au moins ×30 au niveau 100, ×100 au niveau 200, seuils croissants, multiplicateurs entiers >= 2', () => {
+    for (const t of [MILESTONE_TABLE, SHOVEL_TABLE]) {
+      expect(milestoneMult(100, t)).toBeGreaterThanOrEqual(30);
+      expect(milestoneMult(200, t)).toBeGreaterThanOrEqual(100);
+      t.forEach(([lv, m], i) => { expect(Number.isInteger(m) && m >= 2).toBe(true); if (i) expect(lv).toBeGreaterThan(t[i - 1][0]); });
+    }
+    expect(MILESTONES[MILESTONES.length - 1]).toBeGreaterThanOrEqual(500);
+  });
+  it('la production d\'un bâtiment est multipliée au palier', () => {
     const s = newState();
     s.gens[0] = MILESTONES[0] - 1; const before = genProd(s, 0);
     s.gens[0] = MILESTONES[0]; const after = genProd(s, 0);
-    expect(after / before).toBeGreaterThan(2);
+    expect(after / before).toBeGreaterThan(MILESTONE_TABLE[0][1]);
   });
-  it('le palier de la pelle double le clic', () => {
-    const s = newState(); s.shovel = MILESTONES[0] - 1; const a = clickPower(s);
-    s.shovel = MILESTONES[0]; expect(clickPower(s) / a).toBeGreaterThan(2);
+  it('le palier de la pelle multiplie le clic', () => {
+    const s = newState(); s.shovel = SHOVEL_TABLE[0][0] - 1; const a2 = clickPower(s);
+    s.shovel = SHOVEL_TABLE[0][0]; expect(clickPower(s) / a2).toBeGreaterThan(SHOVEL_TABLE[0][1]);
+  });
+  it('clic : pas de plafond, la pelle compte encore beaucoup à 10 min comme à 2 h (part de la production/s par clic)', () => {
+    const s = newState(); s.gens = [30, 28, 20, 12, 6, 2]; s.shovel = 50;
+    const p = perSecondBase(s);
+    const c = clickRaw(s);
+    expect(c * 4).toBeGreaterThan(0.3 * p); // 4 clics/s : au moins 30 % du revenu passif
+    const s2 = { ...s, shovel: 100 };
+    expect(clickRaw(s2)).toBeGreaterThan(clickRaw(s) * 3); // 50 niveaux de pelle de plus : plus de ×3
   });
 });
 

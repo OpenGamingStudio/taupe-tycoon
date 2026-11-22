@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.13.0 — 2026-11-22 (V5, lot 1 : équilibrage)
+- **Moins de bonus, tous différents** : 5 bonus à recharge -> 3. « Ruée d'ouvrières » (production ×2) est absorbée par le Turbo (×2 sur tout) ; « Gain instantané » est absorbé par la Pluie de pépites (12 pépites de 12 s de production). Restent : Auto-tap (clics), Turbo (production + clics), Pluie (à cueillir). Sauvegardes v4 migrées par nom de bonus (recharges conservées), version de sauvegarde 5.
+- **Paliers bien plus forts** : 10 paliers au lieu de 4 (niveaux 10, 25, 50, 100, 150, 200, 300, 400, 500 ; ×2 ×2 ×3 ×3 ×4 ×4 ×5 ×5 ×8) : ×36 au niveau 100 (avant ×16), ×576 au niveau 200 (avant ×16), ×115 200 au niveau 500.
+- **Clic qui compte dans la durée** : la pelle ajoute 0,12 % de la production/s par niveau à chaque clic, et a ses propres paliers (niveaux 5, 10, 25, 50, 100, 150, 200, 300, 400, 500).
+- Équilibre : `GEM_DIV` 3e9 (les paliers accélèrent la progression) ; premier rebirth 29 min avec pépites, 42 min sans. Test d'équilibre sur TOUS les bonus (Auto-tap compris) et 4 profils de partie.
+
 ## 2.12.1 — 2026-11-21 (correctifs de revue)
 - **Équilibrage** : l'Auto-tap ne compte plus que 2 % de la production/s par tap pour la Pelle en or (`AUTO_PS_CAP`), au lieu de 3 % × niveau (+240 % au niv. 100, cumulé avec Turbo et Génie). Le plancher en clics de la Pluie et du Gain instantané ignore aussi la part de la Pelle en or. Le critique (×2, clics manuels seulement) ajoute ~+10 % aux clics : bilan revérifié dans `tests/bonus.test.ts`.
 - Sauvegarde : une version inconnue (>= 5) ne multiplie plus la terre par 10.
