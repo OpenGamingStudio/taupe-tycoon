@@ -7,7 +7,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fail = 0;
 const ok = (c, m) => { console.log((c ? 'OK  ' : 'FAIL') + ' ' + m); if (!c) fail++; };
 const save = JSON.stringify({ v: 7, at: Date.now(), opts: { lang: 'fr', reduced: false, mode: 1, sound: false, seen: 3, music: false, ambient: false },
-  s: { dirt: 5e6, runTotal: 2e7, lifeTotal: 2e7, gems: 5, gemsEarned: 5, rebirths: 2, shovel: 12, gens: [20, 12, 8, 4, 1, 0], perms: [0, 0, 0, 0, 0, 0, 0, 0], pep: 27, pepEarned: 30, clicks: 900, runTime: 900 } });
+  s: { dirt: 5e6, runTotal: 2e7, lifeTotal: 2e7, gems: 5, gemsEarned: 5, rebirths: 2, shovel: 12, gens: [20, 12, 8, 4, 1, 0], perms: [0, 0, 0, 0, 0, 0, 0, 0], pep: 27, pepEarned: 30, bonusLv: [1, 1, 0], clicks: 900, runTime: 900 } });
 for (const [w, h] of [[320, 568], [390, 844], [430, 932]]) {
   const p = await b.newPage();
   await p.setViewport({ width: w, height: h, isMobile: true, hasTouch: true });
@@ -19,6 +19,11 @@ for (const [w, h] of [[320, 568], [390, 844], [430, 932]]) {
   const hud = await p.evaluate(() => ({ t: document.querySelector('#hud-pepn')?.textContent, sw: document.documentElement.scrollWidth, iw: innerWidth }));
   ok(+hud.t >= 27, `${w}px : compteur de pépites = ${hud.t}`);
   ok(hud.sw <= hud.iw, `${w}px : pas de défilement horizontal`);
+  const hh = await p.evaluate(() => Math.round(document.querySelector('header').getBoundingClientRect().height));
+  const gl = await p.evaluate(() => document.querySelector('#goal-l').textContent);
+  ok(hh <= 112, `${w}px : en-tête ${hh}px de haut, barre « ${gl} »`);
+  const bl = await p.evaluate(() => [...document.querySelectorAll('#bonus li')].filter((l) => !l.hidden).length);
+  console.log(`${w}px : ${bl} bonus visibles`);
   const tab = await p.$('#tab-bonus');
   const bx = await tab.boundingBox();
   ok(bx.height >= 44 && bx.width >= 40, `${w}px : onglet Bonus ${Math.round(bx.width)}x${Math.round(bx.height)}`);

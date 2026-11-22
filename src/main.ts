@@ -286,8 +286,13 @@ function renderOwned() {
     if (s.gens[i] < 1) return;
     const li = document.createElement('li');
     li.style.setProperty('--i', String(i));
-    li.setAttribute('aria-label', t('owned', { name: t(g.id), n: f(s.gens[i]) }));
-    li.innerHTML = `${icon(g.id, 'h-8 w-8')}<span class="n" aria-hidden="true">${f(s.gens[i])}</span>`;
+    const bt = document.createElement('button');
+    bt.type = 'button';
+    bt.className = 'ow';
+    bt.setAttribute('aria-label', t('owned', { name: t(g.id), n: f(s.gens[i]) }) + '. ' + t('ownedOpen'));
+    bt.innerHTML = `${icon(g.id, 'h-8 w-8')}<span class="n" aria-hidden="true">${f(s.gens[i])}</span>`;
+    bt.addEventListener('click', () => { openPanel('dig', false); const r = rows[i + 1]; r?.el.scrollIntoView({ block: 'center' }); r?.el.classList.add('flash'); window.setTimeout(() => r?.el.classList.remove('flash'), 900); });
+    li.append(bt);
     if ((ownedPrev[i] ?? 0) < s.gens[i] && ownedPrev.length) li.classList.add('pop');
     ul.append(li);
   });
@@ -297,6 +302,8 @@ function renderOwned() {
 }
 
 let hintTimer = 0;
+let goalTipText = '';
+let hintKeyShown = '', hintSince = 0;
 function hintKey(): string | null {
   const any = s.shovel + s.gens.reduce((a, b) => a + b, 0) + s.rebirths > 0;
   if (rebirthGain(s) >= 1 && s.rebirths === 0 && !(opts.seen & 2)) return 'hintRebirth';
@@ -331,9 +338,10 @@ function render() {
   const gl = goal();
   $('goal').setAttribute('aria-valuenow', String(gl.pct));
   $('goal-fill').style.width = gl.pct + '%';
-  setText($('goal-l'), `${gl.pct} %`);
+  setText($('goal-l'), t('gemPct', { p: gl.pct }));
   const pend = rebirthGain(s);
-  setText($('goal-t'), t('goalCap', { a: pend, b: pend + 1, p: gl.pct, g: Math.round(GEM_BONUS * 100) }) + (pend >= 1 ? ' · ' + t('goalReady') : ''));
+  const goalTxt = t('goalCap', { a: pend, b: pend + 1, p: gl.pct, g: Math.round(GEM_BONUS * 100) }) + (pend >= 1 ? ' · ' + t('goalReady') : '');
+  setText($('goal-t'), goalTxt); goalTipText = goalTxt; $('goal').setAttribute('aria-label', t('gemPct', { p: gl.pct }));
   if (goalPrev >= 0 && pend > goalPrev) {
     notify(t('goalUp', { n: pend, g: Math.round(GEM_BONUS * 100 * pend) }));
     const gb = $('goal'); gb.classList.remove('goal-pop'); void gb.offsetWidth; if (!reducedMotion()) gb.classList.add('goal-pop');
@@ -375,7 +383,7 @@ function render() {
     const nm = nmx && nmx[0];
     r.mile.hidden = locked;
     if (!locked) {
-      setText(r.mile.lastElementChild as HTMLElement, nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm!, m: nmx![1] }));
+      setText(r.mile.lastElementChild as HTMLElement, nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm!, m: nmx![1], k: nm! - level }));
       (r.mile.querySelector('i') as HTMLElement).style.width = (nm === null ? 100 : Math.min(100, Math.floor(level / nm * 100))) + '%';
     }
     setHtml(r.cost.firstElementChild as HTMLElement, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
@@ -430,7 +438,8 @@ function render() {
   renderBadges(hot);
   const hk = hintKey();
   const hint = $('hint');
-  if (hk) { setText(hint, t(hk)); hint.hidden = false; } else hint.hidden = true;
+  if (hk !== hintKeyShown) { hintKeyShown = hk ?? ''; hintSince = Date.now(); }
+  if (hk && Date.now() - hintSince < 5000) { setText(hint, t(hk)); hint.hidden = false; } else hint.hidden = true;
   $('opt-lang').textContent = `${t('lang')} : ${L === 'fr' ? 'Français' : 'English'}`;
   $('opt-motion').textContent = `${t('reduced')} : ${t(opts.reduced ? 'on' : 'off')}`;
   $('opt-motion').setAttribute('aria-pressed', String(opts.reduced));
@@ -519,15 +528,11 @@ function setBadge(id: string, n: number | string) {
   const v = n ? String(n) : '';
   el.hidden = !v;
   if (el.textContent !== v) { el.textContent = v; if (v && !reducedMotion()) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } }
-  if (v) el.setAttribute('aria-label', t('badgeBuy', { n: v }));
+  if (v) el.setAttribute('aria-label', t('badgeBuy'));
 }
 function renderBadges(hot: boolean) {
-  let dig = 0;
-  rows.forEach((r) => { if (r.el.getAttribute('aria-disabled') !== 'true') dig++; });
-  setBadge('dig', dig);
-  let perm = 0;
-  permRows.forEach((r) => { if (r.el.getAttribute('aria-disabled') !== 'true') perm++; });
-  setBadge('rebirth', rebirthAdvised(s) ? '!' : perm);
+  setBadge('dig', rows.some((r) => r.el.getAttribute('aria-disabled') !== 'true') ? '!' : '');
+  setBadge('rebirth', rebirthAdvised(s) || permRows.some((r) => r.el.getAttribute('aria-disabled') !== 'true') ? '!' : '');
   const nb = nextBonusBuy(s);
   setBadge('bonus', nb && nb.missing === 0 ? '!' : '');
   $('tab-dig').classList.toggle('hot', hot && !openPanelName() && !reducedMotion());
@@ -721,10 +726,10 @@ nuggetEl.addEventListener('click', () => {
 const bonusUl = $('bonus');
 const bname = (id: BonusId) => t('b' + id[0].toUpperCase() + id.slice(1));
 const RING = 2 * Math.PI * 23;
-bonusUl.innerHTML = BONUSES.map((b) => `<li><button type="button" class="bn" data-id="${b.id}" data-st="ready"><svg class="bn-ring" viewBox="0 0 52 52" aria-hidden="true" focusable="false"><circle class="bn-bg" cx="26" cy="26" r="23"/><circle class="bn-arc" cx="26" cy="26" r="23" transform="rotate(-90 26 26)"/></svg><span class="bn-ico">${icon(b.id, 'h-7 w-7')}</span><span class="bn-t" hidden></span><span class="bn-dot" hidden></span></button></li>`).join('');
+bonusUl.innerHTML = BONUSES.map((b) => `<li><button type="button" class="bn" data-id="${b.id}" data-st="ready"><svg class="bn-ring" viewBox="0 0 52 52" aria-hidden="true" focusable="false"><circle class="bn-bg" cx="26" cy="26" r="23"/><circle class="bn-arc" cx="26" cy="26" r="23" transform="rotate(-90 26 26)"/></svg><span class="bn-ico">${icon(b.id, 'h-7 w-7')}</span></button><span class="bn-n"></span><span class="bn-s"></span></li>`).join('');
 const bnEls = BONUSES.map((b) => {
   const el = bonusUl.querySelector<HTMLButtonElement>(`[data-id="${b.id}"]`)!;
-  return { def: b, el, arc: el.querySelector<SVGElement>('.bn-arc')!, tm: el.querySelector<HTMLElement>('.bn-t')!, dot: el.querySelector<HTMLElement>('.bn-dot')!, key: '' };
+  return { def: b, el, arc: el.querySelector<SVGElement>('.bn-arc')!, nm: el.parentElement!.querySelector<HTMLElement>('.bn-n')!, tm: el.parentElement!.querySelector<HTMLElement>('.bn-s')!, key: '' };
 });
 const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 function renderBonus() {
@@ -742,9 +747,9 @@ function renderBonus() {
     const frac = st === 'active' ? act / bonusDur(s, b.def.id) : st === 'cool' ? 1 - left / b.def.cd : 1;
     b.arc.setAttribute('stroke-dashoffset', String(Math.round((1 - Math.max(0, Math.min(1, frac))) * RING * 10) / 10));
     b.arc.setAttribute('stroke-dasharray', String(Math.round(RING * 10) / 10));
-    const txt = st === 'active' ? act + ' s' : st === 'cool' ? mmss(left) : '';
-    b.tm.hidden = !txt; setText(b.tm, txt);
-    b.dot.hidden = st !== 'ready';
+    setText(b.nm, bname(b.def.id));
+    b.tm.dataset.st = st;
+    setText(b.tm, st === 'active' ? act + ' s' : st === 'cool' ? mmss(left) : t('stIdle'));
     b.el.setAttribute('aria-disabled', st === 'ready' ? 'false' : 'true');
     b.el.setAttribute('aria-label', st === 'ready' ? t('bonusReady', { name: bname(b.def.id) }) + '. ' + t(b.def.id === 'auto' ? 'bAutoD' : b.def.id === 'turbo' ? 'bTurboD' : 'bRainD')
       : st === 'active' ? t('bonusActive', { name: bname(b.def.id), s: act }) : t('bonusCool', { name: bname(b.def.id), t: fmtDuration(left, lang()) }));
@@ -776,8 +781,8 @@ tipEl.className = 'tip'; tipEl.hidden = true; tipEl.setAttribute('role', 'toolti
 document.body.append(tipEl);
 let tipTimer = 0, tipShown = false;
 function hideTip() { window.clearTimeout(tipTimer); tipEl.hidden = true; }
-function showTip(el: HTMLElement) {
-  tipEl.textContent = tipText(el.dataset.id as BonusId);
+function showTip(el: HTMLElement, text?: string) {
+  tipEl.textContent = text ?? tipText(el.dataset.id as BonusId);
   tipEl.hidden = false;
   const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
   const left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
@@ -795,6 +800,14 @@ bonusUl.addEventListener('pointerdown', (e) => {
 });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'contextmenu', 'blur'] as const) bonusUl.addEventListener(ev, (e) => { if (ev === 'contextmenu') e.preventDefault(); hideTip(); }, true);
 window.addEventListener('scroll', hideTip, true);
+// barre de gemme : appui long ou clic = explication
+{
+  const g = $('goal');
+  let tm = 0;
+  g.addEventListener('pointerdown', () => { window.clearTimeout(tm); tm = window.setTimeout(() => showTip(g, goalTipText), 350); });
+  g.addEventListener('click', () => { window.clearTimeout(tm); showTip(g, goalTipText); window.clearTimeout(tipTimer); tipTimer = window.setTimeout(hideTip, 4500); });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave'] as const) g.addEventListener(ev, () => window.clearTimeout(tm));
+}
 const fingerEl = document.createElement('span');
 fingerEl.className = 'finger'; fingerEl.hidden = true; fingerEl.innerHTML = icon('auto', 'h-12 w-12');
 fx.append(fingerEl);
