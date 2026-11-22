@@ -2,6 +2,10 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.18.3 — 2026-11-22 (revue du code 2.12 à 2.18)
+- **Mouvements réduits** : les « +N » flottants (livraisons, pluie de pépites, auto-tap) ne restaient jamais retirés quand l’animation est coupée (`animationend` ne vient pas) ; ils partent maintenant au plus tard après 1,6 s (`autoRemove`).
+- Revue : aucun id ni @keyframes en double, `.flash` limité à `#stage-fx`, les variables CSS répétées sont des surcharges de thème voulues.
+
 ## 2.18.2 — 2026-11-22 (courbe des pépites)
 - **Les bonus arrivent plus tôt** (bot CPS 4 avec pépites) : Auto-tap vers 5 min, Turbo vers 22 min, Averse vers 60 min (avant : 11 / 69 / 137 min). Prix du niveau 1 : 20 / 26 / 32 pépites. Chaque pépite d’or cueillie donne 2 pépites (`PEP_PER_NUGGET`), 20 pépites d’or par heure au plus, tous les paliers de multiplicateur comptent (pelle : sauf le 1er). Les textes d’aide suivent.
 - Tests : `tests/pep.test.ts` vérifie les 3 dates ; le garde-fou « bonus ≤ ×2 » devient une médiane sur 9 points (un instant isolé dépend du moment des rebirths du bot).
