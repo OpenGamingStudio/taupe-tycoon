@@ -2,6 +2,10 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.18.1 — 2026-11-22 (correctif : les cartes achetées ne disparaissent plus)
+- **Bug corrigé** : en 2.16.0, la classe `flash` de la carte achetée entrait en collision avec l’éclair d’écran (`.flash`, `@keyframes flash`) : la carte devenait absolue et transparente jusqu’au rendu suivant. La carte utilise maintenant `row-flash` ; `.flash` est limité à `#stage-fx`.
+- Tests : `tests/css.test.ts` (aucun @keyframes en double, `.flash` scopé) et `e2e/buy.mjs` (acheter x1 / x10 / Max sur chaque carte, la carte reste affichée).
+
 ## 2.18.0 — 2026-11-22 (V5, lot 5 : revue UI)
 - **En-tête sur 2 lignes** : la barre de gemme porte son libellé (« Gemme 2 % ») et sa longue explication passe en infobulle (appui long ou clic).
 - La bulle d'aide disparaît après 5 s. Boutons de bonus : nom + état (Prêt / compte à rebours / durée restante), plus de pastille rose.
