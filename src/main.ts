@@ -8,7 +8,7 @@ import { DECOR, todAt, weatherAt } from './decor';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
 import { Lang, setLang, t } from './i18n';
-import { Options, PANELS, SAVE_KEY, defaultLang, exportText, importText, load, save, wipe } from './save';
+import { Options, PANELS, SAVE_KEY, SAVE_VERSION, defaultLang, exportText, importText, load, sanitize, save, wipe } from './save';
 import * as sfx from './sound';
 import { VERSION } from './version';
 import { BUILD, watch } from './update';
@@ -1093,3 +1093,21 @@ $('update-go').addEventListener('click', () => {
 });
 $('ver').title = `build ${BUILD}`;
 (window as unknown as { __tt_update?: () => Promise<boolean> }).__tt_update = () => updater.check(true);
+
+// ---------- compte OpenGamingStudio (facultatif) : progression sur tous les appareils ----------
+declare global { interface Window { OGSAccount?: { init(c: Record<string, unknown>): void; show(on: boolean): void } } }
+window.OGSAccount?.init({
+  game: 'taupe-tycoon', version: VERSION, color: '#8B5E3C', anchor: 'top-left', offset: [8, 108],
+  getSave: () => JSON.parse(JSON.stringify({ v: SAVE_VERSION, s, opts: { ...opts, panel: '' } })),
+  applySave: (d: unknown) => {
+    const r = sanitize(d);
+    if (!r) return;
+    s = r.s;
+    Object.assign(opts, r.opts);
+    readOnly = false;
+    persist();
+    location.reload();
+  },
+  isEmpty: (d: { s?: Record<string, unknown> }) => !d?.s || !(Number(d.s.lifeTotal) > 0 || Number(d.s.clicks) > 0),
+  describe: (d: { s?: Record<string, unknown> }) => `${Number(d?.s?.rebirths ?? 0)} renaissances`,
+});
