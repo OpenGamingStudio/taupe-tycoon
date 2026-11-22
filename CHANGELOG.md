@@ -2,6 +2,13 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.15.0 — 2026-11-22 (V5, lot 2 : décor vivant)
+- **Cycle jour/nuit** (4 min : jour, soir, nuit, aube) tiré de l'horloge, sans sauvegarde : ciel qui s'assombrit en aplat, étoiles, lune, lucioles et chauve-souris la nuit.
+- **Météo** (cycle de 6 min : clair, pluie, neige) : gouttes et flocons animés en CSS, ciel plus sombre sous la pluie.
+- **Parallaxe** : colline lointaine qui se balance, deux couches de nuages à vitesses différentes.
+- **Créatures** : oiseau (jour), papillon (jour sans pluie), ver sous terre (toujours).
+- Mouvements réduits (option ou système) : toutes les animations du décor et la météo sont coupées. Aucun dégradé, aucun asset externe (tout dessiné en code). Tests : `tests/decor.test.ts`.
+
 ## 2.14.0 — 2026-11-22 (V5, lot 1 bis : boutique et rendement)
 - **Bug « plus j'achète, moins ça rapporte » corrigé** : la production d'un bâtiment croissait en `niveaux^0,8` (sous-linéaire), donc chaque niveau rapportait moins que le précédent. Elle est maintenant linéaire (`PROD_EXP` = 1) : le gain par achat reste stable et grimpe aux paliers. Test de monotonie (`tests/shop.test.ts`) sur les 6 bâtiments et la pelle, niveaux 1 à 700, plusieurs multiplicateurs ; un achat n'est jamais moins rentable après l'achat d'un autre bâtiment. Le gain « +N/s » affiché à l'achat est celui du vrai calcul.
 - **Bonus à recharge = achat unique** (Auto-tap 3 gemmes, Turbo 5, Pluie 8) : acquis à vie (rebirth, sauvegarde, rechargement), seule la recharge court. Boutique : « Acheté ». Sauvegarde v6 : les joueurs existants les reçoivent (ils les avaient).
