@@ -179,6 +179,11 @@ function goal() {
 }
 
 // ---------- décor vivant et petites taupes ----------
+/** Retire un élément d'effet à la fin de son animation, ou au plus tard après `ms` : en mouvements réduits l'animation est coupée, `animationend` ne vient jamais et l'élément resterait affiché. */
+function autoRemove(el: HTMLElement, ms = 1600) {
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+  window.setTimeout(() => el.remove(), ms);
+}
 const stageFx = $('stage-fx');
 let floatAt = 0, deliverSnd = 0;
 /** Petit texte flottant « +N » dans la scène (DOM, une animation CSS par texte, nombre borné). */
@@ -190,7 +195,7 @@ function floater(x: number, y: number, text: string, cls: string) {
   el.textContent = text;
   el.style.left = `${x}px`; el.style.top = `${y}px`;
   stageFx.append(el);
-  el.addEventListener('animationend', () => el.remove());
+  autoRemove(el);
 }
 const jfx = createFx($<HTMLCanvasElement>('fxc'));
 const fxBox = () => $('fxc').getBoundingClientRect();
@@ -212,7 +217,7 @@ function flash(color: string) {
   const el = document.createElement('div');
   el.className = 'flash'; el.style.backgroundColor = color;
   stageFx.append(el);
-  el.addEventListener('animationend', () => el.remove());
+  autoRemove(el);
 }
 let shakeT = 0;
 function shake(level: 1 | 2 | 3) {
@@ -572,11 +577,11 @@ function burst(power: number, x: number, y: number, crit = false) {
   tag.textContent = '+' + f(power);
   tag.style.left = `${x}px`; tag.style.top = `${y - 10}px`;
   fx.append(tag);
-  tag.addEventListener('animationend', () => tag.remove());
+  autoRemove(tag);
   const ring = document.createElement('span');
   ring.className = 'ring'; ring.style.left = `${x}px`; ring.style.top = `${y}px`;
   fx.append(ring);
-  ring.addEventListener('animationend', () => ring.remove());
+  autoRemove(ring);
   const depth = depthOf();
   for (let i = 0; i < 5; i++) {
     const c = document.createElement('span');
@@ -588,7 +593,7 @@ function burst(power: number, x: number, y: number, crit = false) {
     c.style.setProperty('--dy', `${rnd(-110, -40)}px`);
     c.style.setProperty('--rot', `${rnd(-200, 200)}deg`);
     fx.append(c);
-    c.addEventListener('animationend', () => c.remove());
+    autoRemove(c);
   }
 }
 
@@ -841,11 +846,11 @@ function autoFx(gap: number) {
     while (fx.children.length > 40) { const k = fx.children[1] ?? fx.firstElementChild!; if (k === fingerEl) break; k.remove(); }
     const ring = document.createElement('span');
     ring.className = 'ring'; ring.style.left = `${x}px`; ring.style.top = `${y}px`;
-    fx.append(ring); ring.addEventListener('animationend', () => ring.remove());
+    fx.append(ring); autoRemove(ring);
     if (autoN % 3 === 0) {
       const tag = document.createElement('span');
       tag.className = 'fx'; tag.textContent = '+' + f(autoTapRaw(s) * (s.turbo > 0 ? TURBO_MULT : 1) * (s.genius > 0 ? GENIUS_MULT : 1)); tag.style.left = `${x}px`; tag.style.top = `${y - 14}px`;
-      fx.append(tag); tag.addEventListener('animationend', () => tag.remove());
+      fx.append(tag); autoRemove(tag);
       jfx.sparks(x + ox, y + oy, 4, '#ffc21a');
     }
   }
@@ -881,7 +886,7 @@ function rainDrop() {
     coinsToHud(x, y, 3, 'gold'); jfx.sparks(x, y, 8, '#ffc21a');
     const tag = document.createElement('span');
     tag.className = 'fx'; tag.textContent = '+' + f(g); tag.style.left = `${lx}px`; tag.style.top = `${ly - 10}px`;
-    fx.append(tag); tag.addEventListener('animationend', () => tag.remove());
+    fx.append(tag); autoRemove(tag);
     awardTrophies();
     render();
   });
