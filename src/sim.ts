@@ -4,7 +4,7 @@ import {
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
   BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, RAIN_SEC, RAIN_CLICKS, RAIN_COUNT,
   TREFLE_STEP, CASQUE_STEP, AIMANT_STEP, THERMOS_STEP,
-  PEP_COSTS, BONUS_MAX_LV, BONUS_LV_MULT, PEP_TIER_SKIP, PEP_TIER_SKIP_SHOVEL, PEP_NUGGET_PER_HOUR,
+  PEP_COSTS, BONUS_MAX_LV, BONUS_LV_MULT, PEP_TIER_SKIP, PEP_TIER_SKIP_SHOVEL, PEP_NUGGET_PER_HOUR, PEP_PER_NUGGET,
 } from './config';
 
 export interface State {
@@ -228,12 +228,12 @@ export function nuggetPepLeft(s: State, now: number): { left: number; wait: numb
   const left = Math.max(0, PEP_NUGGET_PER_HOUR - live.length);
   return { left, wait: left > 0 || !live.length ? 0 : Math.ceil((Math.min(...live) + PEP_HOUR - now) / 1000) };
 }
-/** Une pépite d'or cueillie donne 1 pépite si le plafond horaire le permet ; renvoie le gain (0 ou 1). */
+/** Une pépite d'or cueillie donne PEP_PER_NUGGET pépites si le plafond horaire le permet ; renvoie le gain. */
 export function nuggetPep(s: State, now: number): number {
   if (nuggetPepLeft(s, now).left < 1) return 0;
   s.pepAt = [...s.pepAt.filter((t) => now - t < PEP_HOUR && t <= now), now];
-  gainPep(s, 1);
-  return 1;
+  gainPep(s, PEP_PER_NUGGET);
+  return PEP_PER_NUGGET;
 }
 /** Prix en pépites du prochain niveau d'un bonus (0 = niveau maximal). */
 export const pepCost = (s: State, id: BonusId) => PEP_COSTS[id][bonusLevel(s, id)] ?? 0;

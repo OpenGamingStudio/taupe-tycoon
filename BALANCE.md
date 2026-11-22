@@ -37,6 +37,7 @@ Avant -> après (bot, 4 clics/s, `tools/play.ts`) :
 | runs suivantes | 19, 14, 10, 12, 9, 5, 2... min | 20, 17, 13, 16, 13, 8, 6... min |
 Garde-fous : `tests/bonus.test.ts` (tous les bonus, Auto-tap compris, < +80 % de la production sur 4 profils, aucun > 45 %), `tests/features.test.ts` (paliers >= ×30 au niv. 100, clic >= 30 % du revenu passif).
 
-## Pépites (V5 lot 4)
-Bot CPS 4, rebirths conseillés. Pépites gagnées cumulées à 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240 min : 16, 18, 23, 29, 34, 37, 40, 54, 66, 84, 93.
-Premier bonus (Auto-tap, 20) vers 11 min ; Turbo (24) vers 60-75 min ; Averse (30) vers 2 h. Les sources (paliers faciles, succès) tarissent après ~20 min : le rythme visé « un bonus toutes les 15-30 min » n'est pas tenu au-delà. Leviers : `PEP_COSTS`, `PEP_NUGGET_PER_HOUR`, `PEP_TIER_SKIP*` dans `src/config.ts`.
+## Pépites (V5 lot 4, courbe réglée en 2.18.2)
+Bot CPS 4, rebirths conseillés. Pépites gagnées cumulées à 5, 10, 15, 20, 30, 45, 60, 90, 120 min : 22, 26, 34, 44, 57, 72, 76, 100, 138.
+Bonus (prix niveau 1 : 20 / 26 / 32) : Auto-tap vers 5 min, Turbo vers 22 min, Averse vers 60 min (avant : 11 / 69 / 137 min).
+Réglages : 2 pépites par pépite d'or (20 par heure au plus), paliers de bâtiments tous comptés (pelle : sauf le 1er). Leviers : `PEP_COSTS`, `PEP_PER_NUGGET`, `PEP_NUGGET_PER_HOUR`, `PEP_TIER_SKIP*` dans `src/config.ts`; `tests/pep.test.ts` garde les 3 dates.

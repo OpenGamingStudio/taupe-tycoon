@@ -88,9 +88,10 @@ export const RAIN_CLICKS = 30;
  * Sources : paliers de multiplicateur (le 1er palier de chaque ligne ne compte pas, une seule fois à vie par palier),
  * pépite d'or cueillie (plafonnée par heure), succès (1 à 3 selon la difficulté).
  */
-export const PEP_COSTS: Record<BonusId, number[]> = { auto: [20, 45, 85], turbo: [24, 55, 100], rain: [30, 65, 120] }; // coût du niveau 1 (achat), 2 et 3 (amélioration)
+export const PEP_COSTS: Record<BonusId, number[]> = { auto: [20, 45, 85], turbo: [26, 55, 100], rain: [32, 65, 120] }; // coût du niveau 1 (achat), 2 et 3 (amélioration)
 export const BONUS_MAX_LV = 3;
 export const BONUS_LV_MULT = [1, 1.5, 2]; // durée (Auto-tap, Turbo) et nombre de pépites de la Pluie, selon le niveau
-export const PEP_TIER_SKIP = 1; // les N premiers paliers de chaque ligne de bâtiments ne donnent pas de pépite (le 1er qui compte : niveau 25)
-export const PEP_TIER_SKIP_SHOVEL = 2; // idem pour la pelle (1er palier qui compte : niveau 25)
-export const PEP_NUGGET_PER_HOUR = 8; // pépites gagnées au plus par heure en cueillant des pépites d'or
+export const PEP_TIER_SKIP = 0; // les N premiers paliers de chaque ligne de bâtiments ne donnent pas de pépite (0 : tous comptent)
+export const PEP_TIER_SKIP_SHOVEL = 1; // idem pour la pelle
+export const PEP_PER_NUGGET = 2; // pépites données par pépite d'or cueillie
+export const PEP_NUGGET_PER_HOUR = 20; // pépites d'or comptées au plus par heure

@@ -2,6 +2,10 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.18.2 — 2026-11-22 (courbe des pépites)
+- **Les bonus arrivent plus tôt** (bot CPS 4 avec pépites) : Auto-tap vers 5 min, Turbo vers 22 min, Averse vers 60 min (avant : 11 / 69 / 137 min). Prix du niveau 1 : 20 / 26 / 32 pépites. Chaque pépite d’or cueillie donne 2 pépites (`PEP_PER_NUGGET`), 20 pépites d’or par heure au plus, tous les paliers de multiplicateur comptent (pelle : sauf le 1er). Les textes d’aide suivent.
+- Tests : `tests/pep.test.ts` vérifie les 3 dates ; le garde-fou « bonus ≤ ×2 » devient une médiane sur 9 points (un instant isolé dépend du moment des rebirths du bot).
+
 ## 2.18.1 — 2026-11-22 (correctif : les cartes achetées ne disparaissent plus)
 - **Bug corrigé** : en 2.16.0, la classe `flash` de la carte achetée entrait en collision avec l’éclair d’écran (`.flash`, `@keyframes flash`) : la carte devenait absolue et transparente jusqu’au rendu suivant. La carte utilise maintenant `row-flash` ; `.flash` est limité à `#stage-fx`.
 - Tests : `tests/css.test.ts` (aucun @keyframes en double, `.flash` scopé) et `e2e/buy.mjs` (acheter x1 / x10 / Max sur chaque carte, la carte reste affichée).

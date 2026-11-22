@@ -2,7 +2,7 @@ import './style.css';
 import {
   GENS, MILESTONE_TABLE, SHOVEL_TABLE, PERMS, GEM_BONUS, CASQUE_STEP, THERMOS_STEP, RUSH_MULT, TREASURE_SEC, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
   NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, TURBO_MULT, GENIUS_MULT,
-  BONUS_MAX_LV, PEP_COSTS, PEP_NUGGET_PER_HOUR, PEP_TIER_SKIP, PEP_TIER_SKIP_SHOVEL,
+  BONUS_MAX_LV, PEP_COSTS, PEP_NUGGET_PER_HOUR, PEP_PER_NUGGET, PEP_TIER_SKIP, PEP_TIER_SKIP_SHOVEL,
 } from './config';
 import { DECOR, todAt, weatherAt } from './decor';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
@@ -514,7 +514,7 @@ function renderPep() {
   const li = (ico: string, title: string, body: string) => `<li class="note flex items-center gap-2"><span class="shrink-0">${icon(ico, 'h-9 w-9')}</span><span class="min-w-0"><strong class="block text-lg">${title}</strong><span class="block text-base">${body}</span></span></li>`;
   setHtml($('pep-src'),
     li('machine', t('srcTiers'), t('srcTiersD', { a: f(tierDone), b: f(tierMax) }))
-    + li('nugget', t('srcNugget'), t('srcNuggetD', { k: PEP_NUGGET_PER_HOUR, a: f(PEP_NUGGET_PER_HOUR - q.left) }) + (q.left < 1 && q.wait > 0 ? ' ' + t('srcNuggetWait', { t: fmtDuration(q.wait, L) }) : ''))
+    + li('nugget', t('srcNugget'), t('srcNuggetD', { p: PEP_PER_NUGGET, k: PEP_NUGGET_PER_HOUR, a: f(PEP_NUGGET_PER_HOUR - q.left) }) + (q.left < 1 && q.wait > 0 ? ' ' + t('srcNuggetWait', { t: fmtDuration(q.wait, L) }) : ''))
     + li('trophy', t('srcTrophy'), t('srcTrophyD', { a: f(s.trophies.length), b: f(TROPHY_COUNT) })));
   bonusHelp();
 }
@@ -772,7 +772,7 @@ function bonusHelp() {
     ['nugget', t('bTreasure'), t('tipTreasure', { n: f(Math.round(Math.max(perSecondBase(s) * TREASURE_SEC, clickPower(s) * 50))), s: fmtDuration(TREASURE_SEC, lang()) })],
   ];
   const li = (ico: string, name: string, body: string, extra: string) => `<li class="note flex items-center gap-2"><span class="shrink-0">${icon(ico, 'h-9 w-9')}</span><span class="min-w-0"><strong class="block text-lg">${name}</strong><span class="block text-base">${body}</span>${extra ? `<span class="block text-sm">${extra}</span>` : ''}</span></li>`;
-  setHtml($('bonus-help'), nug.map(([i, n, b]) => li(i, n, b, t('nuggetNote'))).join(''));
+  setHtml($('bonus-help'), nug.map(([i, n, b]) => li(i, n, b, t('nuggetNote', { p: PEP_PER_NUGGET }))).join(''));
 }
 
 // ----- infobulle d'appui long (bonus à recharge) : au-dessus du bouton, hors du doigt, se ferme au relâchement -----
