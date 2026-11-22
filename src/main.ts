@@ -3,6 +3,7 @@ import {
   GENS, MILESTONE_TABLE, SHOVEL_TABLE, PERMS, GEM_BONUS, CASQUE_STEP, THERMOS_STEP, RUSH_MULT, TREASURE_SEC, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
   NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, RAIN_COUNT, TURBO_MULT, GENIUS_MULT,
 } from './config';
+import { DECOR, todAt, weatherAt } from './decor';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
 import { fmt, fmtDuration, fmtPct } from './format';
 import { Lang, setLang, t } from './i18n';
@@ -42,6 +43,11 @@ const reducedMotion = () => opts.reduced || window.matchMedia('(prefers-reduced-
 
 // ---------- assets ----------
 $('scene').innerHTML = SCENE;
+$('decor').innerHTML = DECOR;
+const stageEl = $('stage');
+const syncDecor = () => { const n = Date.now(); stageEl.dataset.tod = todAt(n); stageEl.dataset.wx = weatherAt(n); };
+syncDecor();
+window.setInterval(syncDecor, 5000);
 $('mole-svg').innerHTML = MOLE;
 $('ico-dirt').innerHTML = icon('dirt', 'h-8 w-8');
 $('ico-gem').innerHTML = icon('gem', 'h-6 w-6');
