@@ -8,14 +8,14 @@ type Dict = Record<string, string>;
 
 export const T: Record<Lang, Dict> = {
   fr: {
-    tabStats: 'Stats', panelDig: 'Améliorations', close: 'Fermer', hintOpen: 'Ouvre la Mine pour acheter !', badgeBuy: '{n} achat(s) possible(s)',
+    tabStats: 'Stats', panelDig: 'Améliorations', close: 'Fermer', hintOpen: 'Ouvre la Mine pour acheter !', badgeBuy: 'Un achat est possible',
     updateText: 'Nouvelle version disponible', updateGo: 'Recharger', updateLater: 'Plus tard', updateReloading: 'Mise à jour…',
     tabTrophies: 'Succès', trophyTitle: 'Succès', trophyBonus: '{n} / {m} succès · +{p} % de production', trophyDone: 'Succès : {name}', trophiesMany: '{n} succès débloqués', trophyLocked: 'À débloquer', trophyOk: 'Débloqué',
     nugget: 'Pépite d’or', nuggetAppear: 'Une pépite d’or apparaît ! Attrape-la.', nuggetLabel: 'Pépite d’or : attrape-la avant qu’elle disparaisse',
     nuggetRush: 'Ruée ! Production ×3 pendant 20 s', nuggetGenius: 'Coup de génie ! Clic ×5 pendant 15 s', nuggetTreasure: 'Trésor ! +{n} terre',
     buffRush: 'Ruée ×3', buffGenius: 'Génie ×5', buffLeft: '{name} : {s} s',
     statsTitle: 'Statistiques', sDirt: 'Terre creusée', sClicks: 'Coups de pelle', sTime: 'Temps de jeu', sBest: 'Meilleur run', sGems: 'Gemmes gagnées', sCaught: 'Pépites cueillies', sBuildings: 'Bâtiments', sRebirths: 'Rebirths', sNone: '—',
-    nextMile: 'Palier niv. {n} : prod. ×{m}', nextMileShovel: 'Palier niv. {n} : clic ×{m}', allMiles: 'Tous les paliers atteints', mileNow: 'Paliers : ×{m}',
+    gemPct: 'Gemme {p} %', nextMile: 'Prochain palier niv. {n} : ×{m} · encore {k} niv.', nextMileShovel: 'Prochain palier niv. {n} : clic ×{m} · encore {k} niv.', stIdle: 'Prêt', ownedOpen: 'Ouvre l’amélioration', stUp: 'Achetable', allMiles: 'Tous les paliers atteints', mileNow: 'Paliers : ×{m}',
     welcomeTitle: 'Bon retour !', welcomeText: 'Ta taupe a creusé pendant {t}.', welcomeGain: '+{n} terre', welcomeCap: 'Gains hors-ligne plafonnés à {c} (la Sacoche en ajoute).', welcomeCapped: 'Tu es resté plus longtemps que le plafond de {c} : le reste est perdu. La Sacoche l’augmente.', welcomeOk: 'Super !',
     volume: 'Volume', ambient: 'Ambiance sonore', exportBtn: 'Exporter la sauvegarde', importBtn: 'Importer une sauvegarde', ioLabel: 'Texte de sauvegarde', ioCopied: 'Sauvegarde copiée.', ioShown: 'Sauvegarde affichée : copie-la à la main.', importOk: 'Sauvegarde importée.', importBad: 'Texte invalide : rien n’a changé.', importConfirm: 'Confirmer : remplace la partie', otherTab: 'Le jeu est ouvert dans un autre onglet : cette fenêtre ne sauvegarde plus. Recharge la page.',
     title: 'Taupe Tycoon', dirt: 'Terre', perSec: 'par seconde', gems: 'Gemmes',
@@ -76,14 +76,14 @@ export const T: Record<Lang, Dict> = {
     bonusUsed: '{name} !', bonusRainEnd: 'Averse finie : {n} goutte(s) attrapée(s)', bonusRainLabel: 'Goutte d’or : attrape-la',
   },
   en: {
-    tabStats: 'Stats', panelDig: 'Upgrades', close: 'Close', hintOpen: 'Open the Mine to buy!', badgeBuy: '{n} purchase(s) available',
+    tabStats: 'Stats', panelDig: 'Upgrades', close: 'Close', hintOpen: 'Open the Mine to buy!', badgeBuy: 'A purchase is possible',
     updateText: 'New version available', updateGo: 'Reload', updateLater: 'Later', updateReloading: 'Updating…',
     tabTrophies: 'Trophies', trophyTitle: 'Trophies', trophyBonus: '{n} / {m} trophies · +{p}% production', trophyDone: 'Trophy: {name}', trophiesMany: '{n} trophies unlocked', trophyLocked: 'Locked', trophyOk: 'Unlocked',
     nugget: 'Golden nugget', nuggetAppear: 'A golden nugget appears! Catch it.', nuggetLabel: 'Golden nugget: catch it before it vanishes',
     nuggetRush: 'Rush! Production ×3 for 20 s', nuggetGenius: 'Stroke of genius! Clicks ×5 for 15 s', nuggetTreasure: 'Treasure! +{n} dirt',
     buffRush: 'Rush ×3', buffGenius: 'Genius ×5', buffLeft: '{name}: {s} s',
     statsTitle: 'Statistics', sDirt: 'Dirt dug', sClicks: 'Digs', sTime: 'Play time', sBest: 'Best run', sGems: 'Gems earned', sCaught: 'Nuggets caught', sBuildings: 'Buildings', sRebirths: 'Rebirths', sNone: '—',
-    nextMile: 'Milestone lv. {n}: output ×{m}', nextMileShovel: 'Milestone lv. {n}: clicks ×{m}', allMiles: 'All milestones reached', mileNow: 'Milestones: ×{m}',
+    gemPct: 'Gem {p}%', nextMile: 'Next milestone lv. {n}: ×{m} · {k} levels to go', nextMileShovel: 'Next milestone lv. {n}: clicks ×{m} · {k} levels to go', stIdle: 'Ready', ownedOpen: 'Opens the upgrade', stUp: 'Buyable', allMiles: 'All milestones reached', mileNow: 'Milestones: ×{m}',
     welcomeTitle: 'Welcome back!', welcomeText: 'Your mole dug for {t}.', welcomeGain: '+{n} dirt', welcomeCap: 'Offline earnings are capped at {c} (the Satchel adds more).', welcomeCapped: 'You were away longer than the {c} cap: the rest is lost. The Satchel raises it.', welcomeOk: 'Great!',
     volume: 'Volume', ambient: 'Ambient sound', exportBtn: 'Export save', importBtn: 'Import a save', ioLabel: 'Save text', ioCopied: 'Save copied.', ioShown: 'Save shown: copy it by hand.', importOk: 'Save imported.', importBad: 'Invalid text: nothing changed.', importConfirm: 'Confirm: replaces your game', otherTab: 'The game is open in another tab: this window no longer saves. Reload the page.',
     title: 'Taupe Tycoon', dirt: 'Dirt', perSec: 'per second', gems: 'Gems',

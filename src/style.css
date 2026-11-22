@@ -105,7 +105,7 @@ html, body {
   .row .lv { @apply rounded-lg border-2 border-ink bg-cream px-1.5 text-sm font-bold text-ink; }
   .row .desc { display: none; color: #4a3a2c; @apply text-sm leading-tight; }
   .row .mile { @apply mt-0.5 flex items-center gap-1.5 text-sm font-bold; }
-  .row .mile .bar { @apply block h-2 w-12 shrink-0 overflow-hidden rounded-full border-2 border-ink bg-plank-off; }
+  .row .mile .bar { @apply block h-3 w-16 shrink-0 overflow-hidden rounded-full border-2 border-ink bg-plank-off; }
   .row .mile .bar i { @apply block h-full; width: 0; @apply bg-wood; }
   .row .cost { @apply relative flex min-h-[44px] min-w-[4.5rem] items-center justify-center gap-1 whitespace-nowrap rounded-xl border-[3px] border-ink bg-nugget px-2 py-1 text-base font-bold text-ink shadow-hard; }
   .row .cost .cb { @apply flex items-center gap-1; }
@@ -133,7 +133,8 @@ html, body {
   .row.flash { animation: flash 0.45s ease-out; }
 
   /* progression */
-  .goal { @apply overflow-hidden rounded-full border-[3px] border-ink bg-night; box-sizing: content-box; height: 8px; }
+  .goal { @apply relative overflow-hidden rounded-full border-[3px] border-ink bg-night; box-sizing: content-box; height: 20px; touch-action: manipulation; }
+  .goal-l { @apply absolute inset-0 grid place-items-center whitespace-nowrap text-sm font-bold leading-none text-cream; -webkit-text-stroke: 3px #1a100a; paint-order: stroke fill; }
   .goal-fill { @apply block h-full; background: #0f9490; width: 0; transition: width 0.25s linear; }
 
   /* pépites (2.17.0) : compteur de l'en-tête et panneau Bonus */
@@ -243,6 +244,8 @@ html, body {
   /* bâtiments possédés */
   .owned li { @apply relative grid h-11 w-11 place-items-center rounded-xl border-[3px] border-ink bg-cream; animation: bob 2.6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.4s); }
   .owned li svg { @apply h-8 w-8; }
+  .owned .ow { @apply grid h-full w-full place-items-center rounded-xl; touch-action: manipulation; }
+  .row.flash { outline: 4px solid #ffc21a; outline-offset: -2px; }
   .owned .n { @apply absolute -bottom-2 -right-1 rounded-lg border-2 border-ink bg-cream px-1 text-sm font-bold leading-tight; }
   .owned li.pop { animation: pop 0.4s ease-out; }
 
@@ -262,9 +265,11 @@ html, body {
   .bn[data-st="ready"] { animation: bnpulse 1.4s ease-in-out infinite; }
   .bn[data-st="cool"] .bn-ico { opacity: 0.45; }
   .bn-ico { @apply relative grid place-items-center; }
-  .bn-t { @apply absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border-2 border-ink bg-ink px-1 text-[12px] font-bold leading-tight text-cream; }
-  .bn-t[hidden], .bn-dot[hidden] { display: none; }
-  .bn-dot { @apply absolute -right-1 -top-1 h-[18px] w-[18px] rounded-full border-[3px] border-ink bg-rose; }
+  .bonus > li { @apply flex w-[5.25rem] flex-col items-center; }
+  .bn-n { @apply mt-1 max-w-full truncate text-[13px] font-bold leading-tight text-cream; -webkit-text-stroke: 3px #1a100a; paint-order: stroke fill; }
+  .bn-s { @apply rounded-lg border-2 border-ink bg-cream px-1.5 text-[13px] font-bold leading-tight text-ink; }
+  .bn-s[data-st="cool"] { @apply bg-plank-off; }
+  .bn-s[data-st="active"] { @apply bg-nugget; }
   .bn { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
   .tip { @apply pointer-events-none fixed z-50 max-w-[min(20rem,calc(100vw-1rem))] rounded-2xl border-[3px] border-ink bg-ink px-3 py-2 text-base font-bold leading-snug text-cream shadow-hard; }
   .tip[hidden] { display: none; }

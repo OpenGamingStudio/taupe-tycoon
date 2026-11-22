@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.18.0 — 2026-11-22 (V5, lot 5 : revue UI)
+- **En-tête sur 2 lignes** : la barre de gemme porte son libellé (« Gemme 2 % ») et sa longue explication passe en infobulle (appui long ou clic).
+- La bulle d'aide disparaît après 5 s. Boutons de bonus : nom + état (Prêt / compte à rebours / durée restante), plus de pastille rose.
+- Puces de créatures : toucher ouvre l'amélioration correspondante. Pastilles du dock : un « ! » seulement quand un achat est possible.
+- Boutique : prochain palier avec barre plus grosse et « encore N niv. ».
+
 ## 2.17.0 — 2026-11-22 (V5, lot 4 : pépites)
 - **Nouvelle monnaie « pépites »** (survit au rebirth, distincte des gemmes). Sources : 1 par palier de multiplicateur atteint (25, 50, 100…, à vie), 1 par pépite d'or cueillie (8 par heure au maximum), 1 à 3 par succès.
 - **Les bonus s'achètent en pépites** (Auto-tap 20/45/85, Turbo 24/55/100, Averse d'or 30/65/120), niveaux 1 à 3 : durée ×1,5 puis ×2, ou 12/18/24 gouttes. L'ancienne « Pluie de pépites » devient « Averse d'or ».
