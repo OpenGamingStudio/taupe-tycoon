@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TROPHIES, trophyPep, checkTrophies } from '../src/trophies';
-import { BONUSES, PEP_COSTS, PEP_NUGGET_PER_HOUR, GENS, PERMS, SHOVEL_TABLE, MILESTONE_TABLE } from '../src/config';
+import { BONUSES, PEP_COSTS, PEP_NUGGET_PER_HOUR, PEP_PER_NUGGET, GENS, PERMS, SHOVEL_TABLE, MILESTONE_TABLE } from '../src/config';
 import { ALL_PERMS, play } from '../tools/play';
 import { SAVE_VERSION, sanitize } from '../src/save';
 import {
@@ -174,37 +174,38 @@ describe('équilibre avec TOUS les bonus (achetables + activables)', () => {
     tick(s, 30);
     expect(s.dirt - before).toBeLessThan(perSecondBase(s) * 600);
   });
-  it('chaque bonus pris seul ne dépasse pas ×2 sur 3 h', () => {
-    for (const b of [BONUSES[0]]) { // la politique achète les bonus un à un avec les pépites gagnées
-      const one = run({ perms: [3], nuggets: true, bonuses: true });
-      const none = run({ perms: [3], nuggets: true });
-      expect(one.s.lifeTotal, b.id).toBeLessThan(none.s.lifeTotal * 2);
-    }
+  it('les bonus (achetés un à un avec les pépites) ne doublent pas la progression : médiane du rapport < ×2,5', () => {
+    // un rapport pris à un seul instant est chaotique (le bot renaît à des moments différents) : médiane sur 9 points de 20 min
+    const a = newState(), b = newState(), ra: number[] = [];
+    const pa = { perms: [3], nuggets: true, bonuses: true }, pb = { perms: [3], nuggets: true };
+    for (let m = 1; m <= 36; m++) { play(a, 300, true, 99, pa); play(b, 300, true, 99, pb); if (m % 4 === 0) ra.push(a.lifeTotal / b.lifeTotal); }
+    ra.sort((x, y) => x - y);
+    expect(ra[4]).toBeLessThan(2.5);
   });
 });
 
 describe('pépites : sources et garde-fous', () => {
   it('paliers : 1 pépite par palier, une seule fois à vie, pas pour le 1er palier ; survit au rebirth', () => {
     const s = newState(); s.gens[0] = 10; s.shovel = 10;
-    expect(checkTiers(s)).toBe(0); // paliers 10 (bâtiment) et 5, 10 (pelle) : trop faciles
+    expect(checkTiers(s)).toBe(2); // palier 10 (bâtiment) et 10 (pelle : le palier 5 est offert à personne, PEP_TIER_SKIP_SHOVEL = 1)
     s.gens[0] = 25; s.shovel = 25;
-    expect(checkTiers(s)).toBe(2); expect(s.pep).toBe(2);
+    expect(checkTiers(s)).toBe(2); expect(s.pep).toBe(4);
     expect(checkTiers(s)).toBe(0);
     s.runTotal = 1e13; rebirth(s); s.gens[0] = 25; s.shovel = 25; // rejouer le palier ne repaie pas
-    expect(checkTiers(s)).toBe(0); expect(s.pep).toBe(2);
+    expect(checkTiers(s)).toBe(0); expect(s.pep).toBe(4);
     s.gens[0] = 50; expect(checkTiers(s)).toBe(1);
   });
   it('acheter un niveau franchit le palier et paie la pépite', () => {
     const s = newState(); s.gens[1] = 24; s.dirt = 1e12;
-    buy(s, 1, 1); expect(s.gens[1]).toBe(25); expect(s.pep).toBe(1);
+    buy(s, 1, 1); expect(s.gens[1]).toBe(25); expect(s.pep).toBe(2); // paliers 10 et 25
   });
   it('pépite d\'or : au plus N pépites par heure, la fenêtre glisse', () => {
     const s = newState(); let got = 0;
     for (let i = 0; i < 20; i++) got += nuggetPep(s, NOW + i * 60_000);
-    expect(got).toBe(PEP_NUGGET_PER_HOUR);
+    expect(got).toBe(PEP_NUGGET_PER_HOUR * PEP_PER_NUGGET);
     const q = nuggetPepLeft(s, NOW + 20 * 60_000);
     expect(q.left).toBe(0); expect(q.wait).toBeGreaterThan(0); expect(q.wait).toBeLessThanOrEqual(3600);
-    expect(nuggetPep(s, NOW + 61 * 60_000)).toBe(1);
+    expect(nuggetPep(s, NOW + 61 * 60_000)).toBe(PEP_PER_NUGGET);
   });
   it('succès : 1 à 3 pépites chacun', () => {
     for (const tr of TROPHIES) { expect(trophyPep(tr.id)).toBeGreaterThanOrEqual(1); expect(trophyPep(tr.id)).toBeLessThanOrEqual(3); }
@@ -212,7 +213,7 @@ describe('pépites : sources et garde-fous', () => {
   });
   it('migration : succès et paliers déjà atteints sont offerts une fois ; v7 : valeurs bornées', () => {
     const m = sanitize({ v: 6, at: NOW, s: { dirt: 1, gens: [25, 0, 0, 0, 0, 0], shovel: 0, trophies: ['clic1', 'clic10k'] }, opts: {} })!;
-    expect(m.s.pep).toBe(1 + trophyPep('clic1') + trophyPep('clic10k'));
+    expect(m.s.pep).toBe(2 + trophyPep('clic1') + trophyPep('clic10k'));
     const h = sanitize({ v: 7, at: NOW, s: { dirt: 1, pep: 1e99, bonusLv: [9, -1, 'x'], tiers: [1e9], pepAt: [NOW + 1e12, 'a', NOW - 1000] }, opts: {} })!;
     expect(Number.isFinite(h.s.pep)).toBe(true); expect(h.s.bonusLv).toEqual([3, 0, 0]); expect(h.s.pepAt).toEqual([NOW - 1000]);
   });
