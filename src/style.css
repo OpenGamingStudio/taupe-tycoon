@@ -130,7 +130,7 @@ html, body {
   .row.is-max .tile { overflow: visible; }
   .row.is-max .plate { border-radius: 27px 27px 5px 5px; }
   .row.hot { animation: nudge 1.1s ease-in-out infinite; }
-  .row.flash { animation: flash 0.45s ease-out; }
+  .row.row-flash { animation: row-flash 0.45s ease-out; }
 
   /* progression */
   .goal { @apply relative overflow-hidden rounded-full border-[3px] border-ink bg-night; box-sizing: content-box; height: 20px; touch-action: manipulation; }
@@ -245,7 +245,7 @@ html, body {
   .owned li { @apply relative grid h-11 w-11 place-items-center rounded-xl border-[3px] border-ink bg-cream; animation: bob 2.6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.4s); }
   .owned li svg { @apply h-8 w-8; }
   .owned .ow { @apply grid h-full w-full place-items-center rounded-xl; touch-action: manipulation; }
-  .row.flash { outline: 4px solid #ffc21a; outline-offset: -2px; }
+  .row.row-flash { outline: 4px solid #ffc21a; outline-offset: -2px; }
   .owned .n { @apply absolute -bottom-2 -right-1 rounded-lg border-2 border-ink bg-cream px-1 text-sm font-bold leading-tight; }
   .owned li.pop { animation: pop 0.4s ease-out; }
 
@@ -338,7 +338,7 @@ html, body {
 @keyframes ftap { 0%, 100% { transform: translate(0, 0) rotate(-12deg); } 50% { transform: translate(-6px, 10px) rotate(-12deg); } }
 @keyframes dropfall { from { transform: translateY(0); } to { transform: translateY(calc(var(--fall, 600px) * 1.05 + 64px)); } }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
-@keyframes flash { 0% { background: #ffc21a; } 100% { background: var(--acc); } }
+@keyframes row-flash { 0% { background: #ffc21a; } 100% { background: var(--acc); } }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 10px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
 @keyframes wave { from { transform: scale(0.5); opacity: 0.9; } to { transform: scale(40); opacity: 0; } }
 @keyframes shard { 0% { transform: translate(0, 0) rotate(0) scale(0.5); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.2); opacity: 0; } }
@@ -391,7 +391,7 @@ html.reduced *, html.reduced *::before, html.reduced *::after { animation: none 
 html.reduced .decor .d-rain, html.reduced .decor .d-snow { display: none; }
 @media (prefers-reduced-motion: reduce) { .decor .d-rain, .decor .d-snow { display: none; } }
 /* éclair de récompense (2.16.0) : aplat plein cadre qui s'efface, jamais en mouvements réduits */
-.flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; animation: flash 0.45s ease-out forwards; }
+#stage-fx .flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; animation: flash 0.45s ease-out forwards; }
 @keyframes flash { 0% { opacity: .5; } 100% { opacity: 0; } }
-html.reduced .flash { display: none; }
-@media (prefers-reduced-motion: reduce) { .flash { display: none; } }
+html.reduced #stage-fx .flash { display: none; }
+@media (prefers-reduced-motion: reduce) { #stage-fx .flash { display: none; } }

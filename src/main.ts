@@ -133,7 +133,7 @@ function milestoneHit(r: Row, level: number) {
 
 function bought(r: Row, perm: boolean) {
   if (perm) sfx.upgrade(); else sfx.buy();
-  r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
+  r.el.classList.remove('row-flash'); void r.el.offsetWidth; r.el.classList.add('row-flash');
   mood('happy', 800);
   render();
 }
@@ -291,7 +291,7 @@ function renderOwned() {
     bt.className = 'ow';
     bt.setAttribute('aria-label', t('owned', { name: t(g.id), n: f(s.gens[i]) }) + '. ' + t('ownedOpen'));
     bt.innerHTML = `${icon(g.id, 'h-8 w-8')}<span class="n" aria-hidden="true">${f(s.gens[i])}</span>`;
-    bt.addEventListener('click', () => { openPanel('dig', false); const r = rows[i + 1]; r?.el.scrollIntoView({ block: 'center' }); r?.el.classList.add('flash'); window.setTimeout(() => r?.el.classList.remove('flash'), 900); });
+    bt.addEventListener('click', () => { openPanel('dig', false); const r = rows[i + 1]; r?.el.scrollIntoView({ block: 'center' }); r?.el.classList.add('row-flash'); window.setTimeout(() => r?.el.classList.remove('row-flash'), 900); });
     li.append(bt);
     if ((ownedPrev[i] ?? 0) < s.gens[i] && ownedPrev.length) li.classList.add('pop');
     ul.append(li);
