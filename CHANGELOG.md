@@ -2,6 +2,11 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.16.0 — 2026-11-22 (V5, lot 3 : effets de récompense)
+- **Étoiles à contour, ondes de choc et éclairs d'écran** (aplats) sur les vraies récompenses : coup critique (étoiles + onde rouge), palier de niveaux (étoiles, onde et éclair doré), trophée, pépite d'or (le trésor ajoute un éclair), gemme prête (étoiles turquoise sur la barre).
+- **Renaissance : feu d'artifice** (5 gerbes échelonnées d'étincelles, d'étoiles et d'ondes) avec éclair turquoise.
+- Mouvements réduits : éclairs et ondes coupés, étoiles réduites à quelques-unes immobiles. Nombre de particules toujours borné par le plafond existant.
+
 ## 2.15.0 — 2026-11-22 (V5, lot 2 : décor vivant)
 - **Cycle jour/nuit** (4 min : jour, soir, nuit, aube) tiré de l'horloge, sans sauvegarde : ciel qui s'assombrit en aplat, étoiles, lune, lucioles et chauve-souris la nuit.
 - **Météo** (cycle de 6 min : clair, pluie, neige) : gouttes et flocons animés en CSS, ciel plus sombre sous la pluie.

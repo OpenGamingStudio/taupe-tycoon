@@ -112,7 +112,7 @@ function milestoneHit(r: Row, level: number) {
   const sub = t(r.kind < 0 ? 'mileSubShovel' : 'mileSub', { name: t(r.id), n: level, m: milestoneMult(level, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE) / milestoneMult(level - 1, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE) });
   say(`${t('mileBanner')} ${sub}`);
   banner('gem', t('mileBanner'), sub);
-  const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.35, 60); shake(2); vibe([30, 40, 60]);
+  const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.35, 60); jfx.stars(b.width / 2, b.height * 0.35, 14); jfx.shock(b.width / 2, b.height * 0.35, '#ffc21a'); flash('#ffe27a'); shake(2); vibe([30, 40, 60]);
 }
 
 function bought(r: Row, perm: boolean) {
@@ -188,6 +188,15 @@ function coinsToHud(x: number, y: number, n: number, kind: 'dirt' | 'gold' | 'ge
     bump(kind === 'gem' ? 'ico-gem' : 'hud');
     if (now - landAt > 70) { landAt = now; sfx.pickup(i); }
   });
+}
+/** Éclair d'écran en aplat (jamais en mouvement réduit) : un seul à la fois, couleur de la récompense. */
+function flash(color: string) {
+  if (reducedMotion()) return;
+  stageFx.querySelector('.flash')?.remove();
+  const el = document.createElement('div');
+  el.className = 'flash'; el.style.backgroundColor = color;
+  stageFx.append(el);
+  el.addEventListener('animationend', () => el.remove());
 }
 let shakeT = 0;
 function shake(level: 1 | 2 | 3) {
@@ -311,6 +320,7 @@ function render() {
   if (goalPrev >= 0 && pend > goalPrev) {
     notify(t('goalUp', { n: pend, g: Math.round(GEM_BONUS * 100 * pend) }));
     const gb = $('goal'); gb.classList.remove('goal-pop'); void gb.offsetWidth; if (!reducedMotion()) gb.classList.add('goal-pop');
+    { const [gx, gy] = centerOf('goal'); jfx.stars(gx, gy, 10, '#20c5c0'); jfx.shock(gx, gy, '#9ff5ee'); }
     sfx.upgrade();
   }
   goalPrev = pend;
@@ -524,6 +534,7 @@ function dig(e: PointerEvent | MouseEvent | KeyboardEvent) {
   const x = hasPos ? (e as MouseEvent).clientX - box.left : box.width / 2;
   const y = hasPos ? (e as MouseEvent).clientY - box.top : box.height * 0.6;
   burst(p, x, y, crit);
+  if (crit) { jfx.stars(x, y, 7, '#ff5a3c'); jfx.shock(x, y, '#ff5a3c'); }
   coinsToHud(x, y, 1, 'dirt');
   if (p >= s.dirt * 0.2 && p > 50) { shake(1); jfx.sparks(x, y, 10, '#ffc21a'); }
   vibe(8);
@@ -589,7 +600,7 @@ function awardTrophies(quiet = false) {
   if (!fresh.length) return;
   if (quiet) return;
   sfx.trophy();
-  { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.3, 40); }
+  { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.3, 40); jfx.stars(b.width / 2, b.height * 0.3, 10, '#ff7aa8'); flash('#ffffff'); }
   banner(fresh.length === 1 ? fresh[0].icon : 'trophy', t('trophyBanner'), fresh.length === 1 ? trophyName(fresh[0].id)[lang()][0] : t('trophiesMany', { n: fresh.length }));
 }
 
@@ -623,7 +634,7 @@ nuggetEl.addEventListener('click', () => {
   const kind = rollEvent(s, Math.random());
   const got = applyEvent(s, kind);
   sfx.nuggetCatch();
-  { const b = nuggetEl.getBoundingClientRect(), o = fxBox(); const nx = b.left - o.left + b.width / 2, ny = b.top - o.top + b.height / 2; coinsToHud(nx, ny, kind === 'treasure' ? 14 : 8, 'gold'); jfx.confetti(nx, ny, 26); jfx.sparks(nx, ny, 14, '#ffc21a'); }
+  { const b = nuggetEl.getBoundingClientRect(), o = fxBox(); const nx = b.left - o.left + b.width / 2, ny = b.top - o.top + b.height / 2; coinsToHud(nx, ny, kind === 'treasure' ? 14 : 8, 'gold'); jfx.confetti(nx, ny, 26); jfx.sparks(nx, ny, 14, '#ffc21a'); jfx.stars(nx, ny, kind === 'treasure' ? 12 : 6); jfx.shock(nx, ny, '#ffc21a'); if (kind === 'treasure') flash('#ffe27a'); }
   vibe([20, 30, 40]);
   mood('happy', 800);
   notify(kind === 'rush' ? t('nuggetRush') : kind === 'genius' ? t('nuggetGenius') : t('nuggetTreasure', { n: f(got) }));
@@ -889,7 +900,7 @@ function twoTap(btn: HTMLElement, key: string, action: () => void) {
     i18nStatic(); render();
   });
 }
-twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.4, 90); coinsToHud(b.width / 2, b.height * 0.5, 10, 'gem'); shake(3); vibe([40, 40, 80]); } notify(t('rebirthDone', { n: g })); } });
+twoTap($('rb-go'), 'rebirthConfirm', () => { const g = rebirth(s); if (g > 0) { awardTrophies(); persist(); sfx.rebirth(); rebirthFx(); { const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.4, 90); jfx.fireworks(b.width / 2, b.height * 0.3, b.width); coinsToHud(b.width / 2, b.height * 0.5, 10, 'gem'); flash('#9ff5ee'); shake(3); vibe([40, 40, 80]); } notify(t('rebirthDone', { n: g })); } });
 twoTap($('opt-reset'), 'resetConfirm', () => {
   wipe(); s = newState(); lastWall = Date.now(); nuggetIn = 45; nuggetLeft = 0; nuggetEl.hidden = true;
   say(t('resetDone')); persist();

@@ -6,7 +6,7 @@
 export type CoinKind = 'dirt' | 'gold' | 'gem';
 
 interface P {
-  t: 'coin' | 'confetti' | 'spark';
+  t: 'coin' | 'confetti' | 'spark' | 'star' | 'shock';
   x: number; y: number; vx: number; vy: number; a: number; va: number; age: number; life: number; c: string; s: number;
   kind?: CoinKind; land?: () => void; delay?: number;
 }
@@ -20,6 +20,12 @@ export interface Fx {
   coins(x: number, y: number, n: number, kind: CoinKind, target: () => [number, number], onLand: (i: number) => void): void;
   confetti(x: number, y: number, n: number): void;
   sparks(x: number, y: number, n: number, color?: string): void;
+  /** Étoiles à contour qui jaillissent puis retombent (récompenses), aplats. */
+  stars(x: number, y: number, n: number, color?: string): void;
+  /** Onde de choc : un anneau qui s'élargit et s'efface. */
+  shock(x: number, y: number, color?: string): void;
+  /** Feu d'artifice : plusieurs gerbes d'étoiles et d'étincelles échelonnées autour du point. */
+  fireworks(x: number, y: number, w: number): void;
   setReduced(r: boolean): void;
   resize(): void;
   /** Vide les particules et relance la boucle si elle est morte (garde-fou). */
@@ -115,6 +121,19 @@ export function createFx(canvas: HTMLCanvasElement): Fx {
         g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.globalAlpha = Math.min(1, (p.life - p.age) * 3);
         g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s * 0.3 * Math.abs(Math.cos(p.age * 9 + p.va)) - 1, p.s, p.s * 0.6 * Math.abs(Math.cos(p.age * 9 + p.va)) + 2);
         g.restore();
+      } else if (p.t === 'star') {
+        p.vy += 520 * dt; p.vx *= 1 - dt * 1.4; p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt;
+        if (p.age > p.life || p.y > H + 20) { ps.splice(i, 1); return; }
+        g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.globalAlpha = Math.min(1, (p.life - p.age) * 3);
+        g.lineWidth = 2.5; g.strokeStyle = INK; g.fillStyle = p.c; g.lineJoin = 'round';
+        g.beginPath();
+        for (let j = 0; j < 10; j++) { const r = j % 2 ? p.s * 0.45 : p.s, an = (j * Math.PI) / 5 - Math.PI / 2; g.lineTo(Math.cos(an) * r, Math.sin(an) * r); }
+        g.closePath(); g.fill(); g.stroke(); g.restore();
+      } else if (p.t === 'shock') {
+        const k = p.age / p.life;
+        if (k >= 1) { ps.splice(i, 1); return; }
+        g.save(); g.globalAlpha = 1 - k; g.lineWidth = 7 * (1 - k) + 2; g.strokeStyle = p.c;
+        g.beginPath(); g.arc(p.x, p.y, 10 + p.s * k, 0, 6.283); g.stroke(); g.restore();
       } else {
         p.vy += 260 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
         if (p.age > p.life) { ps.splice(i, 1); return; }
@@ -162,6 +181,30 @@ export function createFx(canvas: HTMLCanvasElement): Fx {
       for (let i = 0; i < n; i++) {
         const a = rnd(0, 6.283), sp = rnd(50, 190);
         push({ t: 'spark', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 50, a: 0, va: 0, age: 0, life: rnd(0.3, 0.6), c: i % 2 ? color : '#ffffff', s: rnd(3, 6) });
+      }
+    },
+    stars(x, y, n, color = '#ffc21a') {
+      const count = reduced ? Math.min(n, 3) : n;
+      for (let i = 0; i < count; i++) {
+        const a = rnd(-Math.PI * 0.95, -Math.PI * 0.05), sp = reduced ? 40 : rnd(140, 380);
+        push({ t: 'star', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, a: rnd(0, 6.28), va: reduced ? 0 : rnd(-8, 8), age: 0, life: rnd(0.9, 1.5), c: i % 3 ? color : '#ffffff', s: rnd(7, 12) });
+      }
+    },
+    shock(x, y, color = '#ffffff') {
+      if (reduced) return;
+      push({ t: 'shock', x, y, vx: 0, vy: 0, a: 0, va: 0, age: 0, life: 0.5, c: color, s: 90 });
+    },
+    fireworks(x, y, w) {
+      if (reduced) { this.stars(x, y, 6); return; }
+      const cols = ['#ffc21a', '#ff7aa8', '#20c5c0', '#ffffff', '#e8503a'];
+      for (let b = 0; b < 5; b++) {
+        const bx = x + (b - 2) * Math.min(70, w / 7), by = y - 40 + (b % 2) * 50, d = b * 0.18;
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * 6.283, sp = rnd(120, 230);
+          push({ t: 'spark', x: bx, y: by, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, a: 0, va: 0, age: 0, life: rnd(0.5, 0.9), c: cols[(b + i) % cols.length], s: rnd(4, 7), delay: d });
+        }
+        push({ t: 'star', x: bx, y: by, vx: 0, vy: -60, a: 0, va: 3, age: 0, life: 1.1, c: cols[b % cols.length], s: 12, delay: d });
+        push({ t: 'shock', x: bx, y: by, vx: 0, vy: 0, a: 0, va: 0, age: 0, life: 0.5, c: cols[b % cols.length], s: 60, delay: d });
       }
     },
     setReduced(r) { reduced = r; },
