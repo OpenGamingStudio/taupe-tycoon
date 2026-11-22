@@ -11,7 +11,7 @@ function pen() {
 describe('machines du décor', () => {
   it('le palier suit les paliers de production', () => {
     expect([0, 1, 9, 10, 24, 25, 49, 50, 99, 100, 500].map(tierOf)).toEqual([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
-    expect(MILESTONES).toEqual([10, 25, 50, 100]);
+    expect(MILESTONES.slice(0, 4)).toEqual([10, 25, 50, 100]); // l'aspect des machines s'arrête au palier 4
   });
   it('au moins un exemplaire par type possédé, jamais plus que le nombre réel ni que la place', () => {
     expect(shownMachines(0, 5)).toBe(0);

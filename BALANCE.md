@@ -23,3 +23,16 @@ renaît quand il le juge rentable. Variantes : sans pépites, et une politique d
 
 ## Limites
 Le bot joue en actif : la Sacoche (hors ligne) n'est pas mesurée. Pas de joueur humain testé.
+
+
+# V5 (2.13.0) : paliers, clic, bonus
+Avant -> après (bot, 4 clics/s, `tools/play.ts`) :
+| mesure | avant (2.12.1) | après (2.13.0) |
+|---|---|---|
+| bonus à recharge | 5 (auto, turbo, ruée, pluie, gain instantané) | 3 (auto, turbo, pluie) |
+| multiplicateur de paliers au niv. 100 / 200 / 500 | ×16 / ×16 / ×16 | ×36 / ×576 / ×115 200 |
+| clic à 10 min (taupes 14/13/7/4/2/0, pelle 56) | 1 800 (x4 = 14 % du revenu) | 12 000 (x4 = 53 % du revenu) |
+| premier rebirth, avec / sans pépites | 25,7 / 39,2 min | 29,4 / 42,1 min |
+| 3 h : rebirths, gemmes | 31, 7 257 | 17, 172 (`GEM_DIV` 3e9) |
+| runs suivantes | 19, 14, 10, 12, 9, 5, 2... min | 20, 17, 13, 16, 13, 8, 6... min |
+Garde-fous : `tests/bonus.test.ts` (tous les bonus, Auto-tap compris, < +80 % de la production sur 4 profils, aucun > 45 %), `tests/features.test.ts` (paliers >= ×30 au niv. 100, clic >= 30 % du revenu passif).

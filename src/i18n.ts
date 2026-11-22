@@ -1,4 +1,4 @@
-import { AUTO_RATE, BONUSES, BURST_SEC, CREW_MULT, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from './config';
+import { AUTO_RATE, BONUSES, SHOVEL_PS, SHOVEL_POWER, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from './config';
 
 /** Durées d'effet des bonus (s), tirées de config.ts : une seule source pour le jeu et les textes. */
 const D = Object.fromEntries(BONUSES.map((b) => [b.id, b.dur])) as Record<string, number>;
@@ -15,14 +15,14 @@ export const T: Record<Lang, Dict> = {
     nuggetRush: 'Ruée ! Production ×3 pendant 20 s', nuggetGenius: 'Coup de génie ! Clic ×5 pendant 15 s', nuggetTreasure: 'Trésor ! +{n} terre',
     buffRush: 'Ruée ×3', buffGenius: 'Génie ×5', buffLeft: '{name} : {s} s',
     statsTitle: 'Statistiques', sDirt: 'Terre creusée', sClicks: 'Coups de pelle', sTime: 'Temps de jeu', sBest: 'Meilleur run', sGems: 'Gemmes gagnées', sCaught: 'Pépites cueillies', sBuildings: 'Bâtiments', sRebirths: 'Rebirths', sNone: '—',
-    nextMile: 'Palier niv. {n} : prod. ×2', nextMileShovel: 'Palier niv. {n} : clic ×2', allMiles: 'Tous les paliers atteints', mileNow: 'Paliers : ×{m}',
+    nextMile: 'Palier niv. {n} : prod. ×{m}', nextMileShovel: 'Palier niv. {n} : clic ×{m}', allMiles: 'Tous les paliers atteints', mileNow: 'Paliers : ×{m}',
     welcomeTitle: 'Bon retour !', welcomeText: 'Ta taupe a creusé pendant {t}.', welcomeGain: '+{n} terre', welcomeCap: 'Gains hors-ligne plafonnés à {c} (la Sacoche en ajoute).', welcomeCapped: 'Tu es resté plus longtemps que le plafond de {c} : le reste est perdu. La Sacoche l’augmente.', welcomeOk: 'Super !',
     volume: 'Volume', ambient: 'Ambiance sonore', exportBtn: 'Exporter la sauvegarde', importBtn: 'Importer une sauvegarde', ioLabel: 'Texte de sauvegarde', ioCopied: 'Sauvegarde copiée.', ioShown: 'Sauvegarde affichée : copie-la à la main.', importOk: 'Sauvegarde importée.', importBad: 'Texte invalide : rien n’a changé.', importConfirm: 'Confirmer : remplace la partie', otherTab: 'Le jeu est ouvert dans un autre onglet : cette fenêtre ne sauvegarde plus. Recharge la page.',
     title: 'Taupe Tycoon', dirt: 'Terre', perSec: 'par seconde', gems: 'Gemmes',
     dig: 'Creuser !', digLabel: 'Creuser avec la pelle : +{n} terre',
     tabDig: 'Mine', tabRebirth: 'Rebirth', tabOptions: 'Options',
     buy: 'Acheter', mode: 'Quantité', max: 'Max', level: 'Niv.', cost: 'Coût', each: 'par clic',
-    shovel: 'Pelle renforcée', shovelD: '+10 terre par clic',
+    shovel: 'Pelle renforcée', shovelD: `+${SHOVEL_POWER} terre par clic, plus ${SHOVEL_PS * 100} % de ta production par seconde, par niveau`,
     apprentie: 'Taupe apprentie', apprentieD: 'Creuse toute seule, doucement.',
     taupiniere: 'Taupinière', taupiniereD: 'Une famille entière de creuseuses.',
     foreuse: 'Foreuse à vapeur', foreuseD: 'Pschhh ! Ça perce le roc.',
@@ -52,11 +52,9 @@ export const T: Record<Lang, Dict> = {
     bonusBar: 'Bonus à recharge', bonusReady: '{name} : prêt', bonusCool: '{name} : prêt dans {t}', bonusActive: '{name} : actif, encore {s} s', bonusReadyN: '{n} bonus prêt(s)',
     bAuto: 'Auto-tap', bAutoD: `La taupe creuse toute seule, ${AUTO_RATE} coups par seconde pendant ${D.auto} s.`,
     bTurbo: 'Turbo ×2', bTurboD: `Tous tes gains (clics et production) ×${TURBO_MULT} pendant ${D.turbo} s.`,
-    bCrew: 'Ruée d’ouvrières', bCrewD: `Production de tous les bâtiments ×${CREW_MULT} pendant ${D.crew} s.`,
     bRain: 'Pluie de pépites', bRainD: `${RAIN_COUNT} pépites tombent du ciel : attrape-les (${RAIN_SEC} s de production chacune).`,
-    bBurst: 'Gain instantané', bBurstD: `Reçois tout de suite ${BURST_SEC / 60} minutes de production.`,
-    bonusHelpTitle: 'Aide : les bonus', bonusHelpIntro: 'Appuie sur un bonus quand il pulse. Il se recharge ensuite (5 à 10 min), même quand le jeu est fermé.', bonusCd: 'Recharge : {t}',
-    bonusUsed: '{name} !', bonusBurst: 'Gain instantané : +{n} terre', bonusRainEnd: 'Pluie finie : {n} pépite(s) attrapée(s)', bonusRainLabel: 'Pépite : attrape-la',
+    bonusHelpTitle: 'Aide : les bonus', bonusHelpIntro: 'Appuie sur un bonus quand il pulse. Il se recharge ensuite (5 à 7 min), même quand le jeu est fermé.', bonusCd: 'Recharge : {t}',
+    bonusUsed: '{name} !', bonusRainEnd: 'Pluie finie : {n} pépite(s) attrapée(s)', bonusRainLabel: 'Pépite : attrape-la',
   },
   en: {
     tabStats: 'Stats', panelDig: 'Upgrades', close: 'Close', hintOpen: 'Open the Mine to buy!', badgeBuy: '{n} purchase(s) available',
@@ -66,14 +64,14 @@ export const T: Record<Lang, Dict> = {
     nuggetRush: 'Rush! Production ×3 for 20 s', nuggetGenius: 'Stroke of genius! Clicks ×5 for 15 s', nuggetTreasure: 'Treasure! +{n} dirt',
     buffRush: 'Rush ×3', buffGenius: 'Genius ×5', buffLeft: '{name}: {s} s',
     statsTitle: 'Statistics', sDirt: 'Dirt dug', sClicks: 'Digs', sTime: 'Play time', sBest: 'Best run', sGems: 'Gems earned', sCaught: 'Nuggets caught', sBuildings: 'Buildings', sRebirths: 'Rebirths', sNone: '—',
-    nextMile: 'Milestone lv. {n}: output ×2', nextMileShovel: 'Milestone lv. {n}: clicks ×2', allMiles: 'All milestones reached', mileNow: 'Milestones: ×{m}',
+    nextMile: 'Milestone lv. {n}: output ×{m}', nextMileShovel: 'Milestone lv. {n}: clicks ×{m}', allMiles: 'All milestones reached', mileNow: 'Milestones: ×{m}',
     welcomeTitle: 'Welcome back!', welcomeText: 'Your mole dug for {t}.', welcomeGain: '+{n} dirt', welcomeCap: 'Offline earnings are capped at {c} (the Satchel adds more).', welcomeCapped: 'You were away longer than the {c} cap: the rest is lost. The Satchel raises it.', welcomeOk: 'Great!',
     volume: 'Volume', ambient: 'Ambient sound', exportBtn: 'Export save', importBtn: 'Import a save', ioLabel: 'Save text', ioCopied: 'Save copied.', ioShown: 'Save shown: copy it by hand.', importOk: 'Save imported.', importBad: 'Invalid text: nothing changed.', importConfirm: 'Confirm: replaces your game', otherTab: 'The game is open in another tab: this window no longer saves. Reload the page.',
     title: 'Taupe Tycoon', dirt: 'Dirt', perSec: 'per second', gems: 'Gems',
     dig: 'Dig!', digLabel: 'Dig with the shovel: +{n} dirt',
     tabDig: 'Mine', tabRebirth: 'Rebirth', tabOptions: 'Options',
     buy: 'Buy', mode: 'Amount', max: 'Max', level: 'Lv.', cost: 'Cost', each: 'per click',
-    shovel: 'Stronger shovel', shovelD: '+10 dirt per click',
+    shovel: 'Stronger shovel', shovelD: `+${SHOVEL_POWER} dirt per click, plus ${SHOVEL_PS * 100} % of your output per second, per level`,
     apprentie: 'Apprentice mole', apprentieD: 'Digs on its own, slowly.',
     taupiniere: 'Molehill', taupiniereD: 'A whole family of diggers.',
     foreuse: 'Steam drill', foreuseD: 'Pshhh! It bores through rock.',
@@ -103,11 +101,9 @@ export const T: Record<Lang, Dict> = {
     bonusBar: 'Cooldown boosts', bonusReady: '{name}: ready', bonusCool: '{name}: ready in {t}', bonusActive: '{name}: active, {s} s left', bonusReadyN: '{n} boost(s) ready',
     bAuto: 'Auto-tap', bAutoD: `The mole digs by itself, ${AUTO_RATE} hits per second for ${D.auto} s.`,
     bTurbo: 'Turbo ×2', bTurboD: `All your earnings (clicks and production) ×${TURBO_MULT} for ${D.turbo} s.`,
-    bCrew: 'Worker rush', bCrewD: `Output of every building ×${CREW_MULT} for ${D.crew} s.`,
     bRain: 'Nugget rain', bRainD: `${RAIN_COUNT} nuggets fall from the sky: catch them (${RAIN_SEC} s of production each).`,
-    bBurst: 'Instant gain', bBurstD: `Get ${BURST_SEC / 60} minutes of production right now.`,
-    bonusHelpTitle: 'Help: boosts', bonusHelpIntro: 'Tap a boost when it pulses. It then recharges (5 to 10 min), even while the game is closed.', bonusCd: 'Cooldown: {t}',
-    bonusUsed: '{name}!', bonusBurst: 'Instant gain: +{n} dirt', bonusRainEnd: 'Rain over: {n} nugget(s) caught', bonusRainLabel: 'Nugget: catch it',
+    bonusHelpTitle: 'Help: boosts', bonusHelpIntro: 'Tap a boost when it pulses. It then recharges (5 to 7 min), even while the game is closed.', bonusCd: 'Cooldown: {t}',
+    bonusUsed: '{name}!', bonusRainEnd: 'Rain over: {n} nugget(s) caught', bonusRainLabel: 'Nugget: catch it',
   },
 };
 

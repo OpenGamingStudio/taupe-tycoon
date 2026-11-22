@@ -1,8 +1,8 @@
 import {
   GEM_BONUS, GEM_DIV, GENS, GROWTH, OFFLINE_BASE, OFFLINE_STEP, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, PECULE_SEC, PECULE_MIN,
-  CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER, MILESTONES, MILESTONE_MULT, TROPHY_BONUS,
+  CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER, MILESTONE_TABLE, SHOVEL_TABLE, SHOVEL_PS, TROPHY_BONUS,
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
-  BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, CREW_MULT, RAIN_COUNT, RAIN_SEC, RAIN_CLICKS, BURST_SEC, BURST_CLICKS,
+  BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, RAIN_SEC, RAIN_CLICKS,
 } from './config';
 
 export interface State {
@@ -29,7 +29,6 @@ export interface State {
   auto: number; // secondes restantes d'Auto-tap
   autoAcc: number; // taps en attente (fraction, < 1)
   turbo: number; // secondes restantes de Turbo (gains ×2)
-  crew: number; // secondes restantes de Ruée d'ouvrières (production ×2)
 }
 
 export function newState(): State {
@@ -37,7 +36,7 @@ export function newState(): State {
     dirt: 0, runTotal: 0, lifeTotal: 0, gems: 0, gemsEarned: 0, rebirths: 0, shovel: 0,
     gens: GENS.map(() => 0), perms: PERMS.map(() => 0), clicks: 0, runTime: 0,
     playTime: 0, bestRun: 0, caught: 0, trophies: [], lastPs: 0, rush: 0, genius: 0,
-    ready: BONUSES.map(() => 0), auto: 0, autoAcc: 0, turbo: 0, crew: 0,
+    ready: BONUSES.map(() => 0), auto: 0, autoAcc: 0, turbo: 0,
   };
 }
 
@@ -45,19 +44,22 @@ const permLevel = (s: State, id: string) => s.perms[PERMS.findIndex((p) => p.id 
 
 export const gemMult = (s: State) => 1 + GEM_BONUS * s.gemsEarned;
 export const trophyMult = (s: State) => 1 + TROPHY_BONUS * s.trophies.length;
-/** Multiplicateur de palier : ×2 par seuil de MILESTONES atteint. */
-export const milestoneMult = (level: number) => Math.pow(MILESTONE_MULT, MILESTONES.filter((m) => level >= m).length);
-/** Prochain seuil de palier au-dessus de `level`, ou null. */
-export const nextMilestone = (level: number) => MILESTONES.find((m) => m > level) ?? null;
+/** Multiplicateur de palier : produit des multiplicateurs de la table dont le seuil est atteint (bâtiments : MILESTONE_TABLE, pelle : SHOVEL_TABLE). */
+export const milestoneMult = (level: number, table: [number, number][] = MILESTONE_TABLE) =>
+  table.reduce((a, [lv, m]) => (level >= lv ? a * m : a), 1);
+/** Prochain palier au-dessus de `level` : [seuil, multiplicateur], ou null. */
+export const nextMilestone = (level: number, table: [number, number][] = MILESTONE_TABLE) => table.find((m) => m[0] > level) ?? null;
+/** Nombre de paliers atteints. */
+export const milestoneCount = (level: number, table: [number, number][] = MILESTONE_TABLE) => table.filter((m) => level >= m[0]).length;
 /** Multiplicateur permanent de production (sans les bonus temporaires). */
 export const prodMult = (s: State) => gemMult(s) * trophyMult(s) * (1 + PERM_PROD_BONUS * permLevel(s, 'lunettes'));
-export const clickBase = (s: State) =>
-  (CLICK_BASE + SHOVEL_POWER * s.shovel) * milestoneMult(s.shovel) * gemMult(s);
+export const shovelBase = (s: State, lvl = s.shovel) => (CLICK_BASE + SHOVEL_POWER * lvl) * milestoneMult(lvl, SHOVEL_TABLE) * gemMult(s);
+export const clickBase = (s: State) => shovelBase(s);
 /** Gain d'un clic : base + part de la production (Pelle en or), ×5 pendant « Coup de génie ». */
 export const clickPower = (s: State) =>
   clickRaw(s) * (s.genius > 0 ? GENIUS_MULT : 1) * (s.turbo > 0 ? TURBO_MULT : 1);
 /** Gain d'un clic sans bonus temporaire. */
-export const clickRaw = (s: State) => clickBase(s) + PERM_CLICK_PS * permLevel(s, 'pelleor') * perSecondBase(s);
+export const clickRaw = (s: State, lvl = s.shovel) => shovelBase(s, lvl) + (PERM_CLICK_PS * permLevel(s, 'pelleor') + SHOVEL_PS * lvl) * perSecondBase(s);
 /** Gain d'un tap de l'Auto-tap : comme un clic, mais la part de production (Pelle en or) est plafonnée à AUTO_PS_CAP. */
 export const autoTapRaw = (s: State) =>
   clickBase(s) + Math.min(PERM_CLICK_PS * permLevel(s, 'pelleor'), AUTO_PS_CAP) * perSecondBase(s);
@@ -68,7 +70,7 @@ export const genProdAt = (s: State, i: number, level: number) =>
   GENS[i].prod * Math.pow(level, PROD_EXP) * milestoneMult(level) * prodMult(s);
 /** Production par seconde permanente (sans « Ruée »). */
 export const perSecondBase = (s: State) => GENS.reduce((a, _, i) => a + genProd(s, i), 0);
-export const perSecond = (s: State) => perSecondBase(s) * (s.rush > 0 ? RUSH_MULT : 1) * (s.crew > 0 ? CREW_MULT : 1) * (s.turbo > 0 ? TURBO_MULT : 1);
+export const perSecond = (s: State) => perSecondBase(s) * (s.rush > 0 ? RUSH_MULT : 1) * (s.turbo > 0 ? TURBO_MULT : 1);
 
 /** Coût de `n` niveaux à partir du niveau `level` d'une base donnée. */
 export function costOf(base: number, level: number, n: number): number {
@@ -114,7 +116,7 @@ export function boostOver(dt: number, mults: { left: number; m: number }[]): num
 export function tick(s: State, dt: number) {
   if (dt <= 0) return;
   const prodSecs = boostOver(dt, [
-    { left: s.rush, m: RUSH_MULT }, { left: s.crew, m: CREW_MULT }, { left: s.turbo, m: TURBO_MULT },
+    { left: s.rush, m: RUSH_MULT }, { left: s.turbo, m: TURBO_MULT },
   ]);
   earn(s, perSecondBase(s) * prodSecs);
   const autoSecs = Math.min(dt, s.auto);
@@ -131,7 +133,6 @@ export function tick(s: State, dt: number) {
   s.genius = Math.max(0, s.genius - dt);
   s.auto = Math.max(0, s.auto - dt);
   s.turbo = Math.max(0, s.turbo - dt);
-  s.crew = Math.max(0, s.crew - dt);
   s.runTime += dt;
   s.playTime += dt;
 }
@@ -149,14 +150,12 @@ export const bonusReady = (s: State, id: BonusId, now: number) => bonusLeft(s, i
 export const bonusReadyCount = (s: State, now: number) => BONUSES.filter((b) => bonusReady(s, b.id, now)).length;
 /** Secondes d'effet restantes d'un bonus actif (0 = inactif). */
 export function bonusActive(s: State, id: BonusId): number {
-  return id === 'auto' ? s.auto : id === 'turbo' ? s.turbo : id === 'crew' ? s.crew : 0;
+  return id === 'auto' ? s.auto : id === 'turbo' ? s.turbo : 0;
 }
 /** Production d'un instant, au minimum équivalente à `clicks` clics (utile au tout début, sans bâtiment). */
 const worth = (s: State, sec: number, clicks: number) => Math.floor(Math.max(perSecondBase(s) * sec, clickBase(s) * clicks)); // plancher en clics SANS la part de production de la Pelle en or (sinon ×3 la production au niv. 100)
 /** Valeur d'une pépite de la pluie. */
 export const rainValue = (s: State) => worth(s, RAIN_SEC, RAIN_CLICKS);
-/** Valeur du Gain instantané. */
-export const burstValue = (s: State) => worth(s, BURST_SEC, BURST_CLICKS);
 /** Cueille une pépite de la pluie ; renvoie la terre gagnée. */
 export function rainCatch(s: State): number {
   const g = rainValue(s);
@@ -171,8 +170,6 @@ export function useBonus(s: State, id: BonusId, now: number, out: { gain: number
   s.ready[i] = now + def.cd * 1000;
   if (id === 'auto') { s.auto = def.dur; s.autoAcc = 0; }
   else if (id === 'turbo') s.turbo = def.dur;
-  else if (id === 'crew') s.crew = def.dur;
-  else if (id === 'burst') { out.gain = burstValue(s); earn(s, out.gain); }
   return true;
 }
 
@@ -267,8 +264,7 @@ export function bestBuy(s: State, clicksPerSec: number): number | null {
     const cost = costOf(k < 0 ? SHOVEL_BASE : GENS[k].cost, k < 0 ? s.shovel : s.gens[k], 1);
     let gain: number;
     if (k < 0) {
-      const cur = clickBase(s) / milestoneMult(s.shovel);
-      gain = clicksPerSec * (cur / (CLICK_BASE + SHOVEL_POWER * s.shovel)) * ((CLICK_BASE + SHOVEL_POWER * (s.shovel + 1)) * milestoneMult(s.shovel + 1) - (CLICK_BASE + SHOVEL_POWER * s.shovel) * milestoneMult(s.shovel));
+      gain = clicksPerSec * (clickRaw(s, s.shovel + 1) - clickRaw(s)) * (s.turbo > 0 ? TURBO_MULT : 1);
     } else gain = genProdAt(s, k, s.gens[k] + 1) - genProd(s, k);
     if (base <= 0 && k < 0) gain = SHOVEL_POWER;
     if (gain <= 0) continue;

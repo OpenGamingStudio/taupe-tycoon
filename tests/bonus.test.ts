@@ -1,20 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { AUTO_PS_CAP, AUTO_RATE, BONUSES, BURST_SEC, CREW_MULT, CRIT_CHANCE, CRIT_MULT, GENIUS_MULT, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from '../src/config';
+import { AUTO_PS_CAP, AUTO_RATE, BONUSES, CRIT_CHANCE, CRIT_MULT, GENIUS_MULT, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from '../src/config';
+import { play } from '../tools/play';
 import { T } from '../src/i18n';
 import { sanitize } from '../src/save';
 import {
-  applyOffline, autoTapRaw, boostOver, clickBase, bonusLeft, bonusReady, bonusReadyCount, burstValue, clickPower, clickRaw, newState, perSecond,
+  applyOffline, autoTapRaw, boostOver, clickBase, bonusLeft, bonusReady, bonusReadyCount, clickPower, clickRaw, newState, perSecond,
   perSecondBase, rainCatch, rainValue, tick, useBonus,
 } from '../src/sim';
 
 const NOW = 1_700_000_000_000;
+const goldProfile = () => { const s = rich(); s.perms[1] = 100; s.shovel = 10; return s; };
+const midGame = () => { const s = newState(); play(s, 3600, true, 99); return s; };
+const lateGame = () => { const s = newState(); play(s, 3 * 3600, true, 99); return s; };
+const profiles = () => [rich(), goldProfile(), midGame(), lateGame()];
 const rich = () => { const s = newState(); s.gens = [20, 10, 5, 2, 0, 0]; s.shovel = 5; return s; };
 
 describe('recharge', () => {
-  it('tous les bonus sont prêts au départ ; cooldowns entre 5 et 10 min', () => {
+  it('tous les bonus sont prêts au départ ; cooldowns entre 5 et 7 min; 3 bonus seulement (pas de doublon)', () => {
     const s = newState();
     expect(bonusReadyCount(s, NOW)).toBe(BONUSES.length);
-    for (const b of BONUSES) { expect(b.cd).toBeGreaterThanOrEqual(300); expect(b.cd).toBeLessThanOrEqual(600); }
+    expect(BONUSES.map((b) => b.id)).toEqual(['auto', 'turbo', 'rain']);
+    for (const b of BONUSES) { expect(b.cd).toBeGreaterThanOrEqual(300); expect(b.cd).toBeLessThanOrEqual(420); }
   });
   it('utilisation : recharge lancée, compte à rebours entier, deuxième usage refusé', () => {
     const s = rich();
@@ -57,15 +63,6 @@ describe('durée et multiplicateurs', () => {
     expect(s.turbo).toBe(0);
     expect(perSecond(s)).toBeCloseTo(p);
   });
-  it('Ruée d\'ouvrières ×2 sur la production, pas sur le clic', () => {
-    const s = rich();
-    const p = perSecondBase(s), c = clickPower(s);
-    useBonus(s, 'crew', NOW);
-    expect(perSecond(s)).toBeCloseTo(p * CREW_MULT);
-    expect(clickPower(s)).toBeCloseTo(c);
-    const b = s.dirt; tick(s, 45);
-    expect(s.dirt - b).toBeCloseTo(p * 90);
-  });
   it('multiplicateurs cumulés : intégrale exacte', () => {
     expect(boostOver(10, [{ left: 4, m: 2 }, { left: 6, m: 3 }])).toBeCloseTo(4 * 6 + 2 * 3 + 4);
     expect(boostOver(5, [])).toBe(5);
@@ -73,7 +70,7 @@ describe('durée et multiplicateurs', () => {
   it('Auto-tap : 8 taps/s pendant 30 s, compte les clics, s\'arrête seul', () => {
     const s = rich();
     useBonus(s, 'auto', NOW);
-    const c = clickRaw(s), b = s.dirt, k = s.clicks;
+    const c = autoTapRaw(s), b = s.dirt, k = s.clicks;
     for (let i = 0; i < 400; i++) tick(s, 0.1); // 40 s en pas de 100 ms
     expect(s.auto).toBe(0);
     const prod = perSecondBase(s) * 40;
@@ -99,17 +96,8 @@ describe('durée et multiplicateurs', () => {
 });
 
 describe('gains instantanés', () => {
-  it('Gain instantané : 2 min de production, entier, sur le run', () => {
-    const s = rich();
-    const out = { gain: 0 };
-    expect(useBonus(s, 'burst', NOW, out)).toBe(true);
-    expect(out.gain).toBe(Math.floor(perSecondBase(s) * BURST_SEC));
-    expect(s.dirt).toBe(out.gain);
-    expect(s.runTotal).toBe(out.gain);
-  });
   it('au tout début (sans production) le gain vaut des clics, jamais 0', () => {
     const s = newState();
-    expect(burstValue(s)).toBeGreaterThan(0);
     expect(rainValue(s)).toBeGreaterThan(0);
     expect(Number.isInteger(rainValue(s))).toBe(true);
   });
@@ -120,18 +108,26 @@ describe('gains instantanés', () => {
     expect(s.caught).toBe(1);
     expect(s.dirt).toBe(v);
   });
-  it('équilibre : tous les bonus ensemble restent sous +60 % de la production moyenne', () => {
-    const s = rich();
-    const p = perSecondBase(s);
-    const per = (b: typeof BONUSES[number]) => {
-      if (b.id === 'turbo') return p * b.dur * (TURBO_MULT - 1) / b.cd;
-      if (b.id === 'crew') return p * b.dur * (CREW_MULT - 1) / b.cd;
-      if (b.id === 'burst') return burstValue(s) / b.cd;
-      if (b.id === 'rain') return rainValue(s) * 10 / b.cd;
-      return 0;
-    };
-    const extra = BONUSES.reduce((a, b) => a + per(b), 0) / p;
-    expect(extra).toBeLessThan(0.6);
+  it('équilibre : TOUS les bonus (Auto-tap, Turbo, Pluie) + critique restent sous +80 % de la production, sur 4 profils', () => {
+    for (const s of profiles()) {
+      const p = perSecondBase(s);
+      const per = (b: typeof BONUSES[number]) => {
+        if (b.id === 'turbo') return (p * b.dur * (TURBO_MULT - 1)) / b.cd;
+        if (b.id === 'rain') return (rainValue(s) * RAIN_COUNT) / b.cd;
+        return (autoTapRaw(s) * AUTO_RATE * b.dur) / b.cd; // auto
+      };
+      const shares = BONUSES.map((b) => per(b) / p);
+      const total = shares.reduce((a, b) => a + b, 0);
+      for (const x of shares) expect(x).toBeLessThan(0.45); // aucun bonus ne domine
+      expect(total).toBeLessThan(0.8);
+      expect(CRIT_CHANCE * (CRIT_MULT - 1)).toBeLessThanOrEqual(0.1);
+    }
+  });
+  it('Auto-tap ne rapporte jamais zéro ni davantage qu\'un joueur actif (4 clics/s)', () => {
+    for (const s of profiles()) {
+      expect(autoTapRaw(s)).toBeGreaterThan(0);
+      expect(autoTapRaw(s) * AUTO_RATE).toBeLessThan(clickRaw(s) * 12);
+    }
   });
 });
 
@@ -139,26 +135,31 @@ describe('sauvegarde', () => {
   it('ancienne sauvegarde (v3) : tous les bonus prêts', () => {
     const r = sanitize({ v: 3, at: Date.now(), s: { dirt: 100, gens: [1] } })!;
     expect(r.s.ready).toEqual(BONUSES.map(() => 0));
-    expect(r.s.auto + r.s.turbo + r.s.crew).toBe(0);
+    expect(r.s.auto + r.s.turbo).toBe(0);
     expect(r.s.dirt).toBe(100);
   });
   it('dates et durées corrompues ou excessives sont bornées', () => {
     const now = Date.now();
-    const r = sanitize({ v: 4, s: { ready: [now + 9e12, 'x', -5, NaN, now + 100_000], auto: 9999, turbo: -3, crew: 'a', autoAcc: 7 } })!;
+    const r = sanitize({ v: 5, s: { ready: [now + 9e12, 'x', now + 100_000], auto: 9999, turbo: -3, autoAcc: 7 } })!;
     expect(r.s.ready[0]).toBeLessThanOrEqual(now + BONUSES[0].cd * 1000 + 5);
-    expect(r.s.ready.slice(1, 4)).toEqual([0, 0, 0]);
-    expect(r.s.ready[4]).toBeGreaterThan(now);
+    expect(r.s.ready[1]).toBe(0);
+    expect(r.s.ready[2]).toBeGreaterThan(now);
     expect(r.s.auto).toBe(30);
-    expect(r.s.turbo).toBe(0); expect(r.s.crew).toBe(0);
+    expect(r.s.turbo).toBe(0);
     expect(r.s.autoAcc).toBeLessThan(1);
     expect(r.s.ready).toHaveLength(BONUSES.length);
   });
   it('aller-retour JSON : état des bonus conservé', () => {
     const s = rich();
-    useBonus(s, 'crew', Date.now());
-    const r = sanitize(JSON.parse(JSON.stringify({ v: 4, at: Date.now(), s })))!;
-    expect(r.s.crew).toBe(45);
-    expect(r.s.ready[2]).toBeGreaterThan(Date.now());
+    useBonus(s, 'turbo', Date.now());
+    const r = sanitize(JSON.parse(JSON.stringify({ v: 5, at: Date.now(), s })))!;
+    expect(r.s.turbo).toBe(30);
+    expect(r.s.ready[1]).toBeGreaterThan(Date.now());
+  });
+  it('migration v4 : les recharges suivent les bonus par nom (auto, turbo, crew, rain, burst -> auto, turbo, rain)', () => {
+    const t = Date.now() + 100_000;
+    const r = sanitize({ v: 4, s: { ready: [0, t, t, 0, t] } })!;
+    expect(r.s.ready[0]).toBe(0); expect(r.s.ready[1]).toBeGreaterThan(Date.now()); expect(r.s.ready[2]).toBe(0);
   });
 });
 
@@ -184,18 +185,6 @@ describe('revue 2.12.1', () => {
     tick(s, 1);
     expect(s.dirt - d0).toBeLessThan(p * (TURBO_MULT + AUTO_RATE * GENIUS_MULT * TURBO_MULT * (AUTO_PS_CAP + clickBase(s) / p)) + 1);
   });
-  it('équilibre avec auto et critique : bonus ensemble sous +60 %, profil Pelle en or compris', () => {
-    for (const s of [rich(), goldRich()]) {
-      const p = perSecondBase(s);
-      const auto = (autoTapRaw(s) * AUTO_RATE * BONUSES[0].dur) / BONUSES[0].cd / p;
-      const crit = (CRIT_CHANCE * (CRIT_MULT - 1)); // +10 % sur les clics (manuels seulement)
-      expect(auto).toBeLessThan(0.25); // profil pelle forte (niv. 25) : la part de pelle est payée par le joueur
-      expect(crit).toBeLessThan(0.2);
-      const per = BONUSES.reduce((a, b) => a + (b.id === 'turbo' ? p * b.dur * (TURBO_MULT - 1) / b.cd : b.id === 'crew' ? p * b.dur * (CREW_MULT - 1) / b.cd : b.id === 'burst' ? burstValue(s) / b.cd : b.id === 'rain' ? rainValue(s) * RAIN_COUNT / b.cd : 0), 0) / p;
-      expect(per).toBeLessThan(0.6);
-      expect(per + auto).toBeLessThan(0.8);
-    }
-  });
   it('sauvegarde : version inconnue (>= 5) ou non numérique ne multiplie pas la terre par 10', () => {
     expect(sanitize({ v: 9, s: { dirt: 100 } })!.s.dirt).toBe(100);
     expect(sanitize({ v: '2', s: { dirt: 100 } })!.s.dirt).toBe(1000);
@@ -206,9 +195,7 @@ describe('revue 2.12.1', () => {
     for (const lang of ['fr', 'en'] as const) {
       expect(T[lang].bAutoD).toContain(`${AUTO_RATE}`); expect(T[lang].bAutoD).toContain(`${BONUSES[0].dur} s`);
       expect(T[lang].bTurboD).toContain(`${BONUSES[1].dur} s`);
-      expect(T[lang].bCrewD).toContain(`${BONUSES[2].dur} s`);
       expect(T[lang].bRainD).toContain(`${RAIN_COUNT}`); expect(T[lang].bRainD).toContain(`${RAIN_SEC} s`);
-      expect(T[lang].bBurstD).toContain(`${BURST_SEC / 60}`);
     }
   });
 });

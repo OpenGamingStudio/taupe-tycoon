@@ -3,7 +3,8 @@ import { State, newState } from './sim';
 import { TROPHIES } from './trophies';
 
 export const SAVE_KEY = 'taupe-tycoon-save';
-export const SAVE_VERSION = 4; // 4 : bonus à recharge (ready, auto, turbo, crew) ; les sauvegardes 1 à 3 s'ouvrent sans ces champs
+export const SAVE_VERSION = 5; // 5 : bonus réduits à auto/turbo/pluie (ready réindexé) ; 4 : bonus à recharge ; les sauvegardes 1 à 3 s'ouvrent sans ces champs
+const OLD_BONUS_ORDER = ['auto', 'turbo', 'crew', 'rain', 'burst']; // ordre des `ready` avant la v5
 export const PANELS = ['dig', 'rebirth', 'trophies', 'stats', 'options'];
 export interface Options {
   lang: 'fr' | 'en'; reduced: boolean; mode: 1 | 10 | 'max'; sound: boolean; seen: number;
@@ -46,13 +47,13 @@ export function sanitize(raw: unknown): Saved | null {
   // Bonus à recharge : dates bornées à « maintenant + recharge » (une date lointaine ou une horloge changée ne bloque jamais)
   const nowMs = Date.now();
   s.ready = BONUSES.map((b, i) => {
-    const v = Array.isArray(st.ready) ? st.ready[i] : 0;
+    const j = typeof r.v === 'number' && r.v < 5 ? OLD_BONUS_ORDER.indexOf(b.id) : i;
+    const v = Array.isArray(st.ready) ? st.ready[j] : 0;
     return typeof v === 'number' && isFinite(v) && v > nowMs ? Math.min(Math.floor(v), nowMs + b.cd * 1000) : 0;
   });
   const dur = (id: string) => BONUSES.find((b) => b.id === id)!.dur;
   s.auto = Math.min(Math.ceil(num(st.auto, MAX_SECONDS)), dur('auto'));
   s.turbo = Math.min(Math.ceil(num(st.turbo, MAX_SECONDS)), dur('turbo'));
-  s.crew = Math.min(Math.ceil(num(st.crew, MAX_SECONDS)), dur('crew'));
   s.autoAcc = Math.min(num(st.autoAcc, 1), 0.999);
   const ids = new Set(TROPHIES.map((x) => x.id));
   s.trophies = Array.isArray(st.trophies) ? [...new Set(st.trophies.filter((x: unknown) => typeof x === 'string' && ids.has(x)))] as string[] : [];

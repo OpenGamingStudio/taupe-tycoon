@@ -1,6 +1,6 @@
 import './style.css';
 import {
-  GENS, MILESTONES, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
+  GENS, MILESTONE_TABLE, SHOVEL_TABLE, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
   NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, RAIN_COUNT, TURBO_MULT, GENIUS_MULT,
 } from './config';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
@@ -16,8 +16,8 @@ import { installGuard } from './guard';
 import { TROPHIES, TROPHY_COUNT, checkTrophies } from './trophies';
 import { statsHtml, trophiesHtml } from './lists';
 import {
-  State, applyEvent, applyOffline, buyN, buyPerm, click, clickRoll, clickBase, clickPower, costOf, genProd, genProdAt, maxAffordable,
-  milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
+  State, applyEvent, applyOffline, buyN, buyPerm, click, clickRoll, clickRaw, clickPower, costOf, genProd, genProdAt, maxAffordable,
+  milestoneCount, milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
   rollEvent, startDirt, tick, trophyMult, bonusActive, bonusLeft, bonusReadyCount, rainCatch, useBonus, autoTapRaw,
 } from './sim';
 
@@ -80,7 +80,8 @@ ids.forEach((id, i) => {
       const lvl = r.kind < 0 ? s.shovel : s.gens[r.kind];
       say(t('bought', { name: t(id), n: lvl }));
       bought(r, false);
-      if (milestoneMult(lvl) > milestoneMult(before)) milestoneHit(r, lvl);
+      const tb = r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE;
+      if (milestoneMult(lvl, tb) > milestoneMult(before, tb)) milestoneHit(r, lvl);
       if (r.kind >= 0) sfx.moleArrive();
     }
   });
@@ -100,7 +101,7 @@ PERMS.forEach((p, i) => {
 /** Un palier de niveaux est franchi : fanfare et annonce. */
 function milestoneHit(r: Row, level: number) {
   sfx.fanfare();
-  const sub = t(r.kind < 0 ? 'mileSubShovel' : 'mileSub', { name: t(r.id), n: level, m: milestoneMult(level) });
+  const sub = t(r.kind < 0 ? 'mileSubShovel' : 'mileSub', { name: t(r.id), n: level, m: milestoneMult(level, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE) / milestoneMult(level - 1, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE) });
   say(`${t('mileBanner')} ${sub}`);
   banner('gem', t('mileBanner'), sub);
   const b = fxBox(); jfx.confetti(b.width / 2, b.height * 0.35, 60); shake(2); vibe([30, 40, 60]);
@@ -290,7 +291,7 @@ function render() {
   jfx.setReduced(reducedMotion());
   world.setRates(GENS.map((_, i) => genProd(s, i)));
   if (permsKey !== s.perms.join(',')) { world.setPerms(s.perms, permsKey !== ''); permsKey = s.perms.join(','); }
-  world.setLevel(s.gens.reduce((a, n) => a + MILESTONES.filter((m) => n >= m).length, 0));
+  world.setLevel(s.gens.reduce((a, n) => a + milestoneCount(n), 0));
   if (!st.classList.contains('depth-' + d)) st.className = st.className.replace(/depth-\d/, 'depth-' + d);
   const gl = goal();
   $('goal').setAttribute('aria-valuenow', String(gl.pct));
@@ -316,9 +317,9 @@ function render() {
       setText(r.desc, t('lockedD', { n: f(Math.ceil(GENS[r.kind].cost * 0.4)) }));
       setText(r.cur, '');
     } else if (r.kind < 0) {
-      setText(r.plus, `+${f(clickBase({ ...s, shovel: s.shovel + n }) - clickBase(s))} ${t('per')}`);
+      setText(r.plus, `+${f(clickRaw(s, s.shovel + n) - clickRaw(s))} ${t('per')}`);
       setText(r.desc, t('shovelD'));
-      setText(r.cur, `${t('nowVal')} : ${f(clickBase(s))} ${t('per')}`);
+      setText(r.cur, `${t('nowVal')} : ${f(clickRaw(s))} ${t('per')}`);
     } else {
       const gain = genProdAt(s, r.kind, level + n) - genProd(s, r.kind);
       setText(r.plus, `+${f(gain)}${t('secShort')}`);
@@ -326,10 +327,11 @@ function render() {
       setText(r.cur, `${t('nowVal')} : ${f(genProd(s, r.kind))}${t('secShort')}`);
     }
     r.el.title = locked ? '' : r.desc.textContent ?? '';
-    const nm = locked ? null : nextMilestone(level);
+    const nmx = locked ? null : nextMilestone(level, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE);
+    const nm = nmx && nmx[0];
     r.mile.hidden = locked;
     if (!locked) {
-      setText(r.mile.lastElementChild as HTMLElement, nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm }));
+      setText(r.mile.lastElementChild as HTMLElement, nm === null ? `${t('allMiles')} · ×${f(milestoneMult(level, r.kind < 0 ? SHOVEL_TABLE : MILESTONE_TABLE))}` : t('nextMile' + (r.kind < 0 ? 'Shovel' : ''), { n: nm!, m: nmx![1] }));
       (r.mile.querySelector('i') as HTMLElement).style.width = (nm === null ? 100 : Math.min(100, Math.floor(level / nm * 100))) + '%';
     }
     setHtml(r.cost.firstElementChild as HTMLElement, `${icon('dirt', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(Math.ceil(cost))}`);
@@ -631,7 +633,7 @@ function renderBonus() {
     b.tm.hidden = !txt; setText(b.tm, txt);
     b.dot.hidden = st !== 'ready';
     b.el.setAttribute('aria-disabled', st === 'ready' ? 'false' : 'true');
-    b.el.setAttribute('aria-label', st === 'ready' ? t('bonusReady', { name: bname(b.def.id) }) + '. ' + t(b.def.id === 'auto' ? 'bAutoD' : b.def.id === 'turbo' ? 'bTurboD' : b.def.id === 'crew' ? 'bCrewD' : b.def.id === 'rain' ? 'bRainD' : 'bBurstD')
+    b.el.setAttribute('aria-label', st === 'ready' ? t('bonusReady', { name: bname(b.def.id) }) + '. ' + t(b.def.id === 'auto' ? 'bAutoD' : b.def.id === 'turbo' ? 'bTurboD' : 'bRainD')
       : st === 'active' ? t('bonusActive', { name: bname(b.def.id), s: act }) : t('bonusCool', { name: bname(b.def.id), t: fmtDuration(left, lang()) }));
   });
   const n = bonusReadyCount(s, now);
@@ -744,8 +746,7 @@ bonusUl.addEventListener('click', (e) => {
   jfx.confetti(x, y, 18);
   mood('happy', 700);
   if (id === 'rain') startRain();
-  if (id === 'burst') { coinsToHud(x, y, 10, 'gold'); notify(t('bonusBurst', { n: f(out.gain) })); }
-  else notify(t('bonusUsed', { name: bname(id) }));
+  notify(t('bonusUsed', { name: bname(id) }));
   awardTrophies();
   persist();
   render();

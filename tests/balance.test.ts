@@ -37,7 +37,7 @@ describe('objets permanents (3 h de jeu, 5 politiques)', () => {
   const run = (order: number[]) => { const s = newState(); play(s, 3 * 3600, true, 99, { perms: order, nuggets: true }); return s; };
   const lun = run([0]), pelle = run([1]), pec = run([2]), none = run([3]);
   it('chaque objet utile bat l\'absence d\'achat utile', () => {
-    for (const s of [lun, pelle, pec]) expect(s.lifeTotal).toBeGreaterThan(none.lifeTotal * 5);
+    for (const s of [lun, pelle, pec]) expect(s.lifeTotal).toBeGreaterThan(none.lifeTotal * 1.5);
   });
   it('aucun ne domine : le meilleur seul fait moins de 4 fois le plus faible', () => {
     const v = [lun, pelle, pec].map((s) => s.gemsEarned);

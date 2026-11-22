@@ -94,9 +94,7 @@ export const ICONS: Record<string, string> = {
   // --- bonus à recharge ---
   auto: `<path d="M13 6v28l7-6 5 12 7-3-5-12 10-1z" fill="${C.cream}" ${st()}/>${shine('M17 12v12')}<path d="M32 10q6 3 7 10M36 5q9 4 10 15" fill="none" stroke="${k}" stroke-width="3" stroke-linecap="round"/>`,
   turbo: `<path d="M27 3L9 27h12l-3 18 21-26H26z" fill="${C.gold}" ${st()}/>${shine('M24 10l-7 11')}`,
-  crew: `<path d="M8 32c0-11 7-19 16-19s16 8 16 19z" fill="${C.gold}" ${st()}/><rect x="4" y="32" width="40" height="8" rx="4" fill="${C.goldDark}" ${st()}/><path d="M24 13v12M18 15l-2 9M30 15l2 9" fill="none" stroke="${k}" stroke-width="2.600" stroke-linecap="round"/>${shine('M13 28c0-5 3-9 7-11')}`,
   rain: `<path d="M13 28c-5 0-8-3-8-7 0-4 3-7 7-7 1-5 6-8 11-8 6 0 10 4 11 9 4 0 8 3 8 7s-3 6-7 6z" fill="${C.steel}" ${st()}/><circle cx="14" cy="38" r="3.600" fill="${C.gold}" ${st(2.600)}/><circle cx="25" cy="43" r="3.600" fill="${C.gold}" ${st(2.600)}/><circle cx="35" cy="37" r="3.600" fill="${C.gold}" ${st(2.600)}/>`,
-  burst: `<ellipse cx="24" cy="38" rx="17" ry="6" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="33" rx="17" ry="6" fill="${C.gold}" ${st()}/><ellipse cx="24" cy="26" rx="17" ry="6" fill="${C.goldDark}" ${st()}/><ellipse cx="24" cy="21" rx="17" ry="6" fill="${C.gold}" ${st()}/>${shine('M12 20q4-2 8-2')}<path d="M24 3v8M16 6l3 6M32 6l-3 6" fill="none" stroke="${k}" stroke-width="3" stroke-linecap="round"/>`,
 };
 
 /** Couleur d'un objet : [vive, sombre]. Sert aux cartes d'achat (variables --acc / --accd). */
