@@ -256,6 +256,10 @@ html, body {
   .bn-t { @apply absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border-2 border-ink bg-ink px-1 text-[12px] font-bold leading-tight text-cream; }
   .bn-t[hidden], .bn-dot[hidden] { display: none; }
   .bn-dot { @apply absolute -right-1 -top-1 h-[18px] w-[18px] rounded-full border-[3px] border-ink bg-rose; }
+  .bn { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+  .tip { @apply pointer-events-none fixed z-50 max-w-[min(20rem,calc(100vw-1rem))] rounded-2xl border-[3px] border-ink bg-ink px-3 py-2 text-base font-bold leading-snug text-cream shadow-hard; }
+  .tip[hidden] { display: none; }
+  .goal-pop { animation: goalpop 0.6s ease-out; }
   .bn:focus-visible { outline: 3px solid #fff0c4; outline-offset: 3px; }
   .finger { @apply pointer-events-none absolute z-20; margin: -6px 0 0 -6px; animation: ftap 0.25s ease-in-out infinite; }
   .finger[hidden] { display: none; }
@@ -293,6 +297,7 @@ html, body {
   .rb-fx .shard svg { width: 100%; height: 100%; overflow: visible; }
 }
 
+@keyframes goalpop { 0% { transform: scaleY(1); background: #ffc21a; } 30% { transform: scaleY(1.9); background: #ffc21a; } 100% { transform: scaleY(1); } }
 @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.07); } 100% { transform: scale(1); } }
 @keyframes shine { from { left: -35%; } to { left: 105%; } }
 @keyframes shake1 { 0%, 100% { transform: translate(0); } 25% { transform: translate(-2px, 1px); } 50% { transform: translate(2px, -1px); } 75% { transform: translate(-1px, -1px); } }

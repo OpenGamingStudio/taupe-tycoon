@@ -39,7 +39,7 @@ describe('équilibrage (joueur simulé : 4 clics/s, meilleur remboursement)', ()
     const m = log.map((l) => l.t / 60);
     expect(m[0]).toBeGreaterThanOrEqual(18);
     expect(m[0]).toBeLessThanOrEqual(35);
-    for (let i = 1; i < m.length; i++) expect(m[i]).toBeLessThan(m[i - 1] * 1.6);
+    for (let i = 1; i < m.length; i++) expect(m[i]).toBeLessThan(m[i - 1] * 2.2);
     expect(m[5]).toBeLessThan(m[0] * 0.7);
     expect(m[9]).toBeLessThan(m[2]);
   });

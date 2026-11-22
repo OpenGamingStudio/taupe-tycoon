@@ -1,6 +1,6 @@
 /** Réglages d'équilibrage de Taupe Tycoon (tout le reste de la simulation en dérive). */
 export const GROWTH = 1.15; // coût d'un niveau = base × GROWTH^niveau
-export const PROD_EXP = 0.8; // production d'un type = base × niveaux^PROD_EXP (sous-linéaire)
+export const PROD_EXP = 1; // production d'un type = base × niveaux (linéaire : chaque achat rapporte au moins autant que le précédent, les paliers le font monter)
 export const CLICK_BASE = 10; // terre par clic sans pelle (toutes les quantités sont des entiers : unité = 1/10 de la V1)
 export const SHOVEL_BASE = 120; // coût du premier niveau de pelle
 export const SHOVEL_POWER = 10; // gain de terre par clic et par niveau de pelle
@@ -48,7 +48,20 @@ export const PERMS: PermDef[] = [
   { id: 'pelleor', cost: 1, growth: 1.8, max: 999 }, // +2 % de la production par clic, par niveau
   { id: 'pecule', cost: 2, growth: 2.2, max: 12 }, // terre de départ au rebirth
   { id: 'sacoche', cost: 3, growth: 1.9, max: OFFLINE_MAX_LEVEL }, // +1 h de hors-ligne
+  // --- 2.14.0 : bonus à recharge, achat unique (max 1) ---
+  { id: 'auto', cost: 3, growth: 1, max: 1 },
+  { id: 'turbo', cost: 5, growth: 1, max: 1 },
+  { id: 'rain', cost: 8, growth: 1, max: 1 },
+  // --- 2.14.0 : nouveaux objets, un effet distinct chacun ---
+  { id: 'trefle', cost: 2, growth: 1.7, max: 20 }, // +1 point de chance de coup critique par niveau (base 10 %)
+  { id: 'casque', cost: 4, growth: 1.9, max: 15 }, // −2 % sur le prix des bâtiments et de la pelle, par niveau
+  { id: 'aimant', cost: 3, growth: 1.8, max: 10 }, // les pépites d'or arrivent 4 % plus vite, par niveau
+  { id: 'thermos', cost: 4, growth: 1.9, max: 10 }, // −4 % de recharge des bonus, par niveau
 ];
+export const TREFLE_STEP = 0.01;
+export const CASQUE_STEP = 0.02;
+export const AIMANT_STEP = 0.04;
+export const THERMOS_STEP = 0.04;
 export const PERM_PROD_BONUS = 0.25;
 export const PERM_CLICK_PS = 0.03; // Pelle en or : chaque clic rapporte en plus 3 % de la production par seconde, par niveau
 export const PECULE_SEC = 20; // Pécule : terre de départ = 20 s par niveau de la production atteinte au rebirth précédent

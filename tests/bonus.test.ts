@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { AUTO_PS_CAP, AUTO_RATE, BONUSES, CRIT_CHANCE, CRIT_MULT, GENIUS_MULT, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from '../src/config';
+import { PERMS, AUTO_PS_CAP, AUTO_RATE, BONUSES, CRIT_CHANCE, CRIT_MULT, GENIUS_MULT, RAIN_COUNT, RAIN_SEC, TURBO_MULT } from '../src/config';
 import { play } from '../tools/play';
 import { T } from '../src/i18n';
 import { sanitize } from '../src/save';
 import {
-  applyOffline, autoTapRaw, boostOver, clickBase, bonusLeft, bonusReady, bonusReadyCount, clickPower, clickRaw, newState, perSecond,
+  applyOffline, autoTapRaw, boostOver, clickBase, bonusLeft, bonusReady, bonusReadyCount, clickPower, clickRaw, newState as freshState, perSecond,
   perSecondBase, rainCatch, rainValue, tick, useBonus,
 } from '../src/sim';
 
 const NOW = 1_700_000_000_000;
+/** État de départ où les trois bonus à recharge sont déjà achetés (achat unique en boutique, voir tests/shop.test.ts). */
+const newState = () => { const s = freshState(); s.perms = PERMS.map((p) => (BONUSES.some((b) => b.id === p.id) ? 1 : 0)); return s; };
 const goldProfile = () => { const s = rich(); s.perms[1] = 100; s.shovel = 10; return s; };
 const midGame = () => { const s = newState(); play(s, 3600, true, 99); return s; };
 const lateGame = () => { const s = newState(); play(s, 3 * 3600, true, 99); return s; };

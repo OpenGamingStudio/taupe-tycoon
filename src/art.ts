@@ -73,6 +73,10 @@ export const ICONS: Record<string, string> = {
   gear: `<g fill="${C.steel}" ${st(3)}>${[0, 45, 90, 135].map((a) => `<rect x="20.500" y="3" width="7" height="42" rx="2.500" transform="rotate(${a} 24 24)"/>`).join('')}</g><circle cx="24" cy="24" r="13.500" fill="${C.steel}" ${st(3)}/><circle cx="24" cy="24" r="5.500" fill="${C.cave}" ${st(3)}/>${shine('M15 21a10 10 0 0 1 6-7')}`,
   paw: `<ellipse cx="24" cy="32" rx="11.500" ry="9.500" fill="${C.fur}" ${st()}/><ellipse cx="24" cy="33" rx="5" ry="4" fill="${C.pink}" ${st(2)}/><ellipse cx="10.500" cy="22" rx="4" ry="5.500" transform="rotate(-20 10.500 22)" fill="${C.fur}" ${st()}/><ellipse cx="19" cy="13" rx="4" ry="5.500" fill="${C.fur}" ${st()}/><ellipse cx="29" cy="13" rx="4" ry="5.500" fill="${C.fur}" ${st()}/><ellipse cx="37.500" cy="22" rx="4" ry="5.500" transform="rotate(20 37.500 22)" fill="${C.fur}" ${st()}/>`,
   cuff: `<rect x="5" y="13" width="38" height="22" rx="7" fill="${C.steel}" ${st()}/><rect x="11" y="19" width="26" height="10" rx="4" fill="${C.steelDark}" ${st(2.400)}/><circle cx="17" cy="24" r="2" fill="${C.steel}"/><circle cx="24" cy="24" r="2" fill="${C.steel}"/><circle cx="31" cy="24" r="2" fill="${C.steel}"/>${shine('M10 19c1-2 3-3 5-3')}`,
+  trefle: `<g ${st()}><circle cx="17" cy="17" r="9" fill="${C.grass}"/><circle cx="31" cy="17" r="9" fill="${C.grass}"/><circle cx="17" cy="30" r="9" fill="${C.grass}"/><circle cx="31" cy="30" r="9" fill="${C.grass}"/></g><circle cx="24" cy="24" r="5" fill="${C.grassDark}"/>${shine('M13 13q3-3 6-2')}<path d="M24 34q0 8 8 11" fill="none" ${st(3)}/>`,
+  casque: `<path d="M6 34c0-14 8-22 18-22s18 8 18 22z" fill="${C.gold}" ${st()}/><path d="M20 12h8v22h-8z" fill="${C.goldDark}" ${st(2.6)}/><rect x="3" y="33" width="42" height="8" rx="3" fill="${C.goldDark}" ${st()}/>${shine('M11 28q2-8 8-12')}`,
+  aimant: `<path d="M9 40V22a15 15 0 0 1 30 0v18H29V22a5 5 0 0 0-10 0v18z" fill="${C.red}" ${st()}/><path d="M9 40h10v-7H9zM29 40h10v-7H29z" fill="${C.steel}" ${st(2.6)}/>${shine('M13 24q1-8 8-11')}`,
+  thermos: `<rect x="14" y="14" width="20" height="31" rx="5" fill="${C.denim}" ${st()}/><rect x="16" y="5" width="16" height="9" rx="3" fill="${C.steel}" ${st(2.6)}/><path d="M14 24h20" stroke="${k}" stroke-width="2.4"/><rect x="14" y="30" width="20" height="6" fill="${C.cream}" stroke="${k}" stroke-width="2.4"/>${shine('M19 18v4')}`,
   sacoche: `<path d="M13 15C13 6 35 6 35 15" fill="none" ${st(3)}/>
     <path d="M7 19c0-4 3-6 6-6h22c3 0 6 2 6 6l2 22c0 3-2 4-5 4H10c-3 0-5-1-5-4z" fill="${C.grass}" ${st()}/>
     <path d="M7 19c0-4 3-6 6-6h22c3 0 6 2 6 6v6c-7 4-27 4-34 0z" fill="${C.grassDark}" ${st()}/>
@@ -105,6 +109,8 @@ export const ACC: Record<string, [string, string]> = {
   foreuse: ['#ff6f9c', '#d6447a'],
   machine: ['#5ec6f5', '#2f7fe0'], lunettes: ['#5ec6f5', '#2f7fe0'],
   mine: ['#b79bff', '#7a55d6'], excavatrice: ['#20d0c8', '#0f9490'],
+  trefle: ['#62d13c', '#34a02a'], casque: ['#ffc21a', '#e08a0c'], aimant: ['#ff6f9c', '#d6447a'], thermos: ['#5ec6f5', '#2f7fe0'],
+  auto: ['#ffc21a', '#e08a0c'], turbo: ['#ff8a3d', '#c9562a'], rain: ['#20d0c8', '#0f9490'],
 };
 
 /** Tache de peinture et étincelles derrière l'icône d'une carte (viewBox 64, aplats). */

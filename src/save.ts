@@ -3,7 +3,7 @@ import { State, newState } from './sim';
 import { TROPHIES } from './trophies';
 
 export const SAVE_KEY = 'taupe-tycoon-save';
-export const SAVE_VERSION = 5; // 5 : bonus réduits à auto/turbo/pluie (ready réindexé) ; 4 : bonus à recharge ; les sauvegardes 1 à 3 s'ouvrent sans ces champs
+export const SAVE_VERSION = 6; // 6 : Auto-tap, Turbo et Pluie deviennent des achats uniques (les sauvegardes antérieures les reçoivent : elles les avaient gratuitement) ; 5 : bonus réduits à auto/turbo/pluie (ready réindexé) ; 4 : bonus à recharge ; les sauvegardes 1 à 3 s'ouvrent sans ces champs
 const OLD_BONUS_ORDER = ['auto', 'turbo', 'crew', 'rain', 'burst']; // ordre des `ready` avant la v5
 export const PANELS = ['dig', 'rebirth', 'trophies', 'stats', 'options'];
 export interface Options {
@@ -41,6 +41,7 @@ export function sanitize(raw: unknown): Saved | null {
   s.rebirths = int(st.rebirths, MAX_COUNT); s.shovel = int(st.shovel, MAX_LEVEL);
   s.gens = arr(st.gens, GENS.length, () => MAX_LEVEL);
   s.perms = arr(st.perms, PERMS.length, (i) => Math.min(PERMS[i].max, MAX_LEVEL));
+  if (!(typeof r.v === 'number' && r.v >= 6)) for (const id of ['auto', 'turbo', 'rain']) s.perms[PERMS.findIndex((p) => p.id === id)] = 1;
   s.clicks = int(st.clicks, MAX_COUNT); s.runTime = num(st.runTime, MAX_SECONDS);
   s.playTime = num(st.playTime, MAX_SECONDS); s.bestRun = num(st.bestRun, MAX_SECONDS);
   s.caught = int(st.caught, MAX_COUNT); s.lastPs = num(st.lastPs, MAX_DIRT);

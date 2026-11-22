@@ -2,6 +2,14 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.14.0 — 2026-11-22 (V5, lot 1 bis : boutique et rendement)
+- **Bug « plus j'achète, moins ça rapporte » corrigé** : la production d'un bâtiment croissait en `niveaux^0,8` (sous-linéaire), donc chaque niveau rapportait moins que le précédent. Elle est maintenant linéaire (`PROD_EXP` = 1) : le gain par achat reste stable et grimpe aux paliers. Test de monotonie (`tests/shop.test.ts`) sur les 6 bâtiments et la pelle, niveaux 1 à 700, plusieurs multiplicateurs ; un achat n'est jamais moins rentable après l'achat d'un autre bâtiment. Le gain « +N/s » affiché à l'achat est celui du vrai calcul.
+- **Bonus à recharge = achat unique** (Auto-tap 3 gemmes, Turbo 5, Pluie 8) : acquis à vie (rebirth, sauvegarde, rechargement), seule la recharge court. Boutique : « Acheté ». Sauvegarde v6 : les joueurs existants les reçoivent (ils les avaient).
+- **4 nouveaux objets permanents, effets distincts** : Trèfle (+1 pt de chance de critique), Casque de chantier (-2 % de prix), Aimant à pépites (pépites 4 % plus vite), Thermos (-4 % de recharge des bonus).
+- **Infobulle d'appui long** sur chaque bonus, avec les vrais chiffres (coups, durée, terre gagnée, recharge) ; fermée au relâchement, placée au-dessus du doigt. L'aide (Stats) détaille aussi Ruée, Coup de génie et Trésor.
+- **Barre sous la terre = progression vers la prochaine gemme** : légende explicite (« Gemmes 0 → 1 : 40 % · chaque gemme = +25 % de production »), animation et message quand une gemme est prête.
+- Tests d'équilibre : tous les bonus (achetables + activables) joués par le bot, combo Auto-tap + Pelle en or + Turbo borné.
+
 ## 2.13.0 — 2026-11-22 (V5, lot 1 : équilibrage)
 - **Moins de bonus, tous différents** : 5 bonus à recharge -> 3. « Ruée d'ouvrières » (production ×2) est absorbée par le Turbo (×2 sur tout) ; « Gain instantané » est absorbé par la Pluie de pépites (12 pépites de 12 s de production). Restent : Auto-tap (clics), Turbo (production + clics), Pluie (à cueillir). Sauvegardes v4 migrées par nom de bonus (recharges conservées), version de sauvegarde 5.
 - **Paliers bien plus forts** : 10 paliers au lieu de 4 (niveaux 10, 25, 50, 100, 150, 200, 300, 400, 500 ; ×2 ×2 ×3 ×3 ×4 ×4 ×5 ×5 ×8) : ×36 au niveau 100 (avant ×16), ×576 au niveau 200 (avant ×16), ×115 200 au niveau 500.
