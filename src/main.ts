@@ -1,6 +1,6 @@
 import './style.css';
 import {
-  GENS, MILESTONE_TABLE, SHOVEL_TABLE, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
+  GENS, MILESTONE_TABLE, SHOVEL_TABLE, PERMS, GEM_BONUS, CASQUE_STEP, THERMOS_STEP, RUSH_MULT, TREASURE_SEC, PERM_CLICK_PS, PERM_PROD_BONUS, SHOVEL_BASE, GEM_DIV,
   NUGGET_MIN_DELAY, NUGGET_MAX_DELAY, NUGGET_LIFE, RUSH_TIME, GENIUS_TIME, BONUSES, BonusId, AUTO_RATE, RAIN_COUNT, TURBO_MULT, GENIUS_MULT,
 } from './config';
 import { ACC, CHIPS, ICONS, MOLE, SCENE, icon, plate } from './art';
@@ -18,7 +18,7 @@ import { statsHtml, trophiesHtml } from './lists';
 import {
   State, applyEvent, applyOffline, buyN, buyPerm, click, clickRoll, clickRaw, clickPower, costOf, genProd, genProdAt, maxAffordable,
   milestoneCount, milestoneMult, newState, nextMilestone, offlineCap, perSecond, permCost, prodMult, rebirth, rebirthAdvised, rebirthGain,
-  rollEvent, startDirt, tick, trophyMult, bonusActive, bonusLeft, bonusReadyCount, rainCatch, useBonus, autoTapRaw,
+  rollEvent, startDirt, tick, trophyMult, perSecondBase, bonusActive, baseCost, bonusFacts, bonusOwned, bonusCd, critChance, nuggetDelayMult, bonusLeft, bonusReadyCount, rainCatch, useBonus, autoTapRaw,
 } from './sim';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -88,11 +88,13 @@ ids.forEach((id, i) => {
   rows.push(r);
   (i === 0 ? rowsUl : crewUl).append(r.el.parentElement!);
 });
+const isBonusPerm = (id: string) => BONUSES.some((b) => b.id === id);
+const pname = (id: string) => (isBonusPerm(id) ? t('b' + id[0].toUpperCase() + id.slice(1)) : t(id));
 PERMS.forEach((p, i) => {
   const r = mkRow(p.id, i);
   r.el.addEventListener('click', () => {
     if (r.el.getAttribute('aria-disabled') === 'true') { sfx.deny(); return; }
-    if (buyPerm(s, i)) { say(t('bought', { name: t(p.id), n: s.perms[i] })); bought(r, true); }
+    if (buyPerm(s, i)) { say(p.max === 1 ? t('boughtOnce', { name: pname(p.id) }) : t('bought', { name: pname(p.id), n: s.perms[i] })); bought(r, true); if (p.max === 1) notify(t('boughtOnce', { name: pname(p.id) })); }
   });
   permRows.push(r);
   permsUl.append(r.el.parentElement!);
@@ -146,6 +148,7 @@ const depthOf = () => (s.gens[4] > 0 || s.gens[5] > 0 ? 2 : s.gens[2] > 0 || s.g
 const revealed = (i: number) => s.gens[i] > 0 || s.lifeTotal >= GENS[i].cost * 0.4;
 const bonusPct = (lvl: number, per: number) => fmtPct(per * 100 * lvl, lang());
 
+let goalPrev = -1; // gemmes en attente au rendu précédent (animation de « montée de niveau »)
 /** Progression vers la prochaine gemme, en pourcentage entier. */
 function goal() {
   const g = rebirthGain(s);
@@ -297,11 +300,19 @@ function render() {
   $('goal').setAttribute('aria-valuenow', String(gl.pct));
   $('goal-fill').style.width = gl.pct + '%';
   setText($('goal-l'), `${gl.pct} %`);
+  const pend = rebirthGain(s);
+  setText($('goal-t'), t('goalCap', { a: pend, b: pend + 1, p: gl.pct, g: Math.round(GEM_BONUS * 100) }) + (pend >= 1 ? ' · ' + t('goalReady') : ''));
+  if (goalPrev >= 0 && pend > goalPrev) {
+    notify(t('goalUp', { n: pend, g: Math.round(GEM_BONUS * 100 * pend) }));
+    const gb = $('goal'); gb.classList.remove('goal-pop'); void gb.offsetWidth; if (!reducedMotion()) gb.classList.add('goal-pop');
+    sfx.upgrade();
+  }
+  goalPrev = pend;
   $('goal').setAttribute('aria-label', t(gl.first ? 'goalFirst' : 'goalNext'));
   let hot = false;
   rows.forEach((r, i) => {
     const level = r.kind < 0 ? s.shovel : s.gens[r.kind];
-    const base = r.kind < 0 ? SHOVEL_BASE : GENS[r.kind].cost;
+    const base = baseCost(s, r.kind);
     const locked = r.kind >= 0 && !revealed(r.kind);
     const n = opts.mode === 'max' ? Math.max(1, maxAffordable(base, level, s.dirt)) : opts.mode;
     const cost = costOf(base, level, n);
@@ -355,21 +366,28 @@ function render() {
     const r = permRows[i];
     const lvl = s.perms[i];
     const maxed = lvl >= p.max;
+    const bid = isBonusPerm(p.id) ? (p.id as BonusId) : null;
     const extra = p.id === 'lunettes' ? bonusPct(lvl, PERM_PROD_BONUS) : p.id === 'pelleor' ? bonusPct(lvl, PERM_CLICK_PS)
-      : p.id === 'pecule' ? `${f(startDirt(s))}` : p.id === 'sacoche' ? `+${f(lvl)} h` : '';
+      : p.id === 'pecule' ? `${f(startDirt(s))}` : p.id === 'sacoche' ? `+${f(lvl)} h`
+      : p.id === 'trefle' ? `${t('nowVal')} : ${f(Math.round(critChance(s) * 100))} %`
+      : p.id === 'casque' ? `${t('nowVal')} : -${f(Math.round(CASQUE_STEP * lvl * 100))} %`
+      : p.id === 'aimant' ? `${t('nowVal')} : ${t('nuggetEvery', { t: fmtDuration(Math.round((NUGGET_MIN_DELAY + NUGGET_MAX_DELAY) / 2 * nuggetDelayMult(s)), L) })}`
+      : p.id === 'thermos' ? `${t('nowVal')} : -${f(Math.round(THERMOS_STEP * lvl * 100))} %`
+      : bid ? `≈ +${f(bonusFacts(s, bid).total)} ${t('perUse')}` : '';
     const pc = permCost(s, i);
     const no = !maxed && s.gems < pc;
     r.el.classList.toggle('is-max', maxed);
     r.el.classList.toggle('is-no', no);
-    setText(r.name, t(p.id));
-    setText(r.lv, `${t('level')} ${f(lvl)}`);
-    setText(r.desc, t(p.id + 'D'));
+    setText(r.name, pname(p.id));
+    setText(r.lv, p.max === 1 ? (maxed ? t('purchased') : '') : `${t('level')} ${f(lvl)}`);
+    r.lv.hidden = p.max === 1 && !maxed;
+    setText(r.desc, bid ? t('b' + p.id[0].toUpperCase() + p.id.slice(1) + 'D') + ' ' + t('onceNote') : t(p.id + 'D'));
     r.el.title = r.desc.textContent ?? '';
     setText(r.cur, extra);
     r.cur.hidden = extra === '';
     r.plus.hidden = true;
     r.mile.hidden = true;
-    setHtml(r.cost.firstElementChild as HTMLElement, maxed ? `${icon('trophy', 'h-5 w-5')}${t('full')}` : `${icon('gem', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(pc)}`);
+    setHtml(r.cost.firstElementChild as HTMLElement, maxed ? `${icon('trophy', 'h-5 w-5')}${t(p.max === 1 ? 'purchased' : 'full')}` : `${icon('gem', 'h-5 w-5')}<span class="sr-only">${t('cost')} </span>${f(pc)}`);
     setNeed(r.cost, no ? Math.floor(s.gems / pc * 100) : -1);
     setDisabled(r.el, maxed || no);
   });
@@ -377,6 +395,7 @@ function render() {
   renderBuffs();
   const sel = openPanelName();
   if (sel === 'trophies' || sel === 'stats') renderTrophies();
+  if (sel === 'stats') bonusHelp();
   renderBadges(hot);
   const hk = hintKey();
   const hint = $('hint');
@@ -573,7 +592,7 @@ const nuggetEl = $<HTMLButtonElement>('nugget');
 nuggetEl.innerHTML = icon('nugget', 'h-10 w-10');
 let nuggetIn = 45; // secondes avant la prochaine apparition
 let nuggetLeft = 0; // secondes restantes pour la cueillir (0 = absente)
-const nextNuggetDelay = () => NUGGET_MIN_DELAY + Math.random() * (NUGGET_MAX_DELAY - NUGGET_MIN_DELAY);
+const nextNuggetDelay = () => (NUGGET_MIN_DELAY + Math.random() * (NUGGET_MAX_DELAY - NUGGET_MIN_DELAY)) * nuggetDelayMult(s);
 function nuggetTick(dt: number) {
   if (document.hidden || welcome.open) return;
   if (nuggetLeft > 0) {
@@ -620,11 +639,14 @@ const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padSta
 function renderBonus() {
   const now = Date.now();
   bnEls.forEach((b) => {
+    const own = bonusOwned(s, b.def.id);
     const left = bonusLeft(s, b.def.id, now), act = Math.ceil(bonusActive(s, b.def.id));
     const st = act > 0 ? 'active' : left > 0 ? 'cool' : 'ready';
-    const key = st + (st === 'active' ? act : st === 'cool' ? left : '') + lang();
+    const key = (own ? 'o' : 'n') + st + (st === 'active' ? act : st === 'cool' ? left : '') + lang() + s.perms[PERMS.findIndex((p) => p.id === 'thermos')];
     if (key === b.key) return;
     b.key = key;
+    b.el.parentElement!.hidden = !own;
+    b.el.title = tipText(b.def.id);
     b.el.dataset.st = st;
     const frac = st === 'active' ? act / b.def.dur : st === 'cool' ? 1 - left / b.def.cd : 1;
     b.arc.setAttribute('stroke-dashoffset', String(Math.round((1 - Math.max(0, Math.min(1, frac))) * RING * 10) / 10));
@@ -639,9 +661,51 @@ function renderBonus() {
   const n = bonusReadyCount(s, now);
   bonusUl.setAttribute('aria-label', t('bonusBar') + (n ? ' · ' + t('bonusReadyN', { n }) : ''));
 }
-function bonusHelp() {
-  setHtml($('bonus-help'), BONUSES.map((b) => `<li class="note flex items-center gap-2"><span class="shrink-0">${icon(b.id, 'h-9 w-9')}</span><span class="min-w-0"><strong class="block text-lg">${bname(b.id)}</strong><span class="block text-base">${t('b' + b.id[0].toUpperCase() + b.id.slice(1) + 'D')}</span><span class="block text-sm">${t('bonusCd', { t: fmtDuration(b.cd, lang()) })}</span></span></li>`).join(''));
+/** Texte d'un bonus avec les chiffres réels du niveau actuel (infobulle d'appui long et aide). Aucun nombre à virgule. */
+function tipText(id: BonusId): string {
+  const x = bonusFacts(s, id);
+  const cd = x.cd % 60 === 0 ? `${x.cd / 60} min` : `${Math.floor(x.cd / 60)} min ${x.cd % 60} s`;
+  return id === 'auto' ? t('tipAuto', { r: AUTO_RATE, d: x.dur, e: f(x.each), n: f(x.total), c: cd })
+    : id === 'turbo' ? t('tipTurbo', { m: TURBO_MULT, d: x.dur, n: f(x.total), c: cd })
+    : t('tipRain', { k: x.count, d: x.dur, e: f(x.each), n: f(x.total), c: cd });
 }
+function bonusHelp() {
+  const nug = [
+    ['nugget', t('bRush'), t('tipRush', { m: RUSH_MULT, d: RUSH_TIME, n: f(Math.round(perSecondBase(s) * (RUSH_MULT - 1) * RUSH_TIME)) })],
+    ['nugget', t('bGenius'), t('tipGenius', { m: GENIUS_MULT, d: GENIUS_TIME })],
+    ['nugget', t('bTreasure'), t('tipTreasure', { n: f(Math.round(Math.max(perSecondBase(s) * TREASURE_SEC, clickPower(s) * 50))), s: fmtDuration(TREASURE_SEC, lang()) })],
+  ];
+  const li = (ico: string, name: string, body: string, extra: string) => `<li class="note flex items-center gap-2"><span class="shrink-0">${icon(ico, 'h-9 w-9')}</span><span class="min-w-0"><strong class="block text-lg">${name}</strong><span class="block text-base">${body}</span>${extra ? `<span class="block text-sm">${extra}</span>` : ''}</span></li>`;
+  setHtml($('bonus-help'),
+    BONUSES.map((b) => li(b.id, bname(b.id), tipText(b.id), bonusOwned(s, b.id) ? t('purchased') : t('bonusShop', { n: f(PERMS[PERMS.findIndex((p) => p.id === b.id)].cost) }))).join('')
+    + nug.map(([i, n, b]) => li(i, n, b, t('nuggetNote'))).join(''));
+}
+
+// ----- infobulle d'appui long (bonus à recharge) : au-dessus du bouton, hors du doigt, se ferme au relâchement -----
+const tipEl = document.createElement('div');
+tipEl.className = 'tip'; tipEl.hidden = true; tipEl.setAttribute('role', 'tooltip');
+document.body.append(tipEl);
+let tipTimer = 0, tipShown = false;
+function hideTip() { window.clearTimeout(tipTimer); tipEl.hidden = true; }
+function showTip(el: HTMLElement) {
+  tipEl.textContent = tipText(el.dataset.id as BonusId);
+  tipEl.hidden = false;
+  const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  const left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+  const above = r.top - h - 14;
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = Math.max(8, above >= 8 ? above : r.bottom + 64) + 'px';
+  tipShown = true; vibe(8);
+}
+bonusUl.addEventListener('pointerdown', (e) => {
+  const el = (e.target as HTMLElement).closest<HTMLElement>('.bn');
+  if (!el) return;
+  tipShown = false;
+  window.clearTimeout(tipTimer);
+  tipTimer = window.setTimeout(() => showTip(el), 420);
+});
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'contextmenu', 'blur'] as const) bonusUl.addEventListener(ev, (e) => { if (ev === 'contextmenu') e.preventDefault(); hideTip(); }, true);
+window.addEventListener('scroll', hideTip, true);
 const fingerEl = document.createElement('span');
 fingerEl.className = 'finger'; fingerEl.hidden = true; fingerEl.innerHTML = icon('auto', 'h-12 w-12');
 fx.append(fingerEl);
@@ -733,6 +797,7 @@ function startRain() { rainCaught = 0; rainLeft = RAIN_COUNT; rainStep(); }
 bonusUl.addEventListener('click', (e) => {
   const el = (e.target as HTMLElement).closest<HTMLButtonElement>('.bn');
   if (!el) return;
+  if (tipShown) { tipShown = false; return; } // l'appui long a seulement ouvert l'infobulle
   const id = el.dataset.id as BonusId;
   const out = { gain: 0 };
   if (!useBonus(s, id, Date.now(), out)) {

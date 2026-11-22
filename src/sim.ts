@@ -2,7 +2,8 @@ import {
   GEM_BONUS, GEM_DIV, GENS, GROWTH, OFFLINE_BASE, OFFLINE_STEP, PERMS, PERM_CLICK_PS, PERM_PROD_BONUS, PECULE_SEC, PECULE_MIN,
   CLICK_BASE, PROD_EXP, SHOVEL_BASE, SHOVEL_POWER, MILESTONE_TABLE, SHOVEL_TABLE, SHOVEL_PS, TROPHY_BONUS,
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
-  BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, RAIN_SEC, RAIN_CLICKS,
+  BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, RAIN_SEC, RAIN_CLICKS, RAIN_COUNT,
+  TREFLE_STEP, CASQUE_STEP, AIMANT_STEP, THERMOS_STEP,
 } from './config';
 
 export interface State {
@@ -41,6 +42,17 @@ export function newState(): State {
 }
 
 const permLevel = (s: State, id: string) => s.perms[PERMS.findIndex((p) => p.id === id)] ?? 0;
+export const permLv = permLevel;
+/** Chance de coup critique : base + Trèfle. */
+export const critChance = (s: State) => CRIT_CHANCE + TREFLE_STEP * permLevel(s, 'trefle');
+/** Prix de base (1er niveau) de la pelle (kind -1) ou d'un bâtiment, après le Casque de chantier. */
+export const baseCost = (s: State, kind: number) => (kind < 0 ? SHOVEL_BASE : GENS[kind].cost) * (1 - CASQUE_STEP * permLevel(s, 'casque'));
+/** Multiplicateur de délai des pépites d'or (Aimant : plus petit = plus fréquent). */
+export const nuggetDelayMult = (s: State) => 1 - AIMANT_STEP * permLevel(s, 'aimant');
+/** Recharge réelle d'un bonus, en secondes entières (Thermos). */
+export const bonusCd = (s: State, id: BonusId) => Math.max(1, Math.round(BONUSES[BONUSES.findIndex((b) => b.id === id)].cd * (1 - THERMOS_STEP * permLevel(s, 'thermos'))));
+/** Un bonus à recharge s'achète une fois en boutique (gemmes), puis reste à vie. */
+export const bonusOwned = (s: State, id: BonusId) => permLevel(s, id) >= 1;
 
 export const gemMult = (s: State) => 1 + GEM_BONUS * s.gemsEarned;
 export const trophyMult = (s: State) => 1 + TROPHY_BONUS * s.trophies.length;
@@ -85,7 +97,7 @@ export function maxAffordable(base: number, level: number, budget: number): numb
 
 /** Clic avec chance de critique : `rng` injectable (tests). Le critique double le gain final (×5 or, ×2 turbo compris), arrondi entier ; ni production passive ni prestige. */
 export function clickRoll(s: State, rng: () => number = Math.random): { gain: number; crit: boolean } {
-  const crit = rng() < CRIT_CHANCE;
+  const crit = rng() < critChance(s);
   const g = crit ? Math.round(clickPower(s) * CRIT_MULT) : clickPower(s);
   s.clicks++;
   earn(s, g);
@@ -145,15 +157,24 @@ export function bonusLeft(s: State, id: BonusId, now: number): number {
   const left = Math.ceil(((s.ready[i] ?? 0) - now) / 1000);
   return Math.max(0, Math.min(left, BONUSES[i].cd));
 }
-export const bonusReady = (s: State, id: BonusId, now: number) => bonusLeft(s, id, now) === 0;
+export const bonusReady = (s: State, id: BonusId, now: number) => bonusOwned(s, id) && bonusLeft(s, id, now) === 0;
 /** Nombre de bonus prêts (pastille). */
 export const bonusReadyCount = (s: State, now: number) => BONUSES.filter((b) => bonusReady(s, b.id, now)).length;
+/** Nombre de bonus possédés. */
+export const bonusOwnedCount = (s: State) => BONUSES.filter((b) => bonusOwned(s, b.id)).length;
 /** Secondes d'effet restantes d'un bonus actif (0 = inactif). */
 export function bonusActive(s: State, id: BonusId): number {
   return id === 'auto' ? s.auto : id === 'turbo' ? s.turbo : 0;
 }
 /** Production d'un instant, au minimum équivalente à `clicks` clics (utile au tout début, sans bâtiment). */
 const worth = (s: State, sec: number, clicks: number) => Math.floor(Math.max(perSecondBase(s) * sec, clickBase(s) * clicks)); // plancher en clics SANS la part de production de la Pelle en or (sinon ×3 la production au niv. 100)
+/** Chiffres réels d'un bonus au niveau actuel (infobulle) : durée, recharge, gain total estimé, tous entiers. */
+export function bonusFacts(s: State, id: BonusId): { dur: number; cd: number; total: number; each: number; count: number } {
+  const def = BONUSES[bonusIdx(id)], cd = bonusCd(s, id);
+  if (id === 'auto') return { dur: def.dur, cd, each: Math.round(autoTapRaw(s)), count: AUTO_RATE * def.dur, total: Math.round(autoTapRaw(s) * AUTO_RATE * def.dur) };
+  if (id === 'turbo') return { dur: def.dur, cd, each: TURBO_MULT, count: 0, total: Math.round(perSecondBase(s) * (TURBO_MULT - 1) * def.dur) };
+  return { dur: def.dur, cd, each: rainValue(s), count: RAIN_COUNT, total: rainValue(s) * RAIN_COUNT };
+}
 /** Valeur d'une pépite de la pluie. */
 export const rainValue = (s: State) => worth(s, RAIN_SEC, RAIN_CLICKS);
 /** Cueille une pépite de la pluie ; renvoie la terre gagnée. */
@@ -165,9 +186,9 @@ export function rainCatch(s: State): number {
 }
 /** Déclenche un bonus s'il est prêt (et pas déjà actif) ; renvoie false sinon. Lance la recharge, effet appliqué. Gain instantané : terre gagnée dans `out.gain`. */
 export function useBonus(s: State, id: BonusId, now: number, out: { gain: number } = { gain: 0 }): boolean {
-  if (!bonusReady(s, id, now) || bonusActive(s, id) > 0) return false;
+  if (!bonusOwned(s, id) || !bonusReady(s, id, now) || bonusActive(s, id) > 0) return false;
   const i = bonusIdx(id), def = BONUSES[i];
-  s.ready[i] = now + def.cd * 1000;
+  s.ready[i] = now + bonusCd(s, id) * 1000;
   if (id === 'auto') { s.auto = def.dur; s.autoAcc = 0; }
   else if (id === 'turbo') s.turbo = def.dur;
   return true;
@@ -194,7 +215,7 @@ export function applyEvent(s: State, kind: EventKind): number {
 
 /** Achète `n` niveaux (borné par la bourse) ; renvoie le nombre acheté. kind : -1 pelle, sinon index de générateur. */
 export function buy(s: State, kind: number, n: number): number {
-  const base = kind < 0 ? SHOVEL_BASE : GENS[kind].cost;
+  const base = baseCost(s, kind);
   const level = kind < 0 ? s.shovel : s.gens[kind];
   const k = Math.min(n, maxAffordable(base, level, s.dirt));
   if (k < 1) return 0;
@@ -261,7 +282,7 @@ export function bestBuy(s: State, clicksPerSec: number): number | null {
   let bestRatio = Infinity;
   const base = perSecond(s) + clicksPerSec * clickPower(s);
   for (let k = -1; k < GENS.length; k++) {
-    const cost = costOf(k < 0 ? SHOVEL_BASE : GENS[k].cost, k < 0 ? s.shovel : s.gens[k], 1);
+    const cost = costOf(baseCost(s, k), k < 0 ? s.shovel : s.gens[k], 1);
     let gain: number;
     if (k < 0) {
       gain = clicksPerSec * (clickRaw(s, s.shovel + 1) - clickRaw(s)) * (s.turbo > 0 ? TURBO_MULT : 1);
