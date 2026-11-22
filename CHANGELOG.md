@@ -2,6 +2,9 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.19.0 — 2026-11-22 (compte)
+- **Compte OpenGamingStudio (facultatif)** : connexion pseudo + code, Google ou Discord, et sauvegarde de la progression sur tous les appareils (`account.js`, service api.opengamingstudio.com ; CSP `connect-src` limitée à ce domaine). Le jeu reste jouable sans compte.
+
 ## 2.18.3 — 2026-11-22 (revue du code 2.12 à 2.18)
 - **Mouvements réduits** : les « +N » flottants (livraisons, pluie de pépites, auto-tap) ne restaient jamais retirés quand l’animation est coupée (`animationend` ne vient pas) ; ils partent maintenant au plus tard après 1,6 s (`autoRemove`).
 - Revue : aucun id ni @keyframes en double, `.flash` limité à `#stage-fx`, les variables CSS répétées sont des surcharges de thème voulues.
