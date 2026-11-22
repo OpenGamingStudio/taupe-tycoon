@@ -136,6 +136,15 @@ html, body {
   .goal { @apply overflow-hidden rounded-full border-[3px] border-ink bg-night; box-sizing: content-box; height: 8px; }
   .goal-fill { @apply block h-full; background: #0f9490; width: 0; transition: width 0.25s linear; }
 
+  /* pépites (2.17.0) : compteur de l'en-tête et panneau Bonus */
+  .hudpep { @apply flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-xl border-[3px] border-ink bg-nugget px-1.5 text-ink; touch-action: manipulation; }
+  .hudpep svg { @apply h-6 w-6 shrink-0; }
+  .hudpep.bump { animation: bump 0.22s ease-out; }
+  .hudpep.can { animation: bnpulse 1.4s ease-in-out infinite; }
+  .bp-bar { @apply relative block h-3 overflow-hidden rounded-full border-[3px] border-ink; background: #8f6a48; box-sizing: content-box; }
+  .bp-bar i { @apply block h-full bg-nugget; width: 0; }
+  .row .need i { transition: width 0.25s linear; }
+
   /* V3 : dopamine et interface */
   .hud { @apply bg-rock text-plank shadow-hard; }
   .hud .sr-only { color: inherit; }
@@ -155,7 +164,7 @@ html, body {
   #app { --dock: calc(4.25rem + env(safe-area-inset-bottom)); --sheet-h: min(56dvh, 34rem); --sheet-w: 0px; --sheet-b: 0px; }
   #app:not([data-panel=""]) { --sheet-b: var(--sheet-h); }
   #stage { padding: env(safe-area-inset-top) calc(env(safe-area-inset-right) + var(--sheet-w)) calc(var(--dock) + var(--sheet-b)) env(safe-area-inset-left); transition: padding 0.28s cubic-bezier(.2,.8,.2,1); }
-  .dock { @apply fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 gap-1.5 border-t-[3px] border-ink bg-ink px-1.5 pt-1.5; padding-bottom: max(0.375rem, env(safe-area-inset-bottom)); padding-left: max(0.375rem, env(safe-area-inset-left)); padding-right: max(0.375rem, env(safe-area-inset-right)); height: var(--dock); }
+  .dock { @apply fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 gap-1.5 border-t-[3px] border-ink bg-ink px-1.5 pt-1.5; padding-bottom: max(0.375rem, env(safe-area-inset-bottom)); padding-left: max(0.375rem, env(safe-area-inset-left)); padding-right: max(0.375rem, env(safe-area-inset-right)); height: var(--dock); }
   .dk { @apply relative flex min-h-[48px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border-[3px] border-ink bg-wood px-0.5 text-[12px] text-ink font-bold leading-none; touch-action: manipulation; transition: transform 0.1s ease-out, background-color 0.15s; }
   .dk svg { @apply h-6 w-6 shrink-0; }
   .dk[aria-expanded="true"] { @apply bg-nugget text-ink; transform: translateY(-3px); box-shadow: 0 3px 0 #1a100a; }

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { BONUSES, GENS, PERMS, SHOVEL_TABLE, MILESTONE_TABLE } from '../src/config';
+import { TROPHIES, trophyPep, checkTrophies } from '../src/trophies';
+import { BONUSES, PEP_COSTS, PEP_NUGGET_PER_HOUR, GENS, PERMS, SHOVEL_TABLE, MILESTONE_TABLE } from '../src/config';
 import { ALL_PERMS, play } from '../tools/play';
 import { SAVE_VERSION, sanitize } from '../src/save';
 import {
-  State, baseCost, milestoneMult, bonusCd, bonusFacts, bonusOwned, bonusReady, buy, buyPerm, clickRaw, critChance, clickRoll, genProd, genProdAt, newState,
-  nuggetDelayMult, perSecondBase, rebirth, tick, useBonus,
+  State, baseCost, milestoneMult, bonusCd, bonusFacts, bonusOwned, bonusReady, buy, buyBonus, buyPerm, bonusLevel, pepCost, nextBonusBuy, nuggetPep, nuggetPepLeft, checkTiers, clickRaw, critChance, clickRoll, genProd, genProdAt, newState,
+  nuggetDelayMult, rainCount, perSecondBase, rebirth, tick, useBonus,
 } from '../src/sim';
 
 const NOW = 1_700_000_000_000;
@@ -56,41 +57,58 @@ describe('rendement par achat : jamais en baisse', () => {
   });
 });
 
-describe('bonus à recharge : achat unique, permanent', () => {
-  it('sans achat, le bonus est refusé ; un achat suffit, un second est refusé', () => {
-    const s = newState(); s.gems = 100;
+describe('bonus à recharge : achat en pépites, permanent', () => {
+  it('sans achat, le bonus est refusé ; la 1re pépite-prix l\'achète, puis des niveaux jusqu\'à 3', () => {
+    const s = newState(); s.pep = 10000; s.gems = 100;
     for (const b of BONUSES) {
       expect(bonusOwned(s, b.id)).toBe(false);
       expect(bonusReady(s, b.id, NOW)).toBe(false);
       expect(useBonus(s, b.id, NOW)).toBe(false);
-      expect(buyPerm(s, idx(b.id))).toBe(true);
-      expect(buyPerm(s, idx(b.id))).toBe(false);
-      expect(s.perms[idx(b.id)]).toBe(1);
+      expect(idx(b.id)).toBe(-1); // plus dans la boutique de gemmes
+      expect(buyBonus(s, b.id)).toBe(true);
       expect(bonusOwned(s, b.id)).toBe(true);
-      expect(PERMS[idx(b.id)].max).toBe(1);
+      expect(bonusLevel(s, b.id)).toBe(1);
+      expect(buyBonus(s, b.id)).toBe(true); expect(buyBonus(s, b.id)).toBe(true);
+      expect(buyBonus(s, b.id)).toBe(false); // niveau maximal
+      expect(bonusLevel(s, b.id)).toBe(3);
     }
-    const spent = 100 - s.gems;
-    expect(spent).toBe(BONUSES.reduce((a, b) => a + PERMS[idx(b.id)].cost, 0));
+    expect(s.gems).toBe(100); // les gemmes ne servent plus aux bonus
+    expect(10000 - s.pep).toBe(BONUSES.reduce((a, b) => a + PEP_COSTS[b.id].reduce((x, y) => x + y, 0), 0));
+    const p = newState(); p.pep = PEP_COSTS.auto[0] - 1;
+    expect(buyBonus(p, 'auto')).toBe(false); expect(p.pep).toBe(PEP_COSTS.auto[0] - 1);
+    expect(nextBonusBuy(p)).toEqual({ id: 'auto', cost: PEP_COSTS.auto[0], missing: 1 });
+  });
+  it('les coûts croissent (achat puis niveaux) ; durée et nombre de pépites suivent le niveau', () => {
+    for (const b of BONUSES) { const c = PEP_COSTS[b.id]; expect(c[1]).toBeGreaterThan(c[0]); expect(c[2]).toBeGreaterThan(c[1]); }
+    const s = newState(); s.pep = 1e4;
+    for (const id of ['auto', 'turbo', 'rain'] as const) buyBonus(s, id);
+    expect(bonusFacts(s, 'auto').dur).toBe(30); expect(rainCount(s)).toBe(12);
+    for (const id of ['auto', 'turbo', 'rain'] as const) { buyBonus(s, id); buyBonus(s, id); }
+    expect(bonusFacts(s, 'auto').dur).toBe(60); expect(rainCount(s)).toBe(24);
+    expect(useBonus(s, 'auto', NOW)).toBe(true); expect(s.auto).toBe(60);
   });
   it('reste acquis après un rebirth, une sauvegarde et un rechargement ; la recharge continue', () => {
-    const s = richState(); s.gems = 50; s.runTotal = 1e13;
-    for (const b of BONUSES) buyPerm(s, idx(b.id));
+    const s = richState(); s.gems = 50; s.runTotal = 1e13; s.pep = 500; s.tiers = [1, 1, 1, 1, 1, 1, 1];
+    for (const b of BONUSES) buyBonus(s, b.id);
+    const pep = s.pep;
     expect(useBonus(s, 'turbo', NOW)).toBe(true);
     expect(rebirth(s)).toBeGreaterThan(0);
     for (const b of BONUSES) expect(bonusOwned(s, b.id)).toBe(true);
     const back = sanitize(JSON.parse(JSON.stringify({ v: SAVE_VERSION, s, at: NOW, opts: {} })))!.s;
     for (const b of BONUSES) expect(bonusOwned(back, b.id)).toBe(true);
-    expect(back.perms[idx('auto')]).toBe(1);
+    expect(back.bonusLv).toEqual([1, 1, 1]); expect(s.pep).toBe(pep); expect(back.pep).toBe(pep); expect(back.tiers).toEqual(s.tiers); // les pépites survivent au rebirth
   });
   it('migration : une sauvegarde antérieure à la v6 reçoit les trois bonus, une v6 sans achat ne les a pas', () => {
     const old = sanitize({ v: 5, at: NOW, s: { dirt: 10, perms: [0, 0, 0, 0] }, opts: {} })!;
     for (const b of BONUSES) expect(bonusOwned(old.s, b.id)).toBe(true);
     const fresh = sanitize({ v: 6, at: NOW, s: { dirt: 10, perms: [0, 0, 0, 0, 0, 0, 0] }, opts: {} })!;
     for (const b of BONUSES) expect(bonusOwned(fresh.s, b.id)).toBe(false);
+    const six = sanitize({ v: 6, at: NOW, s: { dirt: 10, perms: [1, 0, 0, 0, 0, 1, 0, 2] }, opts: {} })!; // v6 : lunettes 1, turbo acheté, trèfle 2
+    expect(six.s.bonusLv).toEqual([0, 1, 0]); expect(six.s.perms[0]).toBe(1); expect(six.s.perms[idx('trefle')]).toBe(2);
     expect(old.s.perms[idx('lunettes')]).toBe(0); // rien d'autre n'est offert
   });
   it('infobulle : chiffres réels, entiers, qui suivent le niveau', () => {
-    const a = richState(), b = richState(); b.gens = GENS.map(() => 100); b.perms[idx('thermos')] = 5; b.perms[idx('pelleor')] = 3; b.shovel = 60;
+    const a = richState(), b = richState(); a.bonusLv = [1, 1, 1]; b.bonusLv = [1, 1, 1]; b.gens = GENS.map(() => 100); b.perms[idx('thermos')] = 5; b.perms[idx('pelleor')] = 3; b.shovel = 60;
     for (const bn of BONUSES) {
       const fa = bonusFacts(a, bn.id), fb = bonusFacts(b, bn.id);
       for (const v of [fa.dur, fa.cd, fa.total, fa.each, fa.count]) expect(Number.isInteger(v)).toBe(true);
@@ -122,7 +140,7 @@ describe('nouveaux objets : un effet distinct chacun', () => {
   it('Aimant : pépites plus fréquentes ; Thermos : recharge plus courte', () => {
     const s = newState();
     s.perms[idx('aimant')] = 10; expect(nuggetDelayMult(s)).toBeCloseTo(0.6, 9);
-    s.perms[idx('thermos')] = 10; s.perms[idx('turbo')] = 1;
+    s.perms[idx('thermos')] = 10; s.bonusLv[1] = 1;
     expect(bonusCd(s, 'turbo')).toBe(Math.round(360 * 0.6));
     expect(useBonus(s, 'turbo', NOW)).toBe(true);
     expect(Math.ceil(s.ready[1] - NOW) / 1000).toBe(Math.round(360 * 0.6));
@@ -131,7 +149,7 @@ describe('nouveaux objets : un effet distinct chacun', () => {
     const ids = PERMS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const p of PERMS) { expect(p.cost).toBeGreaterThan(0); expect(p.max).toBeGreaterThanOrEqual(1); }
-    expect(ids.length).toBeGreaterThanOrEqual(11);
+    expect(ids.length).toBeGreaterThanOrEqual(8);
   });
 });
 
@@ -148,7 +166,7 @@ describe('équilibre avec TOUS les bonus (achetables + activables)', () => {
     for (const l of all.log) expect(l.t).toBeGreaterThan(30);
   });
   it('combo Auto-tap + Pelle en or + Turbo : un bonus de 30 s rapporte moins de 10 min de production', () => {
-    const s = richState(); s.perms[idx('pelleor')] = 200; s.perms[idx('turbo')] = 1; s.perms[idx('auto')] = 1; s.shovel = 100;
+    const s = richState(); s.perms[idx('pelleor')] = 200; s.bonusLv = [1, 1, 1]; s.shovel = 100;
     const f = bonusFacts(s, 'auto');
     expect(f.total).toBeLessThan(perSecondBase(s) * 600);
     const before = s.dirt;
@@ -157,11 +175,50 @@ describe('équilibre avec TOUS les bonus (achetables + activables)', () => {
     expect(s.dirt - before).toBeLessThan(perSecondBase(s) * 600);
   });
   it('chaque bonus pris seul ne dépasse pas ×2 sur 3 h', () => {
-    for (const b of BONUSES) {
-      const order = [idx(b.id)];
-      const one = run({ perms: order, nuggets: true, bonuses: true });
+    for (const b of [BONUSES[0]]) { // la politique achète les bonus un à un avec les pépites gagnées
+      const one = run({ perms: [3], nuggets: true, bonuses: true });
       const none = run({ perms: [3], nuggets: true });
       expect(one.s.lifeTotal, b.id).toBeLessThan(none.s.lifeTotal * 2);
     }
+  });
+});
+
+describe('pépites : sources et garde-fous', () => {
+  it('paliers : 1 pépite par palier, une seule fois à vie, pas pour le 1er palier ; survit au rebirth', () => {
+    const s = newState(); s.gens[0] = 10; s.shovel = 10;
+    expect(checkTiers(s)).toBe(0); // paliers 10 (bâtiment) et 5, 10 (pelle) : trop faciles
+    s.gens[0] = 25; s.shovel = 25;
+    expect(checkTiers(s)).toBe(2); expect(s.pep).toBe(2);
+    expect(checkTiers(s)).toBe(0);
+    s.runTotal = 1e13; rebirth(s); s.gens[0] = 25; s.shovel = 25; // rejouer le palier ne repaie pas
+    expect(checkTiers(s)).toBe(0); expect(s.pep).toBe(2);
+    s.gens[0] = 50; expect(checkTiers(s)).toBe(1);
+  });
+  it('acheter un niveau franchit le palier et paie la pépite', () => {
+    const s = newState(); s.gens[1] = 24; s.dirt = 1e12;
+    buy(s, 1, 1); expect(s.gens[1]).toBe(25); expect(s.pep).toBe(1);
+  });
+  it('pépite d\'or : au plus N pépites par heure, la fenêtre glisse', () => {
+    const s = newState(); let got = 0;
+    for (let i = 0; i < 20; i++) got += nuggetPep(s, NOW + i * 60_000);
+    expect(got).toBe(PEP_NUGGET_PER_HOUR);
+    const q = nuggetPepLeft(s, NOW + 20 * 60_000);
+    expect(q.left).toBe(0); expect(q.wait).toBeGreaterThan(0); expect(q.wait).toBeLessThanOrEqual(3600);
+    expect(nuggetPep(s, NOW + 61 * 60_000)).toBe(1);
+  });
+  it('succès : 1 à 3 pépites chacun', () => {
+    for (const tr of TROPHIES) { expect(trophyPep(tr.id)).toBeGreaterThanOrEqual(1); expect(trophyPep(tr.id)).toBeLessThanOrEqual(3); }
+    const s = newState(); s.clicks = 1; checkTrophies(s); expect(s.pep).toBe(trophyPep('clic1'));
+  });
+  it('migration : succès et paliers déjà atteints sont offerts une fois ; v7 : valeurs bornées', () => {
+    const m = sanitize({ v: 6, at: NOW, s: { dirt: 1, gens: [25, 0, 0, 0, 0, 0], shovel: 0, trophies: ['clic1', 'clic10k'] }, opts: {} })!;
+    expect(m.s.pep).toBe(1 + trophyPep('clic1') + trophyPep('clic10k'));
+    const h = sanitize({ v: 7, at: NOW, s: { dirt: 1, pep: 1e99, bonusLv: [9, -1, 'x'], tiers: [1e9], pepAt: [NOW + 1e12, 'a', NOW - 1000] }, opts: {} })!;
+    expect(Number.isFinite(h.s.pep)).toBe(true); expect(h.s.bonusLv).toEqual([3, 0, 0]); expect(h.s.pepAt).toEqual([NOW - 1000]);
+  });
+  it('plusieurs sources : l\'ordre d\'achat conseillé est le moins cher', () => {
+    const s = newState(); s.pep = 5;
+    expect(nextBonusBuy(s)!.id).toBe('auto'); expect(nextBonusBuy(s)!.missing).toBe(PEP_COSTS.auto[0] - 5);
+    expect(pepCost(s, 'turbo')).toBe(PEP_COSTS.turbo[0]);
   });
 });

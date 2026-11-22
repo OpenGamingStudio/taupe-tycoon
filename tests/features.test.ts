@@ -126,7 +126,7 @@ describe('sauvegarde : migration et robustesse', () => {
   it('une sauvegarde V2 (sans les nouveaux champs) est reprise intacte', () => {
     const v2 = { v: 2, at: 1000, s: { dirt: 5000, runTotal: 9000, lifeTotal: 12345, gems: 3, gemsEarned: 7, rebirths: 2, shovel: 4, gens: [3, 2, 1, 0, 0, 0], perms: [1, 0, 0, 0], clicks: 99, runTime: 300 }, opts: { lang: 'fr', reduced: false, mode: 10, sound: false, seen: 3 } };
     const r = sanitize(v2)!;
-    expect(r.s.dirt).toBe(5000); expect(r.s.gens).toEqual([3, 2, 1, 0, 0, 0]); expect(r.s.perms.slice(0, 4)).toEqual([1, 0, 0, 0]); expect(r.s.perms.slice(4, 7)).toEqual([1, 1, 1]); // migration : les bonus à recharge étaient gratuits
+    expect(r.s.dirt).toBe(5000); expect(r.s.gens).toEqual([3, 2, 1, 0, 0, 0]); expect(r.s.perms.slice(0, 4)).toEqual([1, 0, 0, 0]); expect(r.s.perms).toHaveLength(8); expect(r.s.bonusLv).toEqual([1, 1, 1]); // migration : les bonus à recharge étaient gratuits
     expect(r.s.gemsEarned).toBe(7); expect(r.s.trophies).toEqual([]); expect(r.s.playTime).toBe(0);
     expect(r.opts.sound).toBe(false); expect(r.opts.volume).toBe(60); expect(r.opts.ambient).toBe(true); expect(r.opts.mode).toBe(10);
   });

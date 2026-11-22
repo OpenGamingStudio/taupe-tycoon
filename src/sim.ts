@@ -4,6 +4,7 @@ import {
   RUSH_MULT, RUSH_TIME, GENIUS_MULT, GENIUS_TIME, TREASURE_SEC, EVENT_WEIGHTS,
   BONUSES, BonusId, AUTO_RATE, AUTO_PS_CAP, TURBO_MULT, CRIT_CHANCE, CRIT_MULT, RAIN_SEC, RAIN_CLICKS, RAIN_COUNT,
   TREFLE_STEP, CASQUE_STEP, AIMANT_STEP, THERMOS_STEP,
+  PEP_COSTS, BONUS_MAX_LV, BONUS_LV_MULT, PEP_TIER_SKIP, PEP_TIER_SKIP_SHOVEL, PEP_NUGGET_PER_HOUR,
 } from './config';
 
 export interface State {
@@ -30,6 +31,12 @@ export interface State {
   auto: number; // secondes restantes d'Auto-tap
   autoAcc: number; // taps en attente (fraction, < 1)
   turbo: number; // secondes restantes de Turbo (gains ×2)
+  // --- pépites (2.17.0) : monnaie des bonus, survit au rebirth ---
+  pep: number; // pépites à dépenser
+  pepEarned: number; // pépites gagnées au total
+  bonusLv: number[]; // par bonus : niveau (0 = pas acheté, jusqu'à BONUS_MAX_LV)
+  tiers: number[]; // par ligne (0 = pelle, 1.. = bâtiments) : paliers déjà payés en pépites (jamais rejoués après un rebirth)
+  pepAt: number[]; // dates (ms) des dernières pépites gagnées en cueillant une pépite d'or (plafond horaire)
 }
 
 export function newState(): State {
@@ -38,9 +45,11 @@ export function newState(): State {
     gens: GENS.map(() => 0), perms: PERMS.map(() => 0), clicks: 0, runTime: 0,
     playTime: 0, bestRun: 0, caught: 0, trophies: [], lastPs: 0, rush: 0, genius: 0,
     ready: BONUSES.map(() => 0), auto: 0, autoAcc: 0, turbo: 0,
+    pep: 0, pepEarned: 0, bonusLv: BONUSES.map(() => 0), tiers: [0, ...GENS.map(() => 0)], pepAt: [],
   };
 }
 
+const bonusIdx = (id: BonusId) => BONUSES.findIndex((b) => b.id === id);
 const permLevel = (s: State, id: string) => s.perms[PERMS.findIndex((p) => p.id === id)] ?? 0;
 export const permLv = permLevel;
 /** Chance de coup critique : base + Trèfle. */
@@ -52,7 +61,12 @@ export const nuggetDelayMult = (s: State) => 1 - AIMANT_STEP * permLevel(s, 'aim
 /** Recharge réelle d'un bonus, en secondes entières (Thermos). */
 export const bonusCd = (s: State, id: BonusId) => Math.max(1, Math.round(BONUSES[BONUSES.findIndex((b) => b.id === id)].cd * (1 - THERMOS_STEP * permLevel(s, 'thermos'))));
 /** Un bonus à recharge s'achète une fois en boutique (gemmes), puis reste à vie. */
-export const bonusOwned = (s: State, id: BonusId) => permLevel(s, id) >= 1;
+export const bonusLevel = (s: State, id: BonusId) => s.bonusLv[bonusIdx(id)] ?? 0;
+export const bonusOwned = (s: State, id: BonusId) => bonusLevel(s, id) >= 1;
+/** Durée réelle de l'effet (Auto-tap, Turbo) au niveau actuel, en secondes entières. */
+export const bonusDur = (s: State, id: BonusId) => Math.round(BONUSES[bonusIdx(id)].dur * BONUS_LV_MULT[Math.max(0, bonusLevel(s, id) - 1)]);
+/** Nombre de pépites d'une Pluie au niveau actuel. */
+export const rainCount = (s: State) => Math.round(RAIN_COUNT * BONUS_LV_MULT[Math.max(0, bonusLevel(s, 'rain') - 1)]);
 
 export const gemMult = (s: State) => 1 + GEM_BONUS * s.gemsEarned;
 export const trophyMult = (s: State) => 1 + TROPHY_BONUS * s.trophies.length;
@@ -150,7 +164,6 @@ export function tick(s: State, dt: number) {
 }
 
 // ---------- bonus à recharge ----------
-const bonusIdx = (id: BonusId) => BONUSES.findIndex((b) => b.id === id);
 /** Secondes avant que le bonus soit prêt (entier, 0 = prêt). Une horloge reculée ne rallonge jamais au-delà de la recharge. */
 export function bonusLeft(s: State, id: BonusId, now: number): number {
   const i = bonusIdx(id);
@@ -171,9 +184,10 @@ const worth = (s: State, sec: number, clicks: number) => Math.floor(Math.max(per
 /** Chiffres réels d'un bonus au niveau actuel (infobulle) : durée, recharge, gain total estimé, tous entiers. */
 export function bonusFacts(s: State, id: BonusId): { dur: number; cd: number; total: number; each: number; count: number } {
   const def = BONUSES[bonusIdx(id)], cd = bonusCd(s, id);
-  if (id === 'auto') return { dur: def.dur, cd, each: Math.round(autoTapRaw(s)), count: AUTO_RATE * def.dur, total: Math.round(autoTapRaw(s) * AUTO_RATE * def.dur) };
-  if (id === 'turbo') return { dur: def.dur, cd, each: TURBO_MULT, count: 0, total: Math.round(perSecondBase(s) * (TURBO_MULT - 1) * def.dur) };
-  return { dur: def.dur, cd, each: rainValue(s), count: RAIN_COUNT, total: rainValue(s) * RAIN_COUNT };
+  const dur = bonusDur(s, id);
+  if (id === 'auto') return { dur, cd, each: Math.round(autoTapRaw(s)), count: AUTO_RATE * dur, total: Math.round(autoTapRaw(s) * AUTO_RATE * dur) };
+  if (id === 'turbo') return { dur, cd, each: TURBO_MULT, count: 0, total: Math.round(perSecondBase(s) * (TURBO_MULT - 1) * dur) };
+  return { dur: def.dur, cd, each: rainValue(s), count: rainCount(s), total: rainValue(s) * rainCount(s) };
 }
 /** Valeur d'une pépite de la pluie. */
 export const rainValue = (s: State) => worth(s, RAIN_SEC, RAIN_CLICKS);
@@ -187,11 +201,59 @@ export function rainCatch(s: State): number {
 /** Déclenche un bonus s'il est prêt (et pas déjà actif) ; renvoie false sinon. Lance la recharge, effet appliqué. Gain instantané : terre gagnée dans `out.gain`. */
 export function useBonus(s: State, id: BonusId, now: number, out: { gain: number } = { gain: 0 }): boolean {
   if (!bonusOwned(s, id) || !bonusReady(s, id, now) || bonusActive(s, id) > 0) return false;
-  const i = bonusIdx(id), def = BONUSES[i];
+  const i = bonusIdx(id);
   s.ready[i] = now + bonusCd(s, id) * 1000;
-  if (id === 'auto') { s.auto = def.dur; s.autoAcc = 0; }
-  else if (id === 'turbo') s.turbo = def.dur;
+  if (id === 'auto') { s.auto = bonusDur(s, id); s.autoAcc = 0; }
+  else if (id === 'turbo') s.turbo = bonusDur(s, id);
   return true;
+}
+
+// ---------- pépites (2.17.0) ----------
+const PEP_HOUR = 3600_000;
+export function gainPep(s: State, n: number) { s.pep += n; s.pepEarned += n; }
+/** Paliers de multiplicateur atteints pour la première fois (à vie) : 1 pépite chacun, hors les premiers paliers de chaque ligne. Renvoie les pépites gagnées. */
+export function checkTiers(s: State): number {
+  let g = 0;
+  for (let k = -1; k < GENS.length; k++) {
+    const lvl = k < 0 ? s.shovel : s.gens[k];
+    const n = Math.max(0, milestoneCount(lvl, k < 0 ? SHOVEL_TABLE : MILESTONE_TABLE) - (k < 0 ? PEP_TIER_SKIP_SHOVEL : PEP_TIER_SKIP));
+    if (n > s.tiers[k + 1]) { g += n - s.tiers[k + 1]; s.tiers[k + 1] = n; }
+  }
+  if (g) gainPep(s, g);
+  return g;
+}
+/** Pépites encore gagnables en cueillant des pépites d'or pendant l'heure en cours, et secondes avant la prochaine. */
+export function nuggetPepLeft(s: State, now: number): { left: number; wait: number } {
+  const live = s.pepAt.filter((t) => now - t < PEP_HOUR && t <= now);
+  const left = Math.max(0, PEP_NUGGET_PER_HOUR - live.length);
+  return { left, wait: left > 0 || !live.length ? 0 : Math.ceil((Math.min(...live) + PEP_HOUR - now) / 1000) };
+}
+/** Une pépite d'or cueillie donne 1 pépite si le plafond horaire le permet ; renvoie le gain (0 ou 1). */
+export function nuggetPep(s: State, now: number): number {
+  if (nuggetPepLeft(s, now).left < 1) return 0;
+  s.pepAt = [...s.pepAt.filter((t) => now - t < PEP_HOUR && t <= now), now];
+  gainPep(s, 1);
+  return 1;
+}
+/** Prix en pépites du prochain niveau d'un bonus (0 = niveau maximal). */
+export const pepCost = (s: State, id: BonusId) => PEP_COSTS[id][bonusLevel(s, id)] ?? 0;
+export function buyBonus(s: State, id: BonusId): boolean {
+  const lv = bonusLevel(s, id);
+  if (lv >= BONUS_MAX_LV) return false;
+  const c = pepCost(s, id);
+  if (s.pep < c) return false;
+  s.pep -= c;
+  s.bonusLv[bonusIdx(id)] = lv + 1;
+  return true;
+}
+/** Prochain achat de bonus le moins cher : {id, cost, missing} (null si tout est au maximum). */
+export function nextBonusBuy(s: State): { id: BonusId; cost: number; missing: number } | null {
+  let best: { id: BonusId; cost: number; missing: number } | null = null;
+  for (const b of BONUSES) {
+    const c = pepCost(s, b.id);
+    if (c > 0 && (!best || c < best.cost)) best = { id: b.id, cost: c, missing: Math.max(0, c - s.pep) };
+  }
+  return best;
 }
 
 export type EventKind = 'rush' | 'genius' | 'treasure';
@@ -221,6 +283,7 @@ export function buy(s: State, kind: number, n: number): number {
   if (k < 1) return 0;
   s.dirt -= costOf(base, level, k);
   if (kind < 0) s.shovel += k; else s.gens[kind] += k;
+  checkTiers(s);
   return k;
 }
 export const buyN = (s: State, kind: number, mode: 1 | 10 | 'max') =>

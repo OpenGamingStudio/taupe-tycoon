@@ -2,6 +2,12 @@
 
 Versionnage sémantique. La version courante est affichée dans le jeu (Options).
 
+## 2.17.0 — 2026-11-22 (V5, lot 4 : pépites)
+- **Nouvelle monnaie « pépites »** (survit au rebirth, distincte des gemmes). Sources : 1 par palier de multiplicateur atteint (25, 50, 100…, à vie), 1 par pépite d'or cueillie (8 par heure au maximum), 1 à 3 par succès.
+- **Les bonus s'achètent en pépites** (Auto-tap 20/45/85, Turbo 24/55/100, Averse d'or 30/65/120), niveaux 1 à 3 : durée ×1,5 puis ×2, ou 12/18/24 gouttes. L'ancienne « Pluie de pépites » devient « Averse d'or ».
+- **Onglet Bonus** : prochain achat, ce qui manque, sources. Compteur de pépites dans l'en-tête.
+- Sauvegarde v7 : bonus déjà possédés = niveau 1, pépites offertes pour les paliers et succès déjà obtenus.
+
 ## 2.16.0 — 2026-11-22 (V5, lot 3 : effets de récompense)
 - **Étoiles à contour, ondes de choc et éclairs d'écran** (aplats) sur les vraies récompenses : coup critique (étoiles + onde rouge), palier de niveaux (étoiles, onde et éclair doré), trophée, pépite d'or (le trésor ajoute un éclair), gemme prête (étoiles turquoise sur la barre).
 - **Renaissance : feu d'artifice** (5 gerbes échelonnées d'étincelles, d'étoiles et d'ondes) avec éclair turquoise.
